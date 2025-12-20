@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse - MOVX</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .browse-page {
+            padding-top: 100px;
+            min-height: 100vh;
+            background: var(--bg-primary);
+        }
+
+        .browse-container {
+            width: 90%;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding-bottom: 60px;
+        }
+
+        .browse-header {
+            margin-bottom: 30px;
+        }
+
+        .browse-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .results-count {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 24px;
+        }
+
+        /* Loading State */
+        .loading-spinner {
+            text-align: center;
+            padding: 40px;
+            color: var(--accent-primary);
+            font-size: 2rem;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <a href="index.html" class="logo" style="text-decoration: none;">
+                <span class="logo-text">MOV</span><span class="logo-x">X</span>
+            </a>
+            <nav class="main-nav">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="browse.html?type=movie" class="nav-link" id="navMovies">Movies</a>
+                <a href="browse.html?type=tv" class="nav-link" id="navTV">TV Shows</a>
+            </nav>
+        </div>
+
+        <div class="header-right">
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="searchInput" class="search-input" placeholder="Search movies & TV..."
+                    autocomplete="off">
+            </div>
+            <a href="admin.html" class="icon-btn admin-header-btn" title="Admin Panel">
+                <i class="fas fa-cog"></i>
+            </a>
+        </div>
+    </header>
+
+    <div class="browse-page">
+        <div class="browse-container">
+            <div class="browse-header">
+                <h1 class="browse-title" id="pageTitle">Movies</h1>
+                <p class="results-count" id="resultsCount">Loading...</p>
+            </div>
+
+            <div class="content-grid" id="contentGrid">
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Results Modal -->
+    <div class="search-modal" id="searchModal">
+        <div class="search-results" id="searchResults"></div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="api.js"></script>
+    <script src="browse.js"></script>
+    <!-- Use basic app logic for search only if easy, but browse.js will handle most -->
+</body>
+
+</html>

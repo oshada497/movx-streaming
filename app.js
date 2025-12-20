@@ -78,13 +78,15 @@ class MovXApp {
         // Main navigation links
         document.querySelectorAll('.nav-link').forEach(link => {
             link.addEventListener('click', (e) => {
-                e.preventDefault();
-                const section = link.dataset.section;
-                this.navigateToSection(section);
+                if (link.dataset.section) {
+                    e.preventDefault();
+                    const section = link.dataset.section;
+                    this.navigateToSection(section);
 
-                // Update active state
-                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-                link.classList.add('active');
+                    // Update active state
+                    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                }
             });
         });
 
