@@ -140,8 +140,8 @@ img {
     top: 20px;
     left: 50%;
     transform: translateX(-50%);
-    width: 90%;
-    max-width: 1400px;
+    width: 98%;
+    max-width: 1800px;
     height: 70px;
     background: rgba(10, 10, 10, 0.6);
     backdrop-filter: blur(20px);
