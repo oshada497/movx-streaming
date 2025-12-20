@@ -40,7 +40,7 @@ class MovXApp {
         });
 
         document.addEventListener('click', (e) => {
-            if (!e.target.closest('.search-bar') && !e.target.closest('.search-modal')) {
+            if (!e.target.closest('.search-container') && !e.target.closest('.search-modal')) {
                 searchModal.classList.remove('active');
             }
         });
@@ -67,6 +67,64 @@ class MovXApp {
             if (e.key === 'ArrowLeft') this.navigateHero(-1);
             if (e.key === 'ArrowRight') this.navigateHero(1);
         });
+
+        // Main navigation links
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const section = link.dataset.section;
+                this.navigateToSection(section);
+
+                // Update active state
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+            });
+        });
+
+        // Search button click
+        const searchBtn = document.getElementById('searchBtn');
+        if (searchBtn) {
+            searchBtn.addEventListener('click', () => {
+                const query = searchInput.value.trim();
+                if (query.length >= 2) {
+                    this.handleSearch(query);
+                }
+            });
+        }
+    }
+
+    navigateToSection(section) {
+        let targetElement;
+
+        switch (section) {
+            case 'home':
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                // Show all sections
+                document.getElementById('trendingSection').style.display = 'block';
+                document.getElementById('moviesSection').style.display = 'block';
+                document.getElementById('tvShowsSection').style.display = 'block';
+                break;
+            case 'movies':
+                // Show only movies section, hide TV shows
+                document.getElementById('trendingSection').style.display = 'none';
+                document.getElementById('moviesSection').style.display = 'block';
+                document.getElementById('tvShowsSection').style.display = 'none';
+                targetElement = document.getElementById('moviesSection');
+                if (targetElement) {
+                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+                break;
+            case 'tvshows':
+                // Show only TV shows section, hide movies
+                document.getElementById('trendingSection').style.display = 'none';
+                document.getElementById('moviesSection').style.display = 'none';
+                document.getElementById('tvShowsSection').style.display = 'block';
+                targetElement = document.getElementById('tvShowsSection');
+                if (targetElement) {
+                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+                break;
+        }
     }
 
     async loadContent() {

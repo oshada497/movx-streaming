@@ -21,28 +21,25 @@
             <div class="logo">
                 <span class="logo-text">MOV</span><span class="logo-x">X</span>
             </div>
-        </div>
-
-        <div class="header-center">
-            <div class="search-bar">
-                <i class="fas fa-search"></i>
-                <input type="text" id="searchInput" placeholder="Search movie or tv series" autocomplete="off">
-                <button class="voice-btn"><i class="fas fa-microphone"></i></button>
-            </div>
+            <nav class="main-nav">
+                <a href="#" class="nav-link active" data-section="home">Home</a>
+                <a href="#" class="nav-link" data-section="movies">Movies</a>
+                <a href="#" class="nav-link" data-section="tvshows">TV Shows</a>
+            </nav>
         </div>
 
         <div class="header-right">
-            <a href="admin.html" class="icon-btn admin-header-btn" title="Admin Panel"><i class="fas fa-cog"></i></a>
-            <button class="icon-btn"><i class="fas fa-question-circle"></i></button>
-            <button class="icon-btn notification-btn">
-                <i class="fas fa-bell"></i>
-                <span class="notification-dot"></span>
-            </button>
-            <div class="user-profile">
-                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="User" class="user-avatar">
-                <span class="user-name">Akmal Nasrulloh</span>
-                <i class="fas fa-chevron-down"></i>
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="searchInput" class="search-input" placeholder="Search movies & TV..."
+                    autocomplete="off">
+                <button class="search-btn" id="searchBtn">
+                    <i class="fas fa-search"></i>
+                </button>
             </div>
+            <a href="admin.html" class="icon-btn admin-header-btn" title="Admin Panel">
+                <i class="fas fa-cog"></i>
+            </a>
         </div>
     </header>
 

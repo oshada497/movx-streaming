@@ -104,24 +104,28 @@ img {
     left: 0;
     right: 0;
     height: var(--header-height);
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.5) 50%, transparent 100%);
-    backdrop-filter: blur(10px);
+    background: rgba(20, 20, 20, 0.95);
+    backdrop-filter: blur(20px);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 24px;
+    padding: 0 40px;
     z-index: 1000;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .header-left {
     display: flex;
     align-items: center;
+    gap: 40px;
 }
 
 .logo {
     font-size: 1.5rem;
     font-weight: 800;
     letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
 }
 
 .logo-text {
@@ -132,65 +136,99 @@ img {
     color: var(--accent-red);
 }
 
-.header-center {
-    flex: 1;
-    max-width: 480px;
-    margin: 0 40px;
-}
-
-.search-bar {
+/* Main Navigation */
+.main-nav {
     display: flex;
     align-items: center;
-    background: var(--bg-glass);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-full);
-    padding: 10px 20px;
-    gap: 12px;
-    transition: all var(--transition-normal);
+    gap: 8px;
 }
 
-.search-bar:focus-within {
-    background: var(--bg-glass-hover);
-    border-color: var(--border-light);
-}
-
-.search-bar i {
-    color: var(--text-muted);
+.nav-link {
+    padding: 8px 16px;
     font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+    position: relative;
 }
 
-.search-bar input {
+.nav-link:hover {
+    color: var(--text-primary);
+    background: var(--bg-glass);
+}
+
+.nav-link.active {
+    color: var(--text-primary);
+    background: var(--bg-tertiary);
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Search Container - Streamiz Style */
+.search-container {
+    display: flex;
+    align-items: center;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 0;
+    overflow: hidden;
+    transition: all var(--transition-fast);
+}
+
+.search-container:focus-within {
+    border-color: var(--border-light);
+    background: var(--bg-secondary);
+}
+
+.search-icon {
+    padding: 0 12px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.search-input {
     flex: 1;
     background: none;
     border: none;
     outline: none;
     color: var(--text-primary);
     font-size: 0.9rem;
+    padding: 10px 0;
+    width: 200px;
+    transition: width var(--transition-normal);
 }
 
-.search-bar input::placeholder {
+.search-input:focus {
+    width: 280px;
+}
+
+.search-input::placeholder {
     color: var(--text-muted);
 }
 
-.voice-btn {
-    width: 32px;
-    height: 32px;
+.search-btn {
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: var(--bg-glass);
-    border-radius: var(--radius-full);
+    border: none;
+    border-left: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    cursor: pointer;
     transition: all var(--transition-fast);
 }
 
-.voice-btn:hover {
+.search-btn:hover {
     background: var(--bg-glass-hover);
-}
-
-.header-right {
-    display: flex;
-    align-items: center;
-    gap: 16px;
+    color: var(--text-primary);
 }
 
 .icon-btn {
@@ -201,58 +239,12 @@ img {
     justify-content: center;
     color: var(--text-secondary);
     transition: all var(--transition-fast);
-    border-radius: var(--radius-full);
+    border-radius: var(--radius-sm);
 }
 
 .icon-btn:hover {
     color: var(--text-primary);
     background: var(--bg-glass);
-}
-
-.notification-btn {
-    position: relative;
-}
-
-.notification-dot {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 8px;
-    height: 8px;
-    background: var(--accent-red);
-    border-radius: var(--radius-full);
-}
-
-.user-profile {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 6px 16px 6px 6px;
-    background: var(--bg-glass);
-    border-radius: var(--radius-full);
-    cursor: pointer;
-    transition: all var(--transition-fast);
-}
-
-.user-profile:hover {
-    background: var(--bg-glass-hover);
-}
-
-.user-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: var(--radius-full);
-    object-fit: cover;
-}
-
-.user-name {
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-.user-profile i {
-    font-size: 0.7rem;
-    color: var(--text-muted);
 }
 
 .admin-header-btn {
