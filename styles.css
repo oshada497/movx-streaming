@@ -839,26 +839,30 @@ img {
 }
 
 .content-row {
-    display: flex;
-    gap: 16px;
-    overflow-x: auto;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 20px;
     padding: 10px 0;
-    scroll-behavior: smooth;
 }
 
+/* Remove scrollbar hiding since we're not scrolling anymore */
 .content-row::-webkit-scrollbar {
     display: none;
 }
 
 /* ===== Content Card ===== */
 .content-card {
-    flex: 0 0 180px;
+    /* Remove static width */
+    width: 100%;
+    aspect-ratio: 2/3;
     position: relative;
     border-radius: var(--radius-lg);
     overflow: hidden;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: all var(--transition-normal);
+    box-shadow: var(--shadow-sm);
 }
+
 
 .content-card:hover {
     transform: scale(1.05);
