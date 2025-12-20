@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Details - MOVX</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .details-page {
+            position: relative;
+            min-height: 100vh;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .details-backdrop {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center top;
+            z-index: -1;
+        }
+
+        .details-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to right,
+                    rgba(10, 10, 10, 0.95) 0%,
+                    rgba(10, 10, 10, 0.8) 40%,
+                    rgba(10, 10, 10, 0.6) 100%),
+                linear-gradient(to top,
+                    rgba(10, 10, 10, 1) 0%,
+                    rgba(10, 10, 10, 0.5) 50%,
+                    transparent 100%);
+        }
+
+        .details-container {
+            width: 90%;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+            padding-top: 100px;
+            display: flex;
+            gap: 60px;
+            align-items: flex-start;
+        }
+
+        .details-poster {
+            flex-shrink: 0;
+            width: 320px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transform: translateY(20px);
+            opacity: 0;
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        .details-poster img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .details-info {
+            flex: 1;
+            color: #fff;
+            padding-top: 20px;
+            opacity: 0;
+            animation: slideUp 0.8s ease-out 0.2s forwards;
+        }
+
+        .details-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        .details-meta {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 24px;
+            font-size: 1.1rem;
+            color: #ccc;
+        }
+
+        .rating-box {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #ffc107;
+            font-weight: 600;
+        }
+
+        .meta-dot {
+            width: 4px;
+            height: 4px;
+            background: #666;
+            border-radius: 50%;
+        }
+
+        .details-genres {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .details-genre-tag {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            color: #eee;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .details-description {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #ddd;
+            max-width: 800px;
+            margin-bottom: 40px;
+        }
+
+        .details-actions {
+            display: flex;
+            gap: 16px;
+        }
+
+        .btn-watch {
+            background: #fff;
+            color: #000;
+            padding: 14px 32px;
+            border-radius: 50px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            border: none;
+            font-size: 1rem;
+            transition: transform 0.2s;
+        }
+
+        .btn-watch:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-list {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 14px 32px;
+            border-radius: 50px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .btn-list:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 900px) {
+            .details-container {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                padding-top: 120px;
+                gap: 30px;
+            }
+
+            .details-meta {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .details-genres {
+                justify-content: center;
+            }
+
+            .details-logo {
+                width: 200px;
+            }
+
+            .details-title {
+                font-size: 2.5rem;
+            }
+
+            .details-actions {
+                justify-content: center;
+            }
+
+            .details-backdrop {
+                mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+            }
+
+            .details-overlay {
+                background: linear-gradient(to top, #0a0a0a 0%, rgba(10, 10, 10, 0.8) 100%);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <a href="index.html" class="logo" style="text-decoration: none;">
+                <span class="logo-text">MOV</span><span class="logo-x">X</span>
+            </a>
+            <nav class="main-nav">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="index.html" class="nav-link">Movies</a>
+                <a href="index.html" class="nav-link">TV Shows</a>
+            </nav>
+        </div>
+
+        <div class="header-right">
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="searchInput" class="search-input" placeholder="Search movies & TV..."
+                    autocomplete="off">
+            </div>
+            <a href="admin.html" class="icon-btn admin-header-btn" title="Admin Panel">
+                <i class="fas fa-cog"></i>
+            </a>
+        </div>
+    </header>
+
+    <div class="details-page">
+        <div class="details-backdrop" id="backdrop"></div>
+        <div class="details-overlay"></div>
+
+        <div class="details-container">
+            <div class="details-poster">
+                <img id="poster" src="" alt="Poster">
+            </div>
+
+            <div class="details-info">
+                <h1 class="details-title" id="title">Loading...</h1>
+
+                <div class="details-meta">
+                    <span id="year"></span>
+                    <span class="meta-dot"></span>
+                    <span id="runtime"></span>
+                    <span class="meta-dot"></span>
+                    <div class="rating-box">
+                        <i class="fas fa-star"></i>
+                        <span id="rating"></span>
+                    </div>
+                </div>
+
+                <div class="details-genres" id="genres">
+                    <!-- Genres injected here -->
+                </div>
+
+                <p class="details-description" id="description">
+                    Loading content details...
+                </p>
+
+                <div class="details-actions">
+                    <button class="btn-watch" id="watchBtn">
+                        <i class="fas fa-play"></i>
+                        Watch Now
+                    </button>
+                    <button class="btn-list" id="listBtn">
+                        <i class="fas fa-plus"></i>
+                        My List
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Video Player Modal (Reused) -->
+    <div class="player-modal" id="playerModal">
+        <div class="player-container">
+            <button class="close-player" id="closePlayer"><i class="fas fa-times"></i></button>
+            <div class="player-content" id="playerContent"></div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="api.js"></script>
+    <script src="details.js"></script>
+</body>
+
+</html>

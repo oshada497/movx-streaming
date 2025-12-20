@@ -49,8 +49,15 @@ class MovXApp {
         document.getElementById('heroPrev').addEventListener('click', () => this.navigateHero(-1));
         document.getElementById('heroNext').addEventListener('click', () => this.navigateHero(1));
 
-        // Watch Now button
-        document.getElementById('watchNowBtn').addEventListener('click', () => this.playContent());
+        // Watch Now button - Redirect to Details Page
+        document.getElementById('watchNowBtn').addEventListener('click', () => {
+            const content = this.heroContent[this.currentHeroIndex];
+            if (content) {
+                const id = content.tmdbId || content.id;
+                const type = content.mediaType || 'movie';
+                if (id) this.showContentDetails(id, type);
+            }
+        });
 
         // Watchlist button
         document.getElementById('watchlistBtn').addEventListener('click', () => this.toggleWatchlist());
@@ -285,39 +292,7 @@ class MovXApp {
     }
 
     async showContentDetails(id, type) {
-        let details;
-        if (type === 'movie') {
-            details = await TMDB.getMovieDetails(id);
-        } else {
-            details = await TMDB.getTVDetails(id);
-        }
-
-        if (!details) return;
-
-        // Create content object
-        const content = {
-            tmdbId: details.id,
-            mediaType: type,
-            title: details.title || details.name,
-            description: details.overview,
-            platform: 'MOVX',
-            year: (details.release_date || details.first_air_date || '').substring(0, 4),
-            rating: details.vote_average,
-            genres: details.genres,
-            backdrop: TMDB.getBackdropUrl(details.backdrop_path),
-            poster: TMDB.getImageUrl(details.poster_path),
-            runtime: details.runtime ? `${details.runtime} min` : null,
-            seasons: details.number_of_seasons || null,
-            ageRating: details.adult ? '18+' : 'PG-13'
-        };
-
-        // Update hero with this content
-        this.heroContent = [content, ...this.heroContent.slice(0, 4)];
-        this.currentHeroIndex = 0;
-        this.updateHero();
-
-        // Scroll to top
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.location.href = `details.html?id=${id}&type=${type}`;
     }
 
     renderMoviesRow() {
