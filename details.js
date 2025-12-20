@@ -14,12 +14,24 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadDetails(id, type) {
     let details;
 
-    // Attempt to get from API first (if connected) or fall back/mix with provided API logic
-    // Assuming api.js provides TMDB class
+    // Check Storage for content first (to get custom videoUrl)
+    let storedItem = null;
     if (type === 'movie') {
-        details = await TMDB.getMovieDetails(id);
+        storedItem = Storage.getMovies().find(m => m.tmdbId == id);
     } else {
-        details = await TMDB.getTVDetails(id);
+        storedItem = Storage.getTVShows().find(s => s.tmdbId == id);
+    }
+
+    if (storedItem) {
+        details = storedItem;
+        console.log('Loaded from Storage:', details);
+    } else {
+        // Fallback to TMDB API
+        if (type === 'movie') {
+            details = await TMDB.getMovieDetails(id);
+        } else {
+            details = await TMDB.getTVDetails(id);
+        }
     }
 
     if (!details) {
@@ -28,48 +40,72 @@ async function loadDetails(id, type) {
     }
 
     // Populate UI
-    document.title = `${details.title || details.name} - MOVX`;
+    document.title = `${details.title || details.name} - FBFLIX`;
 
     // Backdrop
-    const backdropUrl = TMDB.getBackdropUrl(details.backdrop_path);
+    const backdropUrl = details.backdrop_path ? TMDB.getBackdropUrl(details.backdrop_path) : (details.backdrop || '');
     document.getElementById('backdrop').style.backgroundImage = `url(${backdropUrl})`;
 
     // Poster
-    const posterUrl = TMDB.getImageUrl(details.poster_path);
+    const posterUrl = details.poster_path ? TMDB.getImageUrl(details.poster_path) : (details.poster || '');
     document.getElementById('poster').src = posterUrl;
 
     // Title
     document.getElementById('title').textContent = details.title || details.name;
 
     // Meta
-    const year = (details.release_date || details.first_air_date || '').substring(0, 4);
+    const year = (details.release_date || details.first_air_date || details.year || '').substring(0, 4);
     document.getElementById('year').textContent = year;
 
-    const runtime = details.runtime ? `${details.runtime} min` : (details.number_of_seasons ? `${details.number_of_seasons} Season${details.number_of_seasons > 1 ? 's' : ''}` : 'N/A');
+    const runtime = details.runtime
+        ? (details.runtime.toString().includes('min') ? details.runtime : `${details.runtime} min`)
+        : (details.number_of_seasons ? `${details.number_of_seasons} Season${details.number_of_seasons > 1 ? 's' : ''}` : 'N/A');
     document.getElementById('runtime').textContent = runtime;
 
-    const rating = details.vote_average ? `${details.vote_average.toFixed(1)} / 10` : 'N/A';
+    const ratingVal = details.vote_average || details.rating;
+    const rating = ratingVal ? `${Number(ratingVal).toFixed(1)} / 10` : 'N/A';
     document.getElementById('rating').textContent = rating;
 
     // Genres
     const genresContainer = document.getElementById('genres');
-    genresContainer.innerHTML = (details.genres || []).map(g =>
-        `<span class="details-genre-tag">${g.name}</span>`
+    let genresList = [];
+    if (details.genres) {
+        if (typeof details.genres[0] === 'string') genresList = details.genres;
+        else genresList = details.genres.map(g => g.name);
+    }
+
+    genresContainer.innerHTML = genresList.map(g =>
+        `<span class="details-genre-tag">${g}</span>`
     ).join('');
 
     // Description
-    document.getElementById('description').textContent = details.overview || 'No description available.';
+    document.getElementById('description').textContent = details.overview || details.description || 'No description available.';
 
 
-    // Watch Button Logic
+    // Video Player Logic
+    const videoSection = document.getElementById('video-player-section');
+    const videoPlayer = document.getElementById('main-video-player');
     const watchBtn = document.getElementById('watchBtn');
-    watchBtn.addEventListener('click', () => {
-        // Simple player logic reused from app.js idea
-        // In a real app, this might fetch a specific video stream
-        openPlayer(details);
-    });
 
-    // Close Player Logic
+    if (details.videoUrl) {
+        // Remove existing listeners by cloning or just overriding
+        // setup main player
+        videoSection.style.display = 'block';
+        videoPlayer.src = details.videoUrl;
+
+        watchBtn.textContent = 'Watch Now';
+        watchBtn.onclick = (e) => {
+            e.preventDefault();
+            videoSection.scrollIntoView({ behavior: 'smooth' });
+            setTimeout(() => videoPlayer.play(), 500);
+        };
+    } else {
+        // Fallback to Trailer Modal logic
+        videoSection.style.display = 'none';
+        watchBtn.onclick = () => openPlayer(details);
+    }
+
+    // Close Player Logic (Modal)
     document.getElementById('closePlayer').addEventListener('click', () => {
         const playerModal = document.getElementById('playerModal');
         const playerContent = document.getElementById('playerContent');
@@ -82,18 +118,15 @@ function openPlayer(content) {
     const playerModal = document.getElementById('playerModal');
     const playerContent = document.getElementById('playerContent');
 
-    // Check if we have a stored video user (custom upload) or need to use an embed
-    // For now, mirroring app.js behavior (often placeholders or specific logic)
-    // Since we don't have access to the Storage class here easily unless we duplicate it or import it
-    // let's try to see if there's a trailer or video.
+    // Fetch trailer if not present in content object (TMDB content usually needs fetch)
+    // content from storage might not have 'videos'
+    // This is valid fallback logic
 
-    // NOTE: In the provided app.js, video playback relied on Storage.getAllContent() to find custom added videos.
-    // If this is a TMDB item, we might not have a direct video link unless we hit the /videos endpoint.
-    // For this implementation, I'll show a placeholder or try to find a trailer if available in 'details'.
-
-    // If 'details' has 'videos' (often included in TMDB details response if append_to_response is used, otherwise extra call needed)
-    // api.js getMovieDetails implementation:
-    // async getMovieDetails(id) { ... const response = await fetch(`${BASE_URL}/movie/${id}?api_key=${API_KEY}&append_to_response=videos,credits,similar`); ... }
+    if (content.tmdbId && (!content.videos || !content.videos.results)) {
+        // We might need to fetch videos from TMDB if strictly relying on modal fallback
+        // For now, let's just attempt to use what we have or show error
+        // (Real app would fetch video endpoint here)
+    }
 
     let videoKey = null;
     if (content.videos && content.videos.results) {

@@ -185,30 +185,88 @@ class AdminApp {
                 videoUrl: ''
             };
 
-            let success;
-            if (type === 'movie') {
-                success = Storage.addMovie(content);
-                this.renderMovies();
-            } else {
-                success = Storage.addTVShow(content);
-                this.renderTVShows();
-            }
+            // Open modal to add Video URL
+            this.openAddWithUrlModal(content, type);
 
-            if (success) {
-                button.innerHTML = '<i class="fas fa-check"></i> Added';
-                button.classList.add('added');
-                this.showToast(`${content.title} added successfully!`, 'success');
-                this.updateContentCount();
-            } else {
-                button.innerHTML = '<i class="fas fa-check"></i> Already Added';
-                button.classList.add('added');
-            }
+            // Reset button visual state (logic continues in modal)
+            button.innerHTML = '<i class="fas fa-plus"></i> Add';
+            button.disabled = false;
 
         } catch (error) {
             console.error('Add error:', error);
             button.innerHTML = '<i class="fas fa-plus"></i> Add';
             button.disabled = false;
             this.showToast('Failed to add content', 'error');
+        }
+    }
+
+    openAddWithUrlModal(content, type) {
+        const modal = document.getElementById('editModal');
+        const modalBody = document.getElementById('editModalBody');
+
+        modalBody.innerHTML = `
+            <div style="margin-bottom: 20px;">
+                <h3 style="margin-bottom: 10px;">Add ${type === 'movie' ? 'Movie' : 'TV Show'}</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">
+                    Enter the CDN Video URL to complete adding this content.
+                </p>
+            </div>
+            <form id="addUrlForm" class="manual-form">
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" value="${content.title}" readonly style="opacity: 0.7; cursor: not-allowed;">
+                </div>
+                 <div class="form-group">
+                    <label>Video / Stream URL (CDN)</label>
+                    <input type="url" id="addVideoUrl" required placeholder="https://example.com/video.mp4" autofocus>
+                </div>
+                 <div class="form-group">
+                    <label>Platform</label>
+                     <select id="addPlatform">
+                        ${CONFIG.PLATFORMS.map(p =>
+            `<option value="${p.name}" ${p.name === 'MOVX' ? 'selected' : ''}>${p.name}</option>`
+        ).join('')}
+                    </select>
+                </div>
+                <button type="submit" class="submit-btn" style="width: 100%; margin-top: 20px;">
+                     <i class="fas fa-plus"></i> Add to Library
+                </button>
+            </form>
+        `;
+
+        const form = document.getElementById('addUrlForm');
+        // Handle submit
+        const handleSubmit = (e) => {
+            e.preventDefault();
+            content.videoUrl = document.getElementById('addVideoUrl').value.trim();
+            content.platform = document.getElementById('addPlatform').value;
+
+            if (this.finalAddContent(content, type)) {
+                modal.classList.remove('active');
+            }
+        };
+
+        form.addEventListener('submit', handleSubmit);
+        modal.classList.add('active');
+    }
+
+    finalAddContent(content, type) {
+        let success;
+        if (type === 'movie') {
+            success = Storage.addMovie(content);
+            this.renderMovies();
+        } else {
+            success = Storage.addTVShow(content);
+            this.renderTVShows();
+        }
+
+        if (success) {
+            this.showToast(`${content.title} added successfully!`, 'success');
+            this.updateContentCount();
+            return true;
+        } else {
+            this.showToast('Content already exists in library.', 'error');
+            return false;
         }
     }
 
