@@ -176,6 +176,19 @@ class MovXApp {
         const content = this.heroContent[this.currentHeroIndex];
         const heroBackground = document.getElementById('heroBackground');
 
+        // Reset and trigger animations
+        const heroLeft = document.querySelector('.hero-left');
+        const heroPoster = document.getElementById('heroPoster');
+
+        heroLeft.classList.remove('animating');
+        heroPoster.classList.remove('animating');
+
+        // Trigger reflow
+        void heroLeft.offsetWidth;
+
+        heroLeft.classList.add('animating');
+        heroPoster.classList.add('animating');
+
         // Update background
         if (content.backdrop) {
             heroBackground.style.backgroundImage = `url(${content.backdrop})`;

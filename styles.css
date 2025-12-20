@@ -97,7 +97,43 @@ img {
     background: var(--text-muted);
 }
 
-/* ===== Header ===== */
+/* ===== Animations ===== */
+@keyframes slideDown {
+    from {
+        transform: translate(-50%, -100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes zoomIn {
+    from {
+        transform: scale(1.1);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
 /* ===== Header ===== */
 .header {
     position: fixed;
@@ -118,6 +154,7 @@ img {
     border-radius: 50px;
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.5),
         0 0 1px rgba(255, 255, 255, 0.1);
+    animation: slideDown 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
 .header-left {
@@ -406,8 +443,48 @@ img {
     z-index: 1;
 }
 
-.hero-left {
-    max-width: 500px;
+/* Animate hero text elements */
+.hero-left.animating>* {
+    animation: fadeInUp 0.8s ease-out forwards;
+}
+
+.hero-left>* {
+    opacity: 1;
+    /* Default visible if no animation */
+}
+
+/* Hide initially if animating class will be added */
+.hero-left.animating>* {
+    opacity: 0;
+}
+
+.hero-left.animating .platform-badge {
+    animation-delay: 0.1s;
+}
+
+.hero-left.animating .hero-title {
+    animation-delay: 0.2s;
+}
+
+.hero-left.animating .hero-meta {
+    animation-delay: 0.3s;
+}
+
+.hero-left.animating .hero-description {
+    animation-delay: 0.4s;
+}
+
+.hero-left.animating .hero-genres {
+    animation-delay: 0.5s;
+}
+
+.hero-left.animating .hero-actions {
+    animation-delay: 0.6s;
+}
+
+.hero-poster.animating {
+    animation: fadeInUp 0.8s ease-out 0.4s forwards;
+    opacity: 0;
 }
 
 .platform-badge {
