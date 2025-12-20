@@ -329,7 +329,7 @@ class MovXApp {
             return;
         }
 
-        container.innerHTML = movies.map(movie => this.createContentCard(movie, 'movie')).join('');
+        container.innerHTML = movies.slice(0, 6).map(movie => this.createContentCard(movie, 'movie')).join('');
         this.bindCardEvents(container);
     }
 
@@ -342,7 +342,7 @@ class MovXApp {
             return;
         }
 
-        container.innerHTML = shows.map(show => this.createContentCard(show, 'tv')).join('');
+        container.innerHTML = shows.slice(0, 6).map(show => this.createContentCard(show, 'tv')).join('');
         this.bindCardEvents(container);
     }
 
@@ -356,7 +356,7 @@ class MovXApp {
         }
 
         // Show most recently added as trending
-        container.innerHTML = allContent.slice(0, 10).map(item =>
+        container.innerHTML = allContent.slice(0, 6).map(item =>
             this.createContentCard(item, item.mediaType)
         ).join('');
         this.bindCardEvents(container);
