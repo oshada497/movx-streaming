@@ -350,8 +350,9 @@ img {
 }
 
 /* ===== Main Content ===== */
+/* ===== Main Content ===== */
 .main-content {
-    padding-top: var(--header-height);
+    padding-top: 0;
     min-height: 100vh;
 }
 
@@ -388,7 +389,7 @@ img {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 60px 60px 120px;
+    padding: 140px 60px 120px;
     z-index: 1;
 }
 
