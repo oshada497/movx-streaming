@@ -199,9 +199,13 @@ img {
 
 /* Main Navigation */
 .main-nav {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 40px;
+    /* Increased gap for better separation */
 }
 
 .nav-link {
@@ -1206,7 +1210,7 @@ img {
 }
 
 @media (max-width: 992px) {
-    .header-center {
+    .main-nav {
         display: none;
     }
 
