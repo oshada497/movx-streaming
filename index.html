@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOVX - Watch Movies & TV Shows</title>
+    <meta name="description" content="Stream your favorite movies and TV shows in high quality">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">
+                <span class="logo-text">MOV</span><span class="logo-x">X</span>
+            </div>
+        </div>
+
+        <div class="header-center">
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Search movie or tv series" autocomplete="off">
+                <button class="voice-btn"><i class="fas fa-microphone"></i></button>
+            </div>
+        </div>
+
+        <div class="header-right">
+            <button class="icon-btn"><i class="fas fa-question-circle"></i></button>
+            <button class="icon-btn notification-btn">
+                <i class="fas fa-bell"></i>
+                <span class="notification-dot"></span>
+            </button>
+            <div class="user-profile">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="User" class="user-avatar">
+                <span class="user-name">Akmal Nasrulloh</span>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active" data-tooltip="Home">
+                <i class="fas fa-home"></i>
+            </a>
+            <a href="#" class="nav-item" data-tooltip="Library">
+                <i class="fas fa-folder"></i>
+            </a>
+            <a href="#" class="nav-item" data-tooltip="History">
+                <i class="fas fa-history"></i>
+            </a>
+            <a href="#" class="nav-item" data-tooltip="Favorites">
+                <i class="fas fa-heart"></i>
+            </a>
+        </nav>
+        <div class="sidebar-bottom">
+            <a href="admin.html" class="nav-item admin-btn" data-tooltip="Admin Panel">
+                <i class="fas fa-cog"></i>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Hero Section -->
+        <section class="hero" id="heroSection">
+            <div class="hero-background" id="heroBackground">
+                <div class="hero-overlay"></div>
+            </div>
+
+            <div class="hero-content">
+                <div class="hero-left">
+                    <div class="platform-badge" id="platformBadge">NETFLIX</div>
+                    <h1 class="hero-title" id="heroTitle">Bodies</h1>
+
+                    <div class="hero-meta">
+                        <span class="imdb-badge">
+                            <span class="imdb-logo">IMDb</span>
+                            <span class="imdb-rating" id="heroRating">7.5</span>
+                        </span>
+                        <span class="meta-item" id="heroSeasons">1 Season</span>
+                        <span class="meta-item" id="heroYear">2023</span>
+                        <span class="meta-item age-rating" id="heroAgeRating">18+</span>
+                    </div>
+
+                    <p class="hero-description" id="heroDescription">
+                        One victim, found dead on a London street. Four detectives, in four different
+                        time periods, must solve the mystery to protect Britain's future.
+                    </p>
+
+                    <div class="hero-genres" id="heroGenres">
+                        <span class="genre-tag">Crime</span>
+                        <span class="genre-tag">Drama</span>
+                        <span class="genre-tag">History</span>
+                    </div>
+
+                    <div class="hero-actions">
+                        <button class="btn btn-primary" id="watchNowBtn">
+                            <i class="fas fa-play"></i>
+                            Watch Now
+                        </button>
+                        <button class="btn btn-secondary" id="watchlistBtn">
+                            <i class="fas fa-plus"></i>
+                            Watchlist
+                        </button>
+                    </div>
+                </div>
+
+                <div class="hero-right">
+                    <div class="hero-poster" id="heroPoster">
+                        <img src="" alt="Poster" id="heroPosterImg">
+                    </div>
+                </div>
+            </div>
+
+            <div class="hero-controls">
+                <div class="hero-progress">
+                    <div class="progress-bar" id="heroProgress"></div>
+                </div>
+                <button class="volume-btn" id="volumeBtn">
+                    <i class="fas fa-volume-up"></i>
+                </button>
+            </div>
+
+            <div class="hero-nav">
+                <button class="hero-nav-btn prev" id="heroPrev"><i class="fas fa-chevron-left"></i></button>
+                <button class="hero-nav-btn next" id="heroNext"><i class="fas fa-chevron-right"></i></button>
+            </div>
+        </section>
+
+        <!-- Platforms Section -->
+        <section class="platforms-section">
+            <div class="platforms-row">
+                <div class="platform-card" data-platform="netflix">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg" alt="Netflix">
+                </div>
+                <div class="platform-card" data-platform="disney">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/3/3e/Disney%2B_logo.svg" alt="Disney+">
+                </div>
+                <div class="platform-card" data-platform="prime">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/f/f1/Prime_Video.svg" alt="Prime Video">
+                </div>
+                <div class="platform-card" data-platform="vidio">
+                    <span class="platform-text vidio">Vidio</span>
+                </div>
+                <div class="platform-card" data-platform="apple">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/2/28/Apple_TV_Plus_Logo.svg"
+                        alt="Apple TV+">
+                </div>
+                <div class="platform-card" data-platform="viu">
+                    <span class="platform-text viu"><i class="fas fa-play-circle"></i> viu</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Episodes Section (for TV Shows) -->
+        <section class="episodes-section" id="episodesSection" style="display: none;">
+            <div class="episodes-header">
+                <div class="season-selector">
+                    <span>Season 1</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+            </div>
+            <div class="episodes-carousel">
+                <button class="carousel-btn prev" id="episodesPrev"><i class="fas fa-chevron-left"></i></button>
+                <div class="episodes-list" id="episodesList">
+                    <!-- Episodes will be dynamically added -->
+                </div>
+                <button class="carousel-btn next" id="episodesNext"><i class="fas fa-chevron-right"></i></button>
+            </div>
+        </section>
+
+        <!-- Content Rows -->
+        <section class="content-section" id="trendingSection">
+            <div class="section-header">
+                <h2 class="section-title">Trending Now</h2>
+                <a href="#" class="see-more">See More</a>
+            </div>
+            <div class="content-row" id="trendingRow">
+                <!-- Content cards will be dynamically added -->
+            </div>
+        </section>
+
+        <section class="content-section" id="moviesSection">
+            <div class="section-header">
+                <h2 class="section-title">Movies</h2>
+                <a href="#" class="see-more">See More</a>
+            </div>
+            <div class="content-row" id="moviesRow">
+                <!-- Content cards will be dynamically added -->
+            </div>
+        </section>
+
+        <section class="content-section" id="tvShowsSection">
+            <div class="section-header">
+                <h2 class="section-title">TV Shows</h2>
+                <a href="#" class="see-more">See More</a>
+            </div>
+            <div class="content-row" id="tvShowsRow">
+                <!-- Content cards will be dynamically added -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Search Results Modal -->
+    <div class="search-modal" id="searchModal">
+        <div class="search-results" id="searchResults">
+            <!-- Search results will be dynamically added -->
+        </div>
+    </div>
+
+    <!-- Video Player Modal -->
+    <div class="player-modal" id="playerModal">
+        <div class="player-container">
+            <button class="close-player" id="closePlayer"><i class="fas fa-times"></i></button>
+            <div class="player-content" id="playerContent">
+                <!-- Video player will be added here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="api.js"></script>
+    <script src="app.js"></script>
+    <script src="init-data.js"></script>
+</body>
+
+</html>

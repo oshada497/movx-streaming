@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOVX Admin - Manage Content</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+
+<body class="admin-body">
+    <!-- Header -->
+    <header class="admin-header">
+        <div class="header-left">
+            <a href="index.html" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div class="logo">
+                <span class="logo-text">MOV</span><span class="logo-x">X</span>
+                <span class="admin-badge">ADMIN</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <span class="content-count" id="contentCount">0 items</span>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+        <!-- Tabs -->
+        <div class="admin-tabs">
+            <button class="tab-btn active" data-tab="add">
+                <i class="fas fa-plus-circle"></i>
+                Add Content
+            </button>
+            <button class="tab-btn" data-tab="movies">
+                <i class="fas fa-film"></i>
+                Movies
+            </button>
+            <button class="tab-btn" data-tab="tvshows">
+                <i class="fas fa-tv"></i>
+                TV Shows
+            </button>
+            <button class="tab-btn" data-tab="settings">
+                <i class="fas fa-cog"></i>
+                Settings
+            </button>
+        </div>
+
+        <!-- Add Content Tab -->
+        <div class="tab-content active" id="tab-add">
+            <div class="add-content-section">
+                <h2>Add New Content</h2>
+                <p class="section-description">Search TMDB to find movies and TV shows, then add them to your library.
+                </p>
+
+                <!-- TMDB Search -->
+                <div class="search-section">
+                    <div class="search-input-group">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="tmdbSearch" placeholder="Search TMDB for movies or TV shows...">
+                        <button class="search-btn" id="searchBtn">Search</button>
+                    </div>
+                </div>
+
+                <!-- Search Results -->
+                <div class="search-results-grid" id="searchResultsGrid">
+                    <p class="placeholder-text">Search for content to add to your library</p>
+                </div>
+            </div>
+
+            <!-- Divider -->
+            <div class="divider">
+                <span>OR</span>
+            </div>
+
+            <!-- Manual Add Form -->
+            <div class="manual-add-section">
+                <h3>Add Manually</h3>
+                <form id="manualAddForm" class="manual-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Content Type</label>
+                            <select id="contentType" required>
+                                <option value="movie">Movie</option>
+                                <option value="tv">TV Show</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Platform</label>
+                            <select id="platform">
+                                <option value="NETFLIX">Netflix</option>
+                                <option value="DISNEY+">Disney+</option>
+                                <option value="PRIME VIDEO">Prime Video</option>
+                                <option value="APPLE TV+">Apple TV+</option>
+                                <option value="HBO MAX">HBO Max</option>
+                                <option value="MOVX">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Title *</label>
+                        <input type="text" id="manualTitle" required placeholder="Enter title">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="manualDescription" rows="3" placeholder="Enter description"></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Year</label>
+                            <input type="number" id="manualYear" placeholder="2024" min="1900" max="2030">
+                        </div>
+                        <div class="form-group">
+                            <label>Rating (0-10)</label>
+                            <input type="number" id="manualRating" placeholder="8.5" min="0" max="10" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label>Age Rating</label>
+                            <select id="manualAgeRating">
+                                <option value="G">G</option>
+                                <option value="PG">PG</option>
+                                <option value="PG-13" selected>PG-13</option>
+                                <option value="R">R</option>
+                                <option value="18+">18+</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Genres (comma separated)</label>
+                        <input type="text" id="manualGenres" placeholder="Action, Drama, Thriller">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Poster URL</label>
+                            <input type="url" id="manualPoster" placeholder="https://image.tmdb.org/...">
+                        </div>
+                        <div class="form-group">
+                            <label>Backdrop URL</label>
+                            <input type="url" id="manualBackdrop" placeholder="https://image.tmdb.org/...">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Video/Embed URL (optional)</label>
+                        <input type="url" id="manualVideoUrl" placeholder="https://www.youtube.com/embed/...">
+                    </div>
+
+                    <div class="form-row tv-only" style="display: none;">
+                        <div class="form-group">
+                            <label>Number of Seasons</label>
+                            <input type="number" id="manualSeasons" placeholder="1" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label>Runtime per Episode</label>
+                            <input type="text" id="manualRuntime" placeholder="45 min">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-plus"></i>
+                        Add Content
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Movies Tab -->
+        <div class="tab-content" id="tab-movies">
+            <div class="content-header">
+                <h2>Movies Library</h2>
+                <span class="count" id="moviesCount">0 movies</span>
+            </div>
+            <div class="content-grid" id="moviesGrid">
+                <p class="placeholder-text">No movies added yet</p>
+            </div>
+        </div>
+
+        <!-- TV Shows Tab -->
+        <div class="tab-content" id="tab-tvshows">
+            <div class="content-header">
+                <h2>TV Shows Library</h2>
+                <span class="count" id="tvShowsCount">0 shows</span>
+            </div>
+            <div class="content-grid" id="tvShowsGrid">
+                <p class="placeholder-text">No TV shows added yet</p>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div class="tab-content" id="tab-settings">
+            <div class="settings-section">
+                <h2>Settings</h2>
+
+                <div class="settings-card">
+                    <h3><i class="fas fa-key"></i> TMDB API Key</h3>
+                    <p>Enter your TMDB API key to enable search functionality. Get one free at <a
+                            href="https://www.themoviedb.org/settings/api" target="_blank">themoviedb.org</a></p>
+                    <div class="form-group">
+                        <input type="text" id="tmdbApiKey" placeholder="Enter your TMDB API key">
+                        <button class="save-btn" id="saveApiKey">Save</button>
+                    </div>
+                </div>
+
+                <div class="settings-card danger">
+                    <h3><i class="fas fa-trash"></i> Clear All Data</h3>
+                    <p>This will delete all movies and TV shows from your library. This action cannot be undone.</p>
+                    <button class="danger-btn" id="clearAllData">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Clear All Data
+                    </button>
+                </div>
+
+                <div class="settings-card">
+                    <h3><i class="fas fa-download"></i> Export Data</h3>
+                    <p>Download your library as a JSON file for backup.</p>
+                    <button class="export-btn" id="exportData">
+                        <i class="fas fa-file-download"></i>
+                        Export Library
+                    </button>
+                </div>
+
+                <div class="settings-card">
+                    <h3><i class="fas fa-upload"></i> Import Data</h3>
+                    <p>Import a previously exported library JSON file.</p>
+                    <input type="file" id="importFile" accept=".json" style="display: none;">
+                    <button class="import-btn" id="importData">
+                        <i class="fas fa-file-upload"></i>
+                        Import Library
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Edit Modal -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Content</h3>
+                <button class="close-modal" id="closeEditModal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body" id="editModalBody">
+                <!-- Edit form will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="config.js"></script>
+    <script src="api.js"></script>
+    <script src="admin.js"></script>
+</body>
+
+</html>
