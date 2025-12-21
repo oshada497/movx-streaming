@@ -86,22 +86,68 @@ async function loadDetails(id, type) {
     document.getElementById('description').textContent = details.overview || details.description || 'No description available.';
 
 
-    // Video Player Logic
+    // Video Player Logic (Plyr + HLS.js)
     const videoSection = document.getElementById('video-player-section');
-    const videoPlayer = document.getElementById('main-video-player');
     const watchBtn = document.getElementById('watchBtn');
 
     if (details.videoUrl) {
-        // Remove existing listeners by cloning or just overriding
-        // setup main player
+        // Setup Player
+        const video = document.getElementById('player');
+
+        // Destroy existing instance if any
+        if (window.player) {
+            window.player.destroy();
+        }
+
+        const source = details.videoUrl;
+
+        // HLS Support Detection
+        if (Hls.isSupported() && (source.includes('.m3u8'))) {
+            const hls = new Hls();
+            hls.loadSource(source);
+            hls.attachMedia(video);
+            window.hls = hls;
+
+            // Handle HLS Quality Levels
+            hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
+                const availableQualities = hls.levels.map((l) => l.height);
+                // Initialize Plyr
+                const defaultOptions = {
+                    controls: [
+                        'play-large', 'play', 'rewind', 'fast-forward',
+                        'progress', 'current-time', 'duration', 'mute',
+                        'volume', 'captions', 'settings', 'pip', 'airplay', 'fullscreen'
+                    ],
+                    quality: {
+                        default: availableQualities[0], // Top quality
+                        options: availableQualities,
+                        forced: true,
+                        onChange: (e) => updateQuality(e),
+                    }
+                };
+                window.player = new Plyr(video, defaultOptions);
+            });
+        } else {
+            // Default HTML5 Video (MP4/WebM)
+            video.src = source;
+            window.player = new Plyr(video, {
+                controls: [
+                    'play-large', 'play', 'rewind', 'fast-forward',
+                    'progress', 'current-time', 'duration', 'mute',
+                    'volume', 'settings', 'pip', 'airplay', 'fullscreen'
+                ]
+            });
+        }
+
         videoSection.style.display = 'block';
-        videoPlayer.src = details.videoUrl;
 
         watchBtn.textContent = 'Watch Now';
         watchBtn.onclick = (e) => {
             e.preventDefault();
             videoSection.scrollIntoView({ behavior: 'smooth' });
-            setTimeout(() => videoPlayer.play(), 500);
+            setTimeout(() => {
+                if (window.player) window.player.play();
+            }, 500);
         };
     } else {
         // Fallback to Trailer Modal logic
@@ -115,24 +161,26 @@ async function loadDetails(id, type) {
         const playerContent = document.getElementById('playerContent');
         playerModal.classList.remove('active');
         playerContent.innerHTML = '';
+        if (window.player && window.player.playing) window.player.pause();
     });
+}
+
+function updateQuality(newQuality) {
+    if (window.hls) {
+        window.hls.levels.forEach((level, levelIndex) => {
+            if (level.height === newQuality) {
+                window.hls.currentLevel = levelIndex;
+            }
+        });
+    }
 }
 
 function openPlayer(content) {
     const playerModal = document.getElementById('playerModal');
     const playerContent = document.getElementById('playerContent');
-
-    // Fetch trailer if not present in content object (TMDB content usually needs fetch)
-    // content from storage might not have 'videos'
-    // This is valid fallback logic
-
-    if (content.tmdbId && (!content.videos || !content.videos.results)) {
-        // We might need to fetch videos from TMDB if strictly relying on modal fallback
-        // For now, let's just attempt to use what we have or show error
-        // (Real app would fetch video endpoint here)
-    }
-
     let videoKey = null;
+
+    // Try finding trailer in fetched details
     if (content.videos && content.videos.results) {
         const trailer = content.videos.results.find(v => v.type === 'Trailer') || content.videos.results[0];
         if (trailer) videoKey = trailer.key;
@@ -146,6 +194,7 @@ function openPlayer(content) {
                     allowfullscreen>
             </iframe>`;
     } else {
+        // Try checking if there is a 'search' fallback or just message
         playerContent.innerHTML = `
             <div style="color: white; text-align: center; padding-top: 20%;">
                 <h2>No Trailer Available</h2>
