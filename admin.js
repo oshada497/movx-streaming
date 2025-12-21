@@ -1,5 +1,10 @@
 // ===== Admin Panel Application =====
 
+// List of admin email addresses (add your email here)
+const ADMIN_EMAILS = [
+    'oshadaperera497@gmail.com'  // Replace with your admin email(s)
+];
+
 class AdminApp {
     constructor() {
         this.currentTab = 'add';
@@ -7,7 +12,7 @@ class AdminApp {
     }
 
     async init() {
-        this.checkAuth(); // Check security first
+        await this.checkAuth(); // Check security first
         this.loadApiKey();
         this.bindEvents();
         await this.updateContentCount();
@@ -15,36 +20,38 @@ class AdminApp {
         await this.renderTVShows();
     }
 
-    checkAuth() {
-        const isAuthenticated = sessionStorage.getItem('movx_admin_auth');
+    async checkAuth() {
         const overlay = document.getElementById('loginOverlay');
-        const input = document.getElementById('adminPinInput');
-        const loginBtn = document.getElementById('adminLoginBtn');
+        const loginBtn = document.getElementById('adminGoogleLoginBtn');
         const errorMsg = document.getElementById('loginError');
+        const loginMessage = document.getElementById('loginMessage');
 
-        // Hardcoded PIN for now - User can change this in code if needed
-        const ADMIN_PIN = 'admin123';
+        // Check current session
+        const { data: { session } } = await supabase.auth.getSession();
 
-        if (isAuthenticated === 'true') {
-            overlay.style.display = 'none';
+        if (session) {
+            // User is logged in - check if they're an admin
+            const userEmail = session.user.email;
+
+            if (ADMIN_EMAILS.includes(userEmail)) {
+                // Authorized admin
+                overlay.style.display = 'none';
+            } else {
+                // Not an admin
+                loginMessage.textContent = `Signed in as ${userEmail}`;
+                loginBtn.style.display = 'none';
+                errorMsg.style.display = 'block';
+            }
         } else {
+            // Not logged in - show login button
             overlay.style.display = 'flex';
 
-            const handleLogin = () => {
-                if (input.value === ADMIN_PIN) {
-                    sessionStorage.setItem('movx_admin_auth', 'true');
-                    overlay.style.display = 'none';
-                    input.value = '';
-                } else {
-                    errorMsg.style.display = 'block';
-                    input.value = '';
-                    setTimeout(() => errorMsg.style.display = 'none', 3000);
-                }
-            };
-
-            loginBtn.addEventListener('click', handleLogin);
-            input.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') handleLogin();
+            loginBtn.addEventListener('click', async () => {
+                const redirectUrl = window.location.href;
+                await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: { redirectTo: redirectUrl }
+                });
             });
         }
     }

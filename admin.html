@@ -265,12 +265,12 @@
     <div class="login-overlay" id="loginOverlay">
         <div class="login-box">
             <h2>Admin Access</h2>
-            <p>Enter your PIN to access the admin panel.</p>
-            <div class="login-form">
-                <input type="password" id="adminPinInput" placeholder="Enter PIN" maxlength="10">
-                <button id="adminLoginBtn">Login</button>
-            </div>
-            <p class="error-msg" id="loginError" style="display: none; color: #ff4444; margin-top: 10px;">Incorrect PIN
+            <p id="loginMessage">Sign in with your admin account to continue.</p>
+            <button id="adminGoogleLoginBtn" class="google-login-btn">
+                <i class="fab fa-google"></i> Sign in with Google
+            </button>
+            <p class="error-msg" id="loginError" style="display: none; color: #ff4444; margin-top: 15px;">
+                Access Denied. You are not an admin.
             </p>
             <a href="index.html" class="back-link">Back to Home</a>
         </div>
@@ -308,30 +308,26 @@
             margin-bottom: 20px;
         }
 
-        .login-form {
+        .google-login-btn {
             display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .login-form input {
-            flex: 1;
-            padding: 12px;
-            border-radius: 6px;
-            border: 1px solid #333;
-            background: #222;
-            color: #fff;
-            outline: none;
-        }
-
-        .login-form button {
-            padding: 12px 24px;
-            border-radius: 6px;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            padding: 14px;
+            border-radius: 8px;
             border: none;
-            background: #ffd700;
-            color: #000;
-            font-weight: bold;
+            background: #fff;
+            color: #333;
+            font-weight: 600;
+            font-size: 1rem;
             cursor: pointer;
+            margin-bottom: 20px;
+            transition: background 0.2s;
+        }
+
+        .google-login-btn:hover {
+            background: #f0f0f0;
         }
 
         .back-link {
