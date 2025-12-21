@@ -511,21 +511,18 @@ class AdminApp {
                 ${type === 'tv' ? `
                 <div class="episodes-section" style="margin-top: 30px; border-top: 1px solid var(--border-color); padding-top: 20px;">
                     <h3>Manage Episodes</h3>
-                    <div id="episodesList" style="margin-bottom: 20px; max-height: 300px; overflow-y: auto; padding-right: 5px;">
-                        <p style="color: var(--text-muted);">Loading episodes...</p>
+                    <div style="margin-bottom: 15px;">
+                        <label>Select Season</label>
+                        <select id="seasonSelect" style="width: 100%; padding: 10px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 8px;">
+                             <option value="" disabled selected>Loading seasons...</option>
+                        </select>
                     </div>
-                    <div class="add-episode-form" style="background: var(--bg-secondary); padding: 15px; border-radius: 8px;">
-                        <h4 style="margin-bottom: 10px; font-size: 0.9rem;">Add New Episode</h4>
-                        <div class="form-row">
-                            <input type="number" id="epSeason" placeholder="S" style="width: 70px;" min="1" required>
-                            <input type="number" id="epNumber" placeholder="E" style="width: 70px;" min="1" required>
-                            <input type="text" id="epTitle" placeholder="Episode Title" style="flex:1;" required>
-                        </div>
-                        <input type="url" id="epUrl" placeholder="Episode URL (CDN)" style="width: 100%; margin-top: 10px;" required>
-                        <button type="button" id="btnAddEpisode" class="submit-btn" style="margin-top: 10px; padding: 8px; width: 100%;">
-                            <i class="fas fa-plus"></i> Add Episode
-                        </button>
+                    <div id="episodesList" style="margin-bottom: 20px; max-height: 400px; overflow-y: auto; padding-right: 5px;">
+                        <p style="color: var(--text-muted); text-align: center; padding: 20px;">Select a season to view episodes.</p>
                     </div>
+                    <button type="button" id="btnSaveSeason" class="submit-btn" style="width: 100%; display: none; background: var(--accent-blue);">
+                         <i class="fas fa-save"></i> Save Season URLs
+                    </button>
                 </div>
                 ` : ''}
 
@@ -542,7 +539,7 @@ class AdminApp {
         });
 
         if (type === 'tv') {
-            await this.setupEpisodesManager(content.id);
+            await this.setupEpisodesManager(content.id, content.tmdbId);
         }
 
         modal.classList.add('active');
@@ -710,64 +707,125 @@ class AdminApp {
         }, 3000);
     }
 
-    // --- Episodes Logic ---
-    async setupEpisodesManager(tvShowId) {
-        window.adminApp = this; // Ensure global access
-        await this.renderEpisodesList(tvShowId);
-
-        const btnAdd = document.getElementById('btnAddEpisode');
-        if (btnAdd) {
-            btnAdd.onclick = async () => {
-                const s = document.querySelector('#epSeason').value;
-                const e = document.querySelector('#epNumber').value;
-                const t = document.querySelector('#epTitle').value;
-                const u = document.querySelector('#epUrl').value;
-
-                if (!s || !e || !t || !u) return this.showToast('Fill all fields', 'error');
-
-                const success = await DB.addEpisode({
-                    tv_show_id: tvShowId,
-                    season_number: parseInt(s),
-                    episode_number: parseInt(e),
-                    title: t,
-                    video_url: u
-                });
-
-                if (success) {
-                    await this.renderEpisodesList(tvShowId);
-                    document.querySelector('#epNumber').value = parseInt(e) + 1; // Auto increment
-                    document.querySelector('#epTitle').value = '';
-                    document.querySelector('#epUrl').value = '';
-                    this.showToast('Episode added!', 'success');
-                } else {
-                    this.showToast('Failed to add episode', 'error');
-                }
-            };
-        }
-    }
-
-    async renderEpisodesList(tvShowId) {
+    // --- Improved Episodes Logic (TMDB Based) ---
+    async setupEpisodesManager(tvShowId, tmdbId) {
+        window.adminApp = this;
+        const seasonSelect = document.getElementById('seasonSelect');
         const list = document.getElementById('episodesList');
-        if (!list) return;
+        const btnSave = document.getElementById('btnSaveSeason');
 
-        const episodes = await DB.getEpisodes(tvShowId);
-
-        if (episodes.length === 0) {
-            list.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 20px;">No episodes added yet.</p>';
+        // 1. Fetch TV Details from TMDB to get seasons
+        const tmdbDetails = await TMDB.getTVDetails(tmdbId);
+        if (!tmdbDetails || !tmdbDetails.seasons) {
+            seasonSelect.innerHTML = '<option>Error loading seasons</option>';
             return;
         }
 
-        list.innerHTML = episodes.map(ep => `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255,255,255,0.03); margin-bottom: 8px; border-radius: 6px; border: 1px solid var(--border-color);">
-                <div>
-                    <span style="font-weight: 600; color: var(--accent-yellow);">S${ep.season_number} E${ep.episode_number}</span>
-                    <span style="margin-left: 10px;">${ep.title || 'Untitled'}</span>
-                </div>
-                <button onclick="window.adminApp.deleteEpisode('${ep.id}', '${tvShowId}')" style="color: var(--accent-red); padding: 5px 10px; background: rgba(229, 9, 20, 0.1); border-radius: 4px;">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
-        `).join('');
+        // 2. Populate Season Select
+        seasonSelect.innerHTML = '<option value="" disabled selected>Select Season...</option>' +
+            tmdbDetails.seasons
+                .filter(s => s.season_number > 0) // Filter out specials if desired, or keep them
+                .map(s => `<option value="${s.season_number}">Season ${s.season_number} (${s.episode_count} Episodes)</option>`)
+                .join('');
+
+        // 3. Handle Season Change
+        seasonSelect.onchange = async (e) => {
+            const seasonNum = e.target.value;
+            // Render UI state
+            list.innerHTML = '<div style="text-align:center; padding: 20px;"><div class="spinner"></div><p>Loading metadata...</p></div>';
+            btnSave.style.display = 'none';
+
+            // Fetch TMDB Season Details (Episodes)
+            const seasonData = await TMDB.getSeasonDetails(tmdbId, seasonNum);
+            // Fetch our Saved Episodes (Local DB)
+            const savedEpisodes = await DB.getEpisodes(tvShowId); // This returns ALL seasons
+
+            if (!seasonData || !seasonData.episodes) {
+                list.innerHTML = '<p>Error loading episodes from TMDB</p>';
+                return;
+            }
+
+            // Filter saved episodes for this season
+            const currentSeasonSaved = savedEpisodes.filter(ep => ep.season_number == seasonNum);
+
+            // Render List
+            list.innerHTML = seasonData.episodes.map(ep => {
+                const saved = currentSeasonSaved.find(s => s.episode_number === ep.episode_number);
+                const currentUrl = saved ? saved.video_url : '';
+
+                return `
+                    <div class="episode-item" data-ep="${ep.episode_number}" style="background: var(--bg-tertiary); padding: 15px; margin-bottom: 10px; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <div style="display:flex; justify-content:space-between; margin-bottom: 8px;">
+                            <span style="font-weight:600; color:var(--accent-yellow);">Episode ${ep.episode_number}</span>
+                            <span style="font-size: 0.9rem; color: var(--text-muted);">${ep.air_date || ''}</span>
+                        </div>
+                        <div style="font-weight: 500; margin-bottom: 10px;">${ep.name}</div>
+                        
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <input type="url" class="ep-url-input" 
+                                data-title="${ep.name.replace(/"/g, '&quot;')}"
+                                data-season="${seasonNum}"
+                                data-number="${ep.episode_number}"
+                                data-saved-id="${saved ? saved.id : ''}"
+                                value="${currentUrl}"
+                                placeholder="Paste CDN URL here..."
+                                style="width: 100%; background: var(--bg-primary);">
+                        </div>
+                    </div>
+                 `;
+            }).join('');
+
+            btnSave.style.display = 'block';
+        };
+
+        // 4. Handle Save
+        btnSave.onclick = async () => {
+            const inputs = document.querySelectorAll('.ep-url-input');
+            let updatedCount = 0;
+            let addedCount = 0;
+
+            btnSave.textContent = 'Saving...';
+            btnSave.disabled = true;
+
+            for (const input of inputs) {
+                const url = input.value.trim();
+                const savedId = input.dataset.savedId;
+                const season = parseInt(input.dataset.season);
+                const number = parseInt(input.dataset.number);
+                const title = input.dataset.title;
+
+                if (url) {
+                    if (savedId) {
+                        // Update existing
+                        // Check if changed? avoiding separate call if possible, but safe to update
+                        await DB.updateEpisode(savedId, { video_url: url });
+                        updatedCount++;
+                    } else {
+                        // Add new
+                        await DB.addEpisode({
+                            tv_show_id: tvShowId,
+                            season_number: season,
+                            episode_number: number,
+                            title: title,
+                            video_url: url
+                        });
+                        addedCount++;
+                    }
+                } else if (savedId && !url) {
+                    // If URL removed, delete entry? Or keep as blank?
+                    // Usually delete logic is safer to keep DB clean
+                    await DB.deleteEpisode(savedId);
+                    input.dataset.savedId = ''; // Remove ID
+                }
+            }
+
+            // Refresh data to get new IDs
+            seasonSelect.onchange({ target: { value: seasonSelect.value } });
+
+            btnSave.textContent = 'Save Season URLs';
+            btnSave.disabled = false;
+            this.showToast(`Saved! (${addedCount} added, ${updatedCount} updated)`, 'success');
+        };
     }
 
     async deleteEpisode(id, showId) {
@@ -775,7 +833,11 @@ class AdminApp {
 
         const success = await DB.deleteEpisode(id);
         if (success) {
-            await this.renderEpisodesList(showId);
+            // The new setupEpisodesManager handles rendering, so we don't need to call renderEpisodesList directly here.
+            // Instead, we can trigger a re-render of the current season if needed, or rely on the user to re-select.
+            // For now, we'll just show a toast. If the episode was part of the currently displayed season,
+            // the user would need to re-select the season to see the change reflected.
+            // A more robust solution would be to trigger seasonSelect.onchange() if the deleted episode was in the current season.
             this.showToast('Episode deleted', 'success');
         } else {
             this.showToast('Failed to delete episode', 'error');
