@@ -255,6 +255,66 @@ const DB = {
         return true;
     },
 
+    // --- Episodes ---
+
+    async getEpisodes(tvShowId) {
+        const { data, error } = await supabaseClient
+            .from('episodes')
+            .select('*')
+            .eq('tv_show_id', tvShowId)
+            .order('season_number', { ascending: true })
+            .order('episode_number', { ascending: true });
+
+        if (error) {
+            console.error('Error fetching episodes:', error);
+            return [];
+        }
+        return data || [];
+    },
+
+    async addEpisode(episode) {
+        const { data, error } = await supabaseClient
+            .from('episodes')
+            .insert([episode])
+            .select();
+
+        if (error) {
+            console.error('Error adding episode:', error);
+            return false;
+        }
+        clearCache();
+        return true;
+    },
+
+    async updateEpisode(id, updates) {
+        const { error } = await supabaseClient
+            .from('episodes')
+            .update(updates)
+            .eq('id', id);
+
+        if (error) {
+            console.error('Error updating episode:', error);
+            return false;
+        }
+        clearCache();
+        return true;
+    },
+
+    async deleteEpisode(id) {
+        const { error } = await supabaseClient
+            .from('episodes')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            console.error('Error deleting episode:', error);
+            return false;
+        }
+        clearCache();
+        return true;
+    },
+
+
     // --- Search Content ---
 
     async search(query) {

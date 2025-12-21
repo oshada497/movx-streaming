@@ -253,12 +253,15 @@ class AdminApp {
     openAddWithUrlModal(content, type) {
         const modal = document.getElementById('editModal');
         const modalBody = document.getElementById('editModalBody');
+        const isTv = type === 'tv';
 
         modalBody.innerHTML = `
             <div style="margin-bottom: 20px;">
-                <h3 style="margin-bottom: 10px;">Add ${type === 'movie' ? 'Movie' : 'TV Show'}</h3>
+                <h3 style="margin-bottom: 10px;">Add ${isTv ? 'TV Show' : 'Movie'}</h3>
                 <p style="color: var(--text-muted); font-size: 0.9rem;">
-                    Enter the CDN Video URL to complete adding this content.
+                    ${isTv
+                ? 'Click "Add to Library" to save the show. You can add episodes and seasons in the Edit menu afterwards.'
+                : 'Enter the CDN Video URL to complete adding this content.'}
                 </p>
             </div>
             <form id="addUrlForm" class="manual-form">
@@ -266,16 +269,16 @@ class AdminApp {
                     <label>Title</label>
                     <input type="text" value="${content.title}" readonly style="opacity: 0.7; cursor: not-allowed;">
                 </div>
-                 <div class="form-group">
+                 <div class="form-group" style="${isTv ? 'display:none;' : ''}">
                     <label>Video / Stream URL (CDN)</label>
-                    <input type="url" id="addVideoUrl" required placeholder="https://example.com/video.mp4" autofocus>
+                    <input type="url" id="addVideoUrl" ${isTv ? '' : 'required'} placeholder="https://example.com/video.mp4" autofocus>
                 </div>
                  <div class="form-group">
                     <label>Platform</label>
                      <select id="addPlatform">
                         ${CONFIG.PLATFORMS.map(p =>
-            `<option value="${p.name}" ${p.name === 'MOVX' ? 'selected' : ''}>${p.name}</option>`
-        ).join('')}
+                    `<option value="${p.name}" ${p.name === 'FBFLIX' ? 'selected' : ''}>${p.name}</option>`
+                ).join('')}
                     </select>
                 </div>
                 <button type="submit" class="submit-btn" style="width: 100%; margin-top: 20px;">
@@ -288,7 +291,8 @@ class AdminApp {
         // Handle submit
         const handleSubmit = async (e) => {
             e.preventDefault();
-            content.videoUrl = document.getElementById('addVideoUrl').value.trim();
+            const videoInput = document.getElementById('addVideoUrl');
+            content.videoUrl = videoInput ? videoInput.value.trim() : '';
             content.platform = document.getElementById('addPlatform').value;
 
             if (await this.finalAddContent(content, type)) {
@@ -299,8 +303,8 @@ class AdminApp {
         form.addEventListener('submit', handleSubmit);
         modal.classList.add('active');
 
-        // Focus video url input
-        setTimeout(() => document.getElementById('addVideoUrl').focus(), 100);
+        // Focus video url input only for movies
+        if (!isTv) setTimeout(() => document.getElementById('addVideoUrl').focus(), 100);
     }
 
     async finalAddContent(content, type) {
@@ -491,17 +495,43 @@ class AdminApp {
                         <input type="number" id="editYear" value="${content.year || ''}">
                     </div>
                 </div>
+                
+                ${type === 'movie' ? `
                 <div class="form-group">
                     <label>Video URL</label>
                     <input type="url" id="editVideoUrl" value="${content.videoUrl || ''}" placeholder="https://...">
                 </div>
+                ` : ''}
+
                 <div class="form-group">
                     <label>Poster URL</label>
                     <input type="url" id="editPoster" value="${content.poster || ''}">
                 </div>
-                <button type="submit" class="submit-btn">
+
+                ${type === 'tv' ? `
+                <div class="episodes-section" style="margin-top: 30px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                    <h3>Manage Episodes</h3>
+                    <div id="episodesList" style="margin-bottom: 20px; max-height: 300px; overflow-y: auto; padding-right: 5px;">
+                        <p style="color: var(--text-muted);">Loading episodes...</p>
+                    </div>
+                    <div class="add-episode-form" style="background: var(--bg-secondary); padding: 15px; border-radius: 8px;">
+                        <h4 style="margin-bottom: 10px; font-size: 0.9rem;">Add New Episode</h4>
+                        <div class="form-row">
+                            <input type="number" id="epSeason" placeholder="S" style="width: 70px;" min="1" required>
+                            <input type="number" id="epNumber" placeholder="E" style="width: 70px;" min="1" required>
+                            <input type="text" id="epTitle" placeholder="Episode Title" style="flex:1;" required>
+                        </div>
+                        <input type="url" id="epUrl" placeholder="Episode URL (CDN)" style="width: 100%; margin-top: 10px;" required>
+                        <button type="button" id="btnAddEpisode" class="submit-btn" style="margin-top: 10px; padding: 8px; width: 100%;">
+                            <i class="fas fa-plus"></i> Add Episode
+                        </button>
+                    </div>
+                </div>
+                ` : ''}
+
+                <button type="submit" class="submit-btn" style="margin-top: 20px;">
                     <i class="fas fa-save"></i>
-                    Save Changes
+                    Save Content Metadata
                 </button>
             </form>
         `;
@@ -510,6 +540,10 @@ class AdminApp {
             e.preventDefault();
             this.saveEdit(id, type);
         });
+
+        if (type === 'tv') {
+            await this.setupEpisodesManager(content.id);
+        }
 
         modal.classList.add('active');
     }
@@ -674,6 +708,78 @@ class AdminApp {
             toast.style.transform = 'translateX(100px)';
             setTimeout(() => toast.remove(), 300);
         }, 3000);
+    }
+
+    // --- Episodes Logic ---
+    async setupEpisodesManager(tvShowId) {
+        window.adminApp = this; // Ensure global access
+        await this.renderEpisodesList(tvShowId);
+
+        const btnAdd = document.getElementById('btnAddEpisode');
+        if (btnAdd) {
+            btnAdd.onclick = async () => {
+                const s = document.querySelector('#epSeason').value;
+                const e = document.querySelector('#epNumber').value;
+                const t = document.querySelector('#epTitle').value;
+                const u = document.querySelector('#epUrl').value;
+
+                if (!s || !e || !t || !u) return this.showToast('Fill all fields', 'error');
+
+                const success = await DB.addEpisode({
+                    tv_show_id: tvShowId,
+                    season_number: parseInt(s),
+                    episode_number: parseInt(e),
+                    title: t,
+                    video_url: u
+                });
+
+                if (success) {
+                    await this.renderEpisodesList(tvShowId);
+                    document.querySelector('#epNumber').value = parseInt(e) + 1; // Auto increment
+                    document.querySelector('#epTitle').value = '';
+                    document.querySelector('#epUrl').value = '';
+                    this.showToast('Episode added!', 'success');
+                } else {
+                    this.showToast('Failed to add episode', 'error');
+                }
+            };
+        }
+    }
+
+    async renderEpisodesList(tvShowId) {
+        const list = document.getElementById('episodesList');
+        if (!list) return;
+
+        const episodes = await DB.getEpisodes(tvShowId);
+
+        if (episodes.length === 0) {
+            list.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 20px;">No episodes added yet.</p>';
+            return;
+        }
+
+        list.innerHTML = episodes.map(ep => `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255,255,255,0.03); margin-bottom: 8px; border-radius: 6px; border: 1px solid var(--border-color);">
+                <div>
+                    <span style="font-weight: 600; color: var(--accent-yellow);">S${ep.season_number} E${ep.episode_number}</span>
+                    <span style="margin-left: 10px;">${ep.title || 'Untitled'}</span>
+                </div>
+                <button onclick="window.adminApp.deleteEpisode('${ep.id}', '${tvShowId}')" style="color: var(--accent-red); padding: 5px 10px; background: rgba(229, 9, 20, 0.1); border-radius: 4px;">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `).join('');
+    }
+
+    async deleteEpisode(id, showId) {
+        if (!confirm('Are you sure you want to delete this episode?')) return;
+
+        const success = await DB.deleteEpisode(id);
+        if (success) {
+            await this.renderEpisodesList(showId);
+            this.showToast('Episode deleted', 'success');
+        } else {
+            this.showToast('Failed to delete episode', 'error');
+        }
     }
 }
 

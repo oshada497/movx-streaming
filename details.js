@@ -151,77 +151,59 @@ async function loadDetails(id, type) {
     console.log('Video URL (Camel):', details.videoUrl);
     console.log('Video URL (Lower):', details.videourl);
 
-    // Video Player Logic (Plyr + HLS.js)
+    // Video Player Logic
     const videoSection = document.getElementById('video-player-section');
     const watchBtn = document.getElementById('watchBtn');
 
-    // Robust check for Video URL (handles videoUrl or videourl)
-    const videoSource = details.videoUrl || details.videourl || '';
-    console.log('Detected Video Source:', videoSource);
+    // Global function to init player (exposed for episodes)
+    window.initializePlayer = function (source, posterUrl) {
+        if (!source) return;
 
-    if (videoSource) {
-        console.log('Initializing Player...');
-        // Setup Player
         const video = document.getElementById('player');
-        const finalPosterUrl = backdropUrl || posterUrl || '';
 
-        // Set video poster attribute
-        video.poster = finalPosterUrl;
+        // Update poster
+        video.poster = posterUrl || '';
 
-        // Force poster via CSS to ensure it displays (fixes desktop issues)
-        if (finalPosterUrl) {
-            const style = document.createElement('style');
-            style.innerHTML = `
-                .plyr__poster {
-                    background-image: url("${finalPosterUrl}") !important;
-                    background-size: cover !important;
-                    background-position: center !important;
-                }
-            `;
-            document.head.appendChild(style);
-        }
-
-        // Destroy existing Plyr instance if any
+        // Destroy existing instance
         if (window.plyrPlayer && typeof window.plyrPlayer.destroy === 'function') {
             window.plyrPlayer.destroy();
         }
+        if (window.hls) {
+            window.hls.destroy();
+            window.hls = null;
+        }
 
-        const source = videoSource;
-
-        // HLS Support Detection (check if URL contains .m3u8 anywhere)
+        // HLS Config
         if (window.Hls && Hls.isSupported() && source.includes('.m3u8')) {
             const hls = new Hls();
             hls.loadSource(source);
             hls.attachMedia(video);
             window.hls = hls;
 
-            // Handle HLS Quality Levels
             hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
-                // Get available qualities (heights) and deduplicate
                 const availableQualities = hls.levels.map((l) => l.height);
-                const uniqueQualities = [...new Set(availableQualities)].sort((a, b) => b - a); // Descending order
+                const uniqueQualities = [...new Set(availableQualities)].sort((a, b) => b - a);
 
-                // Initialize Plyr
                 const defaultOptions = {
                     controls: [
                         'play-large', 'play', 'rewind', 'fast-forward',
                         'progress', 'current-time', 'duration', 'mute',
                         'volume', 'captions', 'settings', 'pip', 'airplay', 'fullscreen'
                     ],
-                    settings: ['quality', 'speed', 'loop'], // Explicitly enable settings
+                    settings: ['quality', 'speed', 'loop'],
                     quality: {
-                        default: uniqueQualities[0], // Top quality
-                        options: uniqueQualities, // All unique quality options
+                        default: uniqueQualities[0],
+                        options: uniqueQualities,
                         forced: true,
                         onChange: (e) => updateQuality(e),
                     },
-                    iconUrl: 'https://cdn.plyr.io/3.7.8/plyr.svg', // Ensure icons load
-                    poster: finalPosterUrl // Explicitly pass poster URL
+                    iconUrl: 'https://cdn.plyr.io/3.7.8/plyr.svg',
+                    poster: posterUrl
                 };
                 window.plyrPlayer = new Plyr(video, defaultOptions);
             });
         } else {
-            // Default HTML5 Video (MP4/WebM) - Works for your FB CDN links
+            // Standard MP4
             video.src = source;
             window.plyrPlayer = new Plyr(video, {
                 controls: [
@@ -229,24 +211,76 @@ async function loadDetails(id, type) {
                     'progress', 'current-time', 'duration', 'mute',
                     'volume', 'settings', 'pip', 'airplay', 'fullscreen'
                 ],
-                poster: finalPosterUrl // Explicitly pass poster URL
+                poster: posterUrl
             });
         }
 
         videoSection.style.display = 'block';
+    };
 
+    // Initialize Main Video (if exists)
+    const videoSource = details.videoUrl || details.videourl || '';
+    const finalPosterUrl = backdropUrl || posterUrl || '';
+
+    // Force CSS Poster
+    if (finalPosterUrl) {
+        const style = document.createElement('style');
+        style.innerHTML = `.plyr__poster { background-image: url("${finalPosterUrl}") !important; background-size: cover !important; background-position: center !important; }`;
+        document.head.appendChild(style);
+    }
+
+    if (videoSource) {
+        window.initializePlayer(videoSource, finalPosterUrl);
         watchBtn.textContent = 'Watch Now';
         watchBtn.onclick = (e) => {
             e.preventDefault();
             videoSection.scrollIntoView({ behavior: 'smooth' });
-            setTimeout(() => {
-                if (window.plyrPlayer) window.plyrPlayer.play();
-            }, 500);
+            setTimeout(() => { if (window.plyrPlayer) window.plyrPlayer.play(); }, 500);
         };
     } else {
-        // Fallback to Trailer Modal logic
         videoSection.style.display = 'none';
-        watchBtn.onclick = () => openPlayer(details);
+        watchBtn.onclick = () => openPlayer(details); // Trailer fallback
+    }
+
+    // --- Episodes Logic ---
+    if (type === 'tv') {
+        const episodes = await DB.getEpisodes(storedItem ? storedItem.id : null);
+        if (episodes && episodes.length > 0) {
+            const epSection = document.getElementById('episodes-section');
+            const epContainer = document.getElementById('episodes-list-container');
+
+            epSection.style.display = 'block';
+            epContainer.innerHTML = episodes.map(ep => `
+                <div class="episode-card" onclick="playEpisode('${ep.video_url}', this)">
+                    <span class="episode-number">S${ep.season_number} • E${ep.episode_number}</span>
+                    <span class="episode-title">${ep.title || 'Untitled'}</span>
+                </div>
+            `).join('');
+
+            // Define play handler
+            window.playEpisode = (url, card) => {
+                // Formatting active state
+                document.querySelectorAll('.episode-card').forEach(c => c.classList.remove('active'));
+                if (card) card.classList.add('active');
+
+                // Play
+                window.initializePlayer(url, finalPosterUrl);
+
+                // Scroll
+                videoSection.scrollIntoView({ behavior: 'smooth' });
+                setTimeout(() => { if (window.plyrPlayer) window.plyrPlayer.play(); }, 500);
+            };
+
+            // If no main source, play first episode on 'Watch Now'
+            if (!videoSource) {
+                watchBtn.textContent = 'Watch S1 E1';
+                watchBtn.onclick = (e) => {
+                    e.preventDefault();
+                    const firstCard = epContainer.children[0];
+                    window.playEpisode(episodes[0].video_url, firstCard);
+                };
+            }
+        }
     }
 
     // Close Player Logic (Modal)
