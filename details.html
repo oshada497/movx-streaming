@@ -9,8 +9,29 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
+    <!-- Plyr CSS -->
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+    <style>
+        .plyr {
+            --plyr-color-main: #e50914;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .video-section {
+            width: 100%;
+            padding: 40px 0;
+            background: #0a0a0a;
+            display: flex;
+            justify-content: center;
+        }
+
+        .video-wrapper {
+            width: 90%;
+            max-width: 1200px;
+        }
+    </style>
     <style>
         .details-page {
             position: relative;
@@ -313,12 +334,10 @@
 
     <!-- Video Player Section -->
     <div id="video-player-section" class="video-section" style="display: none;">
-        <div class="container" style="max-width: 1400px; margin: 0 auto;">
-            <div class="video-wrapper">
-                <video id="main-video-player" controls preload="metadata" width="100%">
-                    Your browser does not support the video tag.
-                </video>
-            </div>
+        <div class="video-wrapper">
+            <video id="player" playsinline controls data-poster="">
+                <!-- Source will be added via JS -->
+            </video>
         </div>
     </div>
 
@@ -331,6 +350,8 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <script src="config.js"></script>
     <script src="db.js"></script>
     <script src="api.js"></script>

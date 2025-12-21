@@ -111,7 +111,7 @@ async function loadDetails(id, type) {
         const source = videoSource;
 
         // HLS Support Detection (check if URL contains .m3u8 anywhere)
-        if (Hls.isSupported() && source.includes('.m3u8')) {
+        if (window.Hls && Hls.isSupported() && source.includes('.m3u8')) {
             const hls = new Hls();
             hls.loadSource(source);
             hls.attachMedia(video);
