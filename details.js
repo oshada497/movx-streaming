@@ -14,17 +14,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadDetails(id, type) {
     let details;
 
-    // Check Storage for content first (to get custom videoUrl)
+    // Check Supabase for content first (to get custom videoUrl)
     let storedItem = null;
-    if (type === 'movie') {
-        storedItem = Storage.getMovies().find(m => m.tmdbId == id);
-    } else {
-        storedItem = Storage.getTVShows().find(s => s.tmdbId == id);
+    try {
+        if (type === 'movie') {
+            storedItem = await DB.getMovieByTmdbId(id);
+        } else {
+            storedItem = await DB.getTVShowByTmdbId(id);
+        }
+    } catch (e) {
+        console.error('Error fetching details from DB:', e);
     }
 
     if (storedItem) {
         details = storedItem;
-        console.log('Loaded from Storage:', details);
+        console.log('Loaded from Supabase:', details);
     } else {
         // Fallback to TMDB API
         if (type === 'movie') {

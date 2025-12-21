@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const type = urlParams.get('type') || 'movie';
     const pageTitle = document.getElementById('pageTitle');
@@ -9,22 +9,30 @@ document.addEventListener('DOMContentLoaded', () => {
     let title = '';
 
     // Load content based on type
-    switch (type) {
-        case 'movie':
-            title = 'All Movies';
-            items = Storage.getMovies().map(m => ({ ...m, mediaType: 'movie' }));
-            break;
-        case 'tv':
-            title = 'All TV Shows';
-            items = Storage.getTVShows().map(s => ({ ...s, mediaType: 'tv' }));
-            break;
-        case 'trending':
-            title = 'Trending Now';
-            items = Storage.getAllContent().slice(0, 20); // Top 20 trending
-            break;
-        default:
-            title = 'Browse';
-            items = Storage.getAllContent();
+    try {
+        switch (type) {
+            case 'movie':
+                title = 'All Movies';
+                const movies = await DB.getMovies();
+                items = movies.map(m => ({ ...m, mediaType: 'movie' }));
+                break;
+            case 'tv':
+                title = 'All TV Shows';
+                const shows = await DB.getTVShows();
+                items = shows.map(s => ({ ...s, mediaType: 'tv' }));
+                break;
+            case 'trending':
+                title = 'Trending Now';
+                const allTrending = await DB.getAllContent();
+                items = allTrending.slice(0, 20); // Top 20 trending
+                break;
+            default:
+                title = 'Browse';
+                items = await DB.getAllContent();
+        }
+    } catch (e) {
+        console.error('Error loading content:', e);
+        items = [];
     }
 
     // Set Active Nav Link

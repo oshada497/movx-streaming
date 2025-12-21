@@ -1,5 +1,9 @@
 // ===== Configuration =====
 const CONFIG = {
+    // Supabase Configuration
+    SUPABASE_URL: 'https://hlfvrhmvulsttzdwyzus.supabase.co',
+    SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhsZnZyaG12dWxzdHR6ZHd5enVzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwNjAyMzksImV4cCI6MjA4MTYzNjIzOX0.AZmSk-JMht2MC3I1giMJpI3JGVsDRgAPSkqihaDZ6xo',
+
     // TMDB API Configuration
     // Get your API key from https://www.themoviedb.org/settings/api
     TMDB_API_KEY: 'da06564497bf45a3315c8154022e4552', // TMDB API key

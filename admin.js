@@ -6,12 +6,12 @@ class AdminApp {
         this.init();
     }
 
-    init() {
+    async init() {
         this.loadApiKey();
         this.bindEvents();
-        this.updateContentCount();
-        this.renderMovies();
-        this.renderTVShows();
+        await this.updateContentCount();
+        await this.renderMovies();
+        await this.renderTVShows();
     }
 
     loadApiKey() {
@@ -79,6 +79,9 @@ class AdminApp {
         });
 
         this.currentTab = tabId;
+        // Refresh content if switching to list tabs
+        if (tabId === 'movies') this.renderMovies();
+        if (tabId === 'tvshows') this.renderTVShows();
     }
 
     async searchTMDB() {
@@ -104,10 +107,17 @@ class AdminApp {
                 return;
             }
 
+            // Fetch existing to check for added status
+            const [movies, shows] = await Promise.all([DB.getMovies(), DB.getTVShows()]);
+            const existingIds = new Set([
+                ...movies.map(m => m.tmdbId),
+                ...shows.map(s => s.tmdbId)
+            ]);
+
             grid.innerHTML = results
                 .filter(item => item.media_type === 'movie' || item.media_type === 'tv')
                 .slice(0, 12)
-                .map(item => this.createSearchResultCard(item))
+                .map(item => this.createSearchResultCard(item, existingIds))
                 .join('');
 
             // Bind add buttons
@@ -124,7 +134,7 @@ class AdminApp {
         }
     }
 
-    createSearchResultCard(item) {
+    createSearchResultCard(item, existingIds) {
         const title = item.title || item.name;
         const year = (item.release_date || item.first_air_date || '').substring(0, 4);
         const type = item.media_type === 'tv' ? 'TV Show' : 'Movie';
@@ -132,9 +142,7 @@ class AdminApp {
         const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
 
         // Check if already added
-        const isAdded = item.media_type === 'movie'
-            ? Storage.getMovies().some(m => m.tmdbId === item.id)
-            : Storage.getTVShows().some(s => s.tmdbId === item.id);
+        const isAdded = existingIds.has(item.id);
 
         return `
             <div class="search-result-card">
@@ -188,7 +196,7 @@ class AdminApp {
             // Open modal to add Video URL
             this.openAddWithUrlModal(content, type);
 
-            // Reset button visual state (logic continues in modal)
+            // Reset button visual state
             button.innerHTML = '<i class="fas fa-plus"></i> Add';
             button.disabled = false;
 
@@ -236,41 +244,44 @@ class AdminApp {
 
         const form = document.getElementById('addUrlForm');
         // Handle submit
-        const handleSubmit = (e) => {
+        const handleSubmit = async (e) => {
             e.preventDefault();
             content.videoUrl = document.getElementById('addVideoUrl').value.trim();
             content.platform = document.getElementById('addPlatform').value;
 
-            if (this.finalAddContent(content, type)) {
+            if (await this.finalAddContent(content, type)) {
                 modal.classList.remove('active');
             }
         };
 
         form.addEventListener('submit', handleSubmit);
         modal.classList.add('active');
+
+        // Focus video url input
+        setTimeout(() => document.getElementById('addVideoUrl').focus(), 100);
     }
 
-    finalAddContent(content, type) {
+    async finalAddContent(content, type) {
         let success;
         if (type === 'movie') {
-            success = Storage.addMovie(content);
-            this.renderMovies();
+            success = await DB.addMovie(content);
+            if (success) await this.renderMovies();
         } else {
-            success = Storage.addTVShow(content);
-            this.renderTVShows();
+            success = await DB.addTVShow(content);
+            if (success) await this.renderTVShows();
         }
 
         if (success) {
             this.showToast(`${content.title} added successfully!`, 'success');
-            this.updateContentCount();
+            await this.updateContentCount();
             return true;
         } else {
-            this.showToast('Content already exists in library.', 'error');
+            this.showToast('Content already exists or error.', 'error');
             return false;
         }
     }
 
-    addManualContent() {
+    async addManualContent() {
         const type = document.getElementById('contentType').value;
         const title = document.getElementById('manualTitle').value.trim();
 
@@ -300,24 +311,24 @@ class AdminApp {
 
         let success;
         if (type === 'movie') {
-            success = Storage.addMovie(content);
-            this.renderMovies();
+            success = await DB.addMovie(content);
+            if (success) await this.renderMovies();
         } else {
-            success = Storage.addTVShow(content);
-            this.renderTVShows();
+            success = await DB.addTVShow(content);
+            if (success) await this.renderTVShows();
         }
 
         if (success) {
             this.showToast(`${title} added successfully!`, 'success');
             document.getElementById('manualAddForm').reset();
-            this.updateContentCount();
+            await this.updateContentCount();
         } else {
             this.showToast('Content already exists', 'error');
         }
     }
 
-    renderMovies() {
-        const movies = Storage.getMovies();
+    async renderMovies() {
+        const movies = await DB.getMovies();
         const grid = document.getElementById('moviesGrid');
         const count = document.getElementById('moviesCount');
 
@@ -332,8 +343,8 @@ class AdminApp {
         this.bindContentActions('movie');
     }
 
-    renderTVShows() {
-        const shows = Storage.getTVShows();
+    async renderTVShows() {
+        const shows = await DB.getTVShows();
         const grid = document.getElementById('tvShowsGrid');
         const count = document.getElementById('tvShowsCount');
 
@@ -350,8 +361,8 @@ class AdminApp {
 
     createContentItem(item, type) {
         const poster = item.poster || 'https://via.placeholder.com/200x300/1a1a1a/666666?text=No+Poster';
-        const rating = item.rating ? item.rating.toFixed(1) : 'N/A';
-
+        const rating = item.rating ? Number(item.rating).toFixed(1) : 'N/A';
+        // Note: item.id is from Supabase (probably numeric or uuid)
         return `
             <div class="content-item" data-id="${item.id}" data-type="${type}">
                 <div class="poster-wrapper">
@@ -393,19 +404,24 @@ class AdminApp {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const item = btn.closest('.content-item');
-                this.deleteContent(parseInt(item.dataset.id), item.dataset.type);
+                this.deleteContent(item.dataset.id, item.dataset.type);
             });
         });
     }
 
-    openEditModal(id, type) {
+    async openEditModal(id, type) {
         const modal = document.getElementById('editModal');
         const modalBody = document.getElementById('editModalBody');
 
         // Get content
-        const content = type === 'movie'
-            ? Storage.getMovies().find(m => m.id === parseInt(id))
-            : Storage.getTVShows().find(s => s.id === parseInt(id));
+        let content;
+        if (type === 'movie') {
+            const movies = await DB.getMovies();
+            content = movies.find(m => m.id == id); // Loose equality for string/num
+        } else {
+            const shows = await DB.getTVShows();
+            content = shows.find(s => s.id == id);
+        }
 
         if (!content) return;
 
@@ -450,13 +466,13 @@ class AdminApp {
 
         document.getElementById('editForm').addEventListener('submit', (e) => {
             e.preventDefault();
-            this.saveEdit(parseInt(id), type);
+            this.saveEdit(id, type);
         });
 
         modal.classList.add('active');
     }
 
-    saveEdit(id, type) {
+    async saveEdit(id, type) {
         const updates = {
             title: document.getElementById('editTitle').value.trim(),
             description: document.getElementById('editDescription').value.trim(),
@@ -466,37 +482,46 @@ class AdminApp {
             poster: document.getElementById('editPoster').value.trim()
         };
 
+        let result;
         if (type === 'movie') {
-            Storage.updateMovie(id, updates);
-            this.renderMovies();
+            result = await DB.updateMovie(id, updates);
+            if (result) await this.renderMovies();
         } else {
-            Storage.updateTVShow(id, updates);
-            this.renderTVShows();
+            result = await DB.updateTVShow(id, updates);
+            if (result) await this.renderTVShows();
         }
 
-        document.getElementById('editModal').classList.remove('active');
-        this.showToast('Content updated successfully!', 'success');
+        if (result) {
+            document.getElementById('editModal').classList.remove('active');
+            this.showToast('Content updated successfully!', 'success');
+        } else {
+            this.showToast('Update failed!', 'error');
+        }
     }
 
-    deleteContent(id, type) {
+    async deleteContent(id, type) {
         if (!confirm('Are you sure you want to delete this content?')) return;
 
+        let result;
         if (type === 'movie') {
-            Storage.removeMovie(id);
-            this.renderMovies();
+            result = await DB.removeMovie(id);
+            if (result) await this.renderMovies();
         } else {
-            Storage.removeTVShow(id);
-            this.renderTVShows();
+            result = await DB.removeTVShow(id);
+            if (result) await this.renderTVShows();
         }
 
-        this.updateContentCount();
-        this.showToast('Content deleted', 'success');
+        if (result) {
+            await this.updateContentCount();
+            this.showToast('Content deleted', 'success');
+        } else {
+            this.showToast('Deletion failed', 'error');
+        }
     }
 
-    updateContentCount() {
-        const movies = Storage.getMovies().length;
-        const tvShows = Storage.getTVShows().length;
-        document.getElementById('contentCount').textContent = `${movies + tvShows} items`;
+    async updateContentCount() {
+        const [movies, shows] = await Promise.all([DB.getMovies(), DB.getTVShows()]);
+        document.getElementById('contentCount').textContent = `${(movies?.length || 0) + (shows?.length || 0)} items`;
     }
 
     saveApiKey() {
@@ -511,24 +536,34 @@ class AdminApp {
         this.showToast('API key saved!', 'success');
     }
 
-    clearAllData() {
+    async clearAllData() {
         if (!confirm('Are you sure you want to delete ALL content? This cannot be undone.')) return;
         if (!confirm('This is your final warning. All movies and TV shows will be deleted.')) return;
 
-        localStorage.removeItem(CONFIG.STORAGE_KEYS.movies);
-        localStorage.removeItem(CONFIG.STORAGE_KEYS.tvShows);
+        // Implement deletion from Supabase one by one or create a clear function
+        // For simplicity and safety against massive deletion without a specific procedure:
+        // Supabase doesn't support 'truncate' via client effortlessly without RLS setup permissions sometimes
+        // We will fetch all and delete for now.
+
+        // This is dangerous but requested.
+        const [movies, shows] = await Promise.all([DB.getMovies(), DB.getTVShows()]);
+
+        for (const m of movies) await DB.removeMovie(m.id);
+        for (const s of shows) await DB.removeTVShow(s.id);
+
         localStorage.removeItem(CONFIG.STORAGE_KEYS.watchlist);
 
-        this.renderMovies();
-        this.renderTVShows();
-        this.updateContentCount();
+        await this.renderMovies();
+        await this.renderTVShows();
+        await this.updateContentCount();
         this.showToast('All data cleared', 'success');
     }
 
-    exportData() {
+    async exportData() {
+        const [movies, shows] = await Promise.all([DB.getMovies(), DB.getTVShows()]);
         const data = {
-            movies: Storage.getMovies(),
-            tvShows: Storage.getTVShows(),
+            movies: movies,
+            tvShows: shows,
             exportedAt: new Date().toISOString()
         };
 
@@ -548,21 +583,30 @@ class AdminApp {
         if (!file) return;
 
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
             try {
                 const data = JSON.parse(e.target.result);
+                let count = 0;
 
-                if (data.movies) {
-                    Storage.saveMovies(data.movies);
+                if (data.movies && Array.isArray(data.movies)) {
+                    for (const m of data.movies) {
+                        delete m.id; // Let Supabase gen ID
+                        delete m.created_at;
+                        if (await DB.addMovie(m)) count++;
+                    }
                 }
-                if (data.tvShows) {
-                    Storage.saveTVShows(data.tvShows);
+                if (data.tvShows && Array.isArray(data.tvShows)) {
+                    for (const s of data.tvShows) {
+                        delete s.id;
+                        delete s.created_at;
+                        if (await DB.addTVShow(s)) count++;
+                    }
                 }
 
-                this.renderMovies();
-                this.renderTVShows();
-                this.updateContentCount();
-                this.showToast('Library imported successfully!', 'success');
+                await this.renderMovies();
+                await this.renderTVShows();
+                await this.updateContentCount();
+                this.showToast(`Imported ${count} items successfully!`, 'success');
 
             } catch (error) {
                 console.error('Import error:', error);

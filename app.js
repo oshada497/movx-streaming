@@ -137,8 +137,8 @@ class MovXApp {
     }
 
     async loadContent() {
-        // Load content from local storage
-        const allContent = Storage.getAllContent();
+        // Load content from Database
+        const allContent = await DB.getAllContent();
 
         if (allContent.length > 0) {
             // Use stored content for hero
@@ -150,9 +150,9 @@ class MovXApp {
         }
 
         // Render content rows
-        this.renderMoviesRow();
-        this.renderTVShowsRow();
-        this.renderTrendingRow();
+        await this.renderMoviesRow();
+        await this.renderTVShowsRow();
+        this.renderTrendingRow(allContent);
     }
 
     showDemoContent() {
@@ -201,7 +201,7 @@ class MovXApp {
         // Update content
         document.getElementById('platformBadge').textContent = content.platform || 'MOVX';
         document.getElementById('heroTitle').textContent = content.title;
-        document.getElementById('heroRating').textContent = content.rating ? content.rating.toFixed(1) : 'N/A';
+        document.getElementById('heroRating').textContent = content.rating ? Number(content.rating).toFixed(1) : 'N/A';
         document.getElementById('heroSeasons').textContent = content.seasons ? `${content.seasons} Season${content.seasons > 1 ? 's' : ''}` : content.runtime || '';
         document.getElementById('heroYear').textContent = content.year || '';
         document.getElementById('heroAgeRating').textContent = content.ageRating || 'PG-13';
@@ -209,7 +209,10 @@ class MovXApp {
 
         // Update genres
         const genresContainer = document.getElementById('heroGenres');
-        genresContainer.innerHTML = (content.genres || []).map(g =>
+        // Genres handled as arrays of strings or objects
+        const genres = Array.isArray(content.genres) ? content.genres : (content.genres ? [content.genres] : []);
+
+        genresContainer.innerHTML = genres.map(g =>
             `<span class="genre-tag">${typeof g === 'object' ? g.name : g}</span>`
         ).join('');
 
@@ -224,7 +227,7 @@ class MovXApp {
 
         // Update watchlist button
         const watchlistBtn = document.getElementById('watchlistBtn');
-        const isInWatchlist = content.tmdbId && Storage.isInWatchlist(content.tmdbId, content.mediaType);
+        const isInWatchlist = content.tmdbId && DB.isInWatchlist(content.tmdbId, content.mediaType);
         watchlistBtn.innerHTML = isInWatchlist
             ? '<i class="fas fa-check"></i> In Watchlist'
             : '<i class="fas fa-plus"></i> Watchlist';
@@ -267,7 +270,14 @@ class MovXApp {
         const searchModal = document.getElementById('searchModal');
         const searchResults = document.getElementById('searchResults');
 
-        // Search in TMDB
+        // Search in TMDB (User likely wants discovery)
+        constresults = await TMDB.search(query);
+        // We could also search local DB?
+        // For now sticking to TMDB as "Search to Add" or "Search Universe"
+        // But the main site "Search" usually searches available content. 
+        // The previous implementation searched TMDB.
+        // Let's improve it: Search TMDB AND Local DB? 
+        // Or just TMDB as before since we redirect to details page which handles flow.
         const results = await TMDB.search(query);
 
         if (results.length === 0) {
@@ -310,8 +320,8 @@ class MovXApp {
         window.location.href = `details.html?id=${id}&type=${type}`;
     }
 
-    renderMoviesRow() {
-        const movies = Storage.getMovies();
+    async renderMoviesRow() {
+        const movies = await DB.getMovies();
         const container = document.getElementById('moviesRow');
 
         if (movies.length === 0) {
@@ -323,8 +333,8 @@ class MovXApp {
         this.bindCardEvents(container);
     }
 
-    renderTVShowsRow() {
-        const shows = Storage.getTVShows();
+    async renderTVShowsRow() {
+        const shows = await DB.getTVShows();
         const container = document.getElementById('tvShowsRow');
 
         if (shows.length === 0) {
@@ -336,8 +346,7 @@ class MovXApp {
         this.bindCardEvents(container);
     }
 
-    renderTrendingRow() {
-        const allContent = Storage.getAllContent();
+    renderTrendingRow(allContent) {
         const container = document.getElementById('trendingRow');
 
         if (allContent.length === 0) {
@@ -354,10 +363,11 @@ class MovXApp {
 
     createContentCard(item, type) {
         const poster = item.poster || 'https://via.placeholder.com/180x270/1a1a1a/666666?text=No+Poster';
-        const rating = item.rating ? item.rating.toFixed(1) : 'N/A';
+        const rating = item.rating ? Number(item.rating).toFixed(1) : 'N/A';
 
+        // Use tmdbId for linking if available, otherwise fallback (DB items should have tmdbId)
         return `
-            <div class="content-card" data-id="${item.id || item.tmdbId}" data-tmdb="${item.tmdbId}" data-type="${type}">
+            <div class="content-card" data-id="${item.tmdbId || item.id}" data-tmdb="${item.tmdbId}" data-type="${type}">
                 <div class="rating-badge">
                     <i class="fas fa-star"></i>
                     ${rating}
@@ -381,6 +391,9 @@ class MovXApp {
                 const type = card.dataset.type;
                 if (tmdbId) {
                     this.showContentDetails(tmdbId, type);
+                } else {
+                    // Fallback
+                    this.showContentDetails(card.dataset.id, type);
                 }
             });
         });
@@ -401,6 +414,8 @@ class MovXApp {
     }
 
     playContent() {
+        // ... existing playContent logic relies on 'this.heroContent[index]' which is populated ...
+        // ... logic is good ...
         const content = this.heroContent[this.currentHeroIndex];
         if (!content) return;
 
@@ -442,12 +457,12 @@ class MovXApp {
         const content = this.heroContent[this.currentHeroIndex];
         if (!content || !content.tmdbId) return;
 
-        const isInWatchlist = Storage.isInWatchlist(content.tmdbId, content.mediaType);
+        const isInWatchlist = DB.isInWatchlist(content.tmdbId, content.mediaType);
 
         if (isInWatchlist) {
-            Storage.removeFromWatchlist(content.tmdbId, content.mediaType);
+            DB.removeFromWatchlist(content.tmdbId, content.mediaType);
         } else {
-            Storage.addToWatchlist({
+            DB.addToWatchlist({
                 tmdbId: content.tmdbId,
                 mediaType: content.mediaType,
                 title: content.title,
