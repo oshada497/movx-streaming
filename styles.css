@@ -1696,14 +1696,15 @@ img {
 
 #saveProfileBtn {
     width: 100%;
-    /* Fills the grid column */
     background: var(--text-primary);
     color: var(--bg-primary);
     font-weight: 600;
     border-radius: var(--radius-sm);
     padding: 10px;
     margin-top: 0;
-    /* Remove top margin */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 #logoutBtn {
