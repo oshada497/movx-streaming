@@ -46,7 +46,7 @@ class MovXApp {
                     const { data, error } = await supabase.auth.signInWithOAuth({
                         provider: 'google',
                         options: {
-                            redirectTo: window.location.href // Redirect back to this page
+                            redirectTo: window.location.origin + window.location.pathname // Safer redirect URL
                         }
                     });
                     if (error) console.error('Sign in error:', error);
