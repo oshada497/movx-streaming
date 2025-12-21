@@ -1198,99 +1198,180 @@ img {
 }
 
 /* ===== Responsive ===== */
-@media (max-width: 1200px) {
-    .hero-title {
-        font-size: 3rem;
+/* ===== Mobile Optimization ===== */
+
+@media (max-width: 1024px) {
+    .header {
+        width: 100%;
+        top: 0;
+        border-radius: 0;
+        border: none;
+        border-bottom: 1px solid var(--border-color);
+        padding: 0 20px;
     }
 
-    .hero-poster {
-        width: 150px;
-        height: 225px;
-    }
-}
-
-@media (max-width: 992px) {
     .main-nav {
         display: none;
+        /* Hide top nav links on smaller screens */
     }
 
-    .hero-content {
-        padding: 40px;
-    }
-
-    .hero-right {
-        display: none;
-    }
-
-    .platforms-section,
-    .episodes-section,
-    .content-section {
-        padding-left: 30px;
-        padding-right: 30px;
-    }
-
-    .hero-nav {
-        left: 30px;
-        right: 30px;
-    }
-}
-
-@media (max-width: 768px) {
     .sidebar {
         display: none;
+        /* Hide sidebar on tablet/mobile */
     }
 
     .main-content {
         margin-left: 0;
+        padding-bottom: 80px;
+        /* Space for bottom nav if we decide to add one */
     }
 
-    .header {
-        padding: 0 16px;
-    }
-
-    .hero {
-        height: 70vh;
+    .hero-right {
+        display: none;
+        /* Hide hero poster image to save space */
     }
 
     .hero-content {
-        padding: 24px;
+        justify-content: center;
+        text-align: center;
+        padding: 120px 20px 60px;
+    }
+
+    .hero-left {
+        align-items: center;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .hero-meta {
+        justify-content: center;
+    }
+
+    .hero-genres {
+        justify-content: center;
+    }
+
+    .hero-description {
+        text-align: center;
+        font-size: 0.9rem;
+        max-width: 100%;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+}
+
+@media (max-width: 768px) {
+
+    /* Adjust Fonts */
+    html {
+        font-size: 14px;
     }
 
     .hero-title {
-        font-size: 2.2rem;
+        font-size: 2.5rem;
+        margin-bottom: 10px;
     }
 
     .hero-actions {
+        width: 100%;
         flex-direction: column;
+        gap: 12px;
     }
 
     .btn {
         width: 100%;
         justify-content: center;
+        padding: 12px;
     }
 
-    .platforms-row {
-        flex-wrap: wrap;
-    }
-
-    .platform-card {
-        flex: 0 0 calc(33.333% - 12px);
+    /* Scrollable Cards */
+    .content-row {
+        display: flex;
+        overflow-x: auto;
+        gap: 12px;
+        padding-bottom: 10px;
+        scroll-snap-type: x mandatory;
+        padding-left: 20px;
+        /* Align with container */
+        margin: 0 -20px;
+        /* Bleed out */
+        width: calc(100% + 40px);
+        -webkit-overflow-scrolling: touch;
+        /* Smooth scroll on iOS */
     }
 
     .content-card {
         flex: 0 0 140px;
+        /* Fixed width for cards */
+        scroll-snap-align: start;
+    }
+
+    .section-header {
+        padding: 0 20px;
+    }
+
+    /* Search Bar Optimization */
+    .search-input {
+        width: 120px;
+        /* Smaller default width */
+    }
+
+    .search-input:focus {
+        width: 100%;
+        /* Expand full width */
+        position: fixed;
+        left: 0;
+        top: 60px;
+        background: var(--bg-secondary);
+        z-index: 1001;
+        padding: 15px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    /* Player Controls */
+    .hero-controls {
+        bottom: 20px;
+        right: 20px;
+    }
+
+    .hero-progress {
+        width: 60px;
+        /* Smaller progress bar */
     }
 }
 
 @media (max-width: 480px) {
-    .user-name {
-        display: none;
+    .header {
+        padding: 0 15px;
+    }
+
+    .logo-text {
+        font-size: 1.2rem;
+    }
+
+    .logo-icon {
+        width: 28px;
+        height: 28px;
+        font-size: 1rem;
+    }
+
+    /* Platform Grid */
+    .platforms-row {
+        gap: 8px;
     }
 
     .platform-card {
-        flex: 0 0 calc(50% - 8px);
+        padding: 10px;
+        height: 60px;
+    }
+
+    .platform-text {
+        font-size: 0.9rem;
     }
 }
+
 
 /* ===== Video Player Section (Details Page) ===== */
 .video-section {
