@@ -200,7 +200,9 @@ async function loadDetails(id, type) {
                         options: uniqueQualities, // All unique quality options
                         forced: true,
                         onChange: (e) => updateQuality(e),
-                    }
+                    },
+                    iconUrl: 'https://cdn.plyr.io/3.7.8/plyr.svg', // Ensure icons load
+                    poster: video.poster // Explicitly pass poster
                 };
                 window.plyrPlayer = new Plyr(video, defaultOptions);
             });
@@ -212,7 +214,8 @@ async function loadDetails(id, type) {
                     'play-large', 'play', 'rewind', 'fast-forward',
                     'progress', 'current-time', 'duration', 'mute',
                     'volume', 'settings', 'pip', 'airplay', 'fullscreen'
-                ]
+                ],
+                poster: video.poster // Explicitly pass poster for standard video
             });
         }
 
