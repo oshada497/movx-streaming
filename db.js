@@ -9,10 +9,55 @@ const supabaseClient = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABAS
 // Expose as global 'supabase' for app.js to use
 window.supabase = supabaseClient;
 
+// ===== Cache Configuration =====
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+const CACHE_KEYS = {
+    movies: 'movx_cache_movies',
+    tvShows: 'movx_cache_tvshows',
+    allContent: 'movx_cache_all'
+};
+
+// Cache helper functions
+function getFromCache(key) {
+    try {
+        const cached = sessionStorage.getItem(key);
+        if (!cached) return null;
+
+        const { data, timestamp } = JSON.parse(cached);
+        if (Date.now() - timestamp > CACHE_DURATION) {
+            sessionStorage.removeItem(key);
+            return null;
+        }
+        return data;
+    } catch (e) {
+        return null;
+    }
+}
+
+function setCache(key, data) {
+    try {
+        sessionStorage.setItem(key, JSON.stringify({
+            data,
+            timestamp: Date.now()
+        }));
+    } catch (e) {
+        // Storage full, clear old cache
+        sessionStorage.clear();
+    }
+}
+
+function clearCache() {
+    Object.values(CACHE_KEYS).forEach(key => sessionStorage.removeItem(key));
+}
+
 const DB = {
     // --- Movies ---
 
     async getMovies() {
+        // Check cache first
+        const cached = getFromCache(CACHE_KEYS.movies);
+        if (cached) return cached;
+
         const { data, error } = await supabaseClient
             .from('movies')
             .select('*')
@@ -22,6 +67,9 @@ const DB = {
             console.error('Error fetching movies:', error);
             return [];
         }
+
+        // Store in cache
+        setCache(CACHE_KEYS.movies, data || []);
         return data || [];
     },
 
@@ -50,6 +98,7 @@ const DB = {
             console.error('Error adding movie:', error);
             return false;
         }
+        clearCache(); // Invalidate cache
         return true;
     },
 
@@ -88,6 +137,7 @@ const DB = {
             console.error('Error updating movie:', error);
             return false;
         }
+        clearCache(); // Invalidate cache
         return true;
     },
 
@@ -101,12 +151,17 @@ const DB = {
             console.error('Error deleting movie:', error);
             return false;
         }
+        clearCache(); // Invalidate cache
         return true;
     },
 
     // --- TV Shows ---
 
     async getTVShows() {
+        // Check cache first
+        const cached = getFromCache(CACHE_KEYS.tvShows);
+        if (cached) return cached;
+
         const { data, error } = await supabaseClient
             .from('tv_shows')
             .select('*')
@@ -116,6 +171,9 @@ const DB = {
             console.error('Error fetching tv shows:', error);
             return [];
         }
+
+        // Store in cache
+        setCache(CACHE_KEYS.tvShows, data || []);
         return data || [];
     },
 
@@ -143,6 +201,7 @@ const DB = {
             console.error('Error adding tv show:', error);
             return false;
         }
+        clearCache(); // Invalidate cache
         return true;
     },
 
@@ -178,6 +237,7 @@ const DB = {
             console.error('Error updating tv show:', error);
             return false;
         }
+        clearCache(); // Invalidate cache
         return true;
     },
 
@@ -191,6 +251,7 @@ const DB = {
             console.error('Error deleting tv show:', error);
             return false;
         }
+        clearCache(); // Invalidate cache
         return true;
     },
 

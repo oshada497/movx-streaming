@@ -459,7 +459,7 @@ class MovXApp {
                     <i class="fas fa-star"></i>
                     ${rating}
                 </div>
-                <img src="${poster}" alt="${item.title}" class="card-poster">
+                <img src="${poster}" alt="${item.title}" class="card-poster" loading="lazy">
                 <div class="card-overlay">
                     <h4 class="card-title">${item.title}</h4>
                     <div class="card-meta">
