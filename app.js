@@ -89,26 +89,18 @@ class MovXApp {
             alert('Profile updated successfully!');
         }
     }
-}
-
-updateAuthUI(session) {
-    this.currentSession = session;
-    const authBtn = document.getElementById('authBtn');
-
-    if (session) {
-        // Logged In: Show User Avatar or Logout Icon
-        const avatarUrl = session.user.user_metadata.avatar_url;
-        if (avatarUrl) {
-            authBtn.innerHTML = `<img src="${avatarUrl}" style="width: 28px; height: 28px; border-radius: 50%;">`;
-        } else {
-            authBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i>';
-        }
-        authBtn.title = `Logged in as ${session.user.email}. Click to Logout.`;
+    const avatarUrl = session.user.user_metadata.avatar_url;
+    if(avatarUrl) {
+        authBtn.innerHTML = `<img src="${avatarUrl}" style="width: 28px; height: 28px; border-radius: 50%;">`;
     } else {
-        // Logged Out: Show Google Icon
-        authBtn.innerHTML = '<i class="fab fa-google"></i>';
-        authBtn.title = 'Login with Google';
-    }
+    authBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i>';
+}
+authBtn.title = `Logged in as ${session.user.email}. Click to Logout.`;
+    } else {
+    // Logged Out: Show Google Icon
+    authBtn.innerHTML = '<i class="fab fa-google"></i>';
+    authBtn.title = 'Login with Google';
+}
 }
 
 bindEvents() {
