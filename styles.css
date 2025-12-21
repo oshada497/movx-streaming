@@ -1313,21 +1313,53 @@ img {
     }
 
     /* Search Bar Optimization */
-    .search-input {
-        width: 120px;
-        /* Smaller default width */
+    /* Search Bar Optimization */
+    .search-container {
+        width: 40px;
+        /* Collapsed width */
+        background: transparent;
+        border: none;
+        justify-content: flex-end;
     }
 
-    .search-input:focus {
+    .search-input {
+        width: 0;
+        padding: 0;
+        opacity: 0;
+        pointer-events: none;
+        transition: width 0.3s ease, opacity 0.3s ease;
+    }
+
+    .search-icon {
+        display: none;
+        /* Hide internal icon since we use the button */
+    }
+
+    .search-container:focus-within {
         width: 100%;
-        /* Expand full width */
-        position: fixed;
+        position: absolute;
         left: 0;
-        top: 60px;
+        top: 0;
+        height: 100%;
         background: var(--bg-secondary);
-        z-index: 1001;
-        padding: 15px;
-        border-bottom: 1px solid var(--border-color);
+        z-index: 1002;
+        padding: 0 10px;
+        border-radius: 0;
+        justify-content: space-between;
+    }
+
+    .search-container:focus-within .search-input {
+        width: 100%;
+        padding: 10px;
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .search-btn {
+        background: transparent;
+        border: none;
+        color: var(--text-primary);
+        font-size: 1.2rem;
     }
 
     /* Player Controls */
