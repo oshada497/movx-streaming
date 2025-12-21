@@ -186,6 +186,10 @@ async function loadDetails(id, type) {
 
         containers.forEach(el => el.classList.add('content-visible'));
     }, 300); // Short delay for smoothness
+
+    // Setup comment section
+    const contentId = details.tmdb_id || details.id;
+    await setupCommentSection(String(contentId), type);
 }
 
 function updateQuality(newQuality) {
@@ -227,4 +231,179 @@ function openPlayer(content) {
     }
 
     playerModal.classList.add('active');
+}
+
+// ===== Comments Functionality =====
+
+let currentContentId = null;
+let currentContentType = null;
+
+async function setupCommentSection(contentId, contentType) {
+    currentContentId = contentId;
+    currentContentType = contentType;
+
+    // Check if user is logged in
+    const { data: { session } } = await supabase.auth.getSession();
+    const commentInputArea = document.getElementById('commentInputArea');
+
+    if (session) {
+        // Show comment input and set user avatar
+        commentInputArea.style.display = 'flex';
+        const avatarUrl = session.user.user_metadata.avatar_url || 'https://via.placeholder.com/40';
+        document.getElementById('commentUserAvatar').src = avatarUrl;
+    } else {
+        // Hide comment input if not logged in
+        commentInputArea.innerHTML = `
+            <div style="text-align: center; width: 100%; color: var(--text-muted);">
+                <p>Please <a href="#" onclick="loginToComment()" style="color: var(--accent-yellow);">login</a> to post a comment.</p>
+            </div>
+        `;
+    }
+
+    // Setup submit button
+    const submitBtn = document.getElementById('submitCommentBtn');
+    if (submitBtn) {
+        submitBtn.addEventListener('click', postComment);
+    }
+
+    // Load existing comments
+    await loadComments(contentId, contentType);
+}
+
+async function loginToComment() {
+    const redirectUrl = window.location.href;
+    await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: redirectUrl }
+    });
+}
+
+async function loadComments(contentId, contentType) {
+    const commentsList = document.getElementById('commentsList');
+    const noCommentsMessage = document.getElementById('noCommentsMessage');
+
+    try {
+        const { data: comments, error } = await supabase
+            .from('comments')
+            .select('*')
+            .eq('content_id', contentId)
+            .eq('content_type', contentType)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Error loading comments:', error);
+            return;
+        }
+
+        if (comments && comments.length > 0) {
+            noCommentsMessage.style.display = 'none';
+            renderComments(comments);
+        } else {
+            noCommentsMessage.style.display = 'block';
+        }
+    } catch (err) {
+        console.error('Error fetching comments:', err);
+    }
+}
+
+function renderComments(comments) {
+    const commentsList = document.getElementById('commentsList');
+    const noCommentsMessage = document.getElementById('noCommentsMessage');
+
+    // Clear existing except noCommentsMessage
+    commentsList.innerHTML = '';
+    commentsList.appendChild(noCommentsMessage);
+    noCommentsMessage.style.display = 'none';
+
+    comments.forEach(comment => {
+        const timeAgo = getTimeAgo(new Date(comment.created_at));
+        const commentHTML = `
+            <div class="comment-card" data-id="${comment.id}">
+                <div class="comment-avatar">
+                    <img src="${comment.user_avatar || 'https://via.placeholder.com/40'}" alt="${comment.user_name}">
+                </div>
+                <div class="comment-content">
+                    <div class="comment-header">
+                        <span class="comment-author">${escapeHTML(comment.user_name)}</span>
+                        <span class="comment-time">${timeAgo}</span>
+                    </div>
+                    <p class="comment-text">${escapeHTML(comment.comment_text)}</p>
+                </div>
+            </div>
+        `;
+        commentsList.insertAdjacentHTML('beforeend', commentHTML);
+    });
+}
+
+async function postComment() {
+    const commentInput = document.getElementById('commentInput');
+    const commentText = commentInput.value.trim();
+
+    if (!commentText) {
+        alert('Please enter a comment.');
+        return;
+    }
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+        alert('You must be logged in to comment.');
+        return;
+    }
+
+    const user = session.user;
+    const userName = user.user_metadata.full_name || user.user_metadata.name || user.email;
+    const userAvatar = user.user_metadata.avatar_url || '';
+
+    try {
+        const { data, error } = await supabase
+            .from('comments')
+            .insert({
+                content_id: currentContentId,
+                content_type: currentContentType,
+                user_id: user.id,
+                user_name: userName,
+                user_avatar: userAvatar,
+                comment_text: commentText
+            })
+            .select();
+
+        if (error) {
+            console.error('Error posting comment:', error);
+            alert('Failed to post comment. ' + error.message);
+            return;
+        }
+
+        // Clear input and reload comments
+        commentInput.value = '';
+        await loadComments(currentContentId, currentContentType);
+    } catch (err) {
+        console.error('Error submitting comment:', err);
+    }
+}
+
+function getTimeAgo(date) {
+    const seconds = Math.floor((new Date() - date) / 1000);
+
+    let interval = seconds / 31536000;
+    if (interval > 1) return Math.floor(interval) + ' years ago';
+
+    interval = seconds / 2592000;
+    if (interval > 1) return Math.floor(interval) + ' months ago';
+
+    interval = seconds / 86400;
+    if (interval > 1) return Math.floor(interval) + ' days ago';
+
+    interval = seconds / 3600;
+    if (interval > 1) return Math.floor(interval) + ' hours ago';
+
+    interval = seconds / 60;
+    if (interval > 1) return Math.floor(interval) + ' minutes ago';
+
+    return 'just now';
+}
+
+function escapeHTML(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
 }

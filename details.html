@@ -392,6 +392,31 @@
         </div>
     </div>
 
+    <!-- Comments Section -->
+    <section class="comments-section" id="commentsSection">
+        <div class="comments-container">
+            <h2 class="comments-title"><i class="fas fa-comments"></i> Comments</h2>
+
+            <div class="comment-input-area" id="commentInputArea">
+                <div class="comment-avatar">
+                    <img id="commentUserAvatar" src="https://via.placeholder.com/40" alt="Your Avatar">
+                </div>
+                <div class="comment-form">
+                    <textarea id="commentInput" placeholder="Write a comment..." rows="2"></textarea>
+                    <button class="btn btn-primary" id="submitCommentBtn">Post Comment</button>
+                </div>
+            </div>
+
+            <div class="comments-list" id="commentsList">
+                <!-- Comments will be loaded here -->
+                <div class="no-comments" id="noCommentsMessage">
+                    <i class="fas fa-comment-slash"></i>
+                    <p>No comments yet. Be the first to comment!</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Video Player Modal (Reused) -->
     <div class="player-modal" id="playerModal">
         <div class="player-container">
