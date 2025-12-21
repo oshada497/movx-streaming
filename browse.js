@@ -56,23 +56,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         searchTimeout = setTimeout(async () => {
-            const results = await TMDB.search(query);
+            // Search in local database (your site's content)
+            const results = await DB.search(query);
             const searchResults = document.getElementById('searchResults');
 
             if (results.length === 0) {
-                searchResults.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 20px;">No results found</p>';
+                searchResults.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 20px;">No results found in your library</p>';
                 searchModal.classList.add('active');
                 return;
             }
 
             searchResults.innerHTML = results.slice(0, 8).map(item => {
-                const ntitle = item.title || item.name;
-                const nyear = (item.release_date || item.first_air_date || '').substring(0, 4);
-                const ntype = item.media_type === 'tv' ? 'TV Show' : 'Movie';
-                const nposter = TMDB.getImageUrl(item.poster_path, 'thumbnail');
+                const ntitle = item.title;
+                const nyear = item.year || '';
+                const ntype = item.mediaType === 'tv' ? 'TV Show' : 'Movie';
+                const nposter = item.poster || 'https://via.placeholder.com/300x450/1a1a1a/666666?text=No+Poster';
 
                 return `
-                    <div class="search-result-item" data-id="${item.id}" data-type="${item.media_type}">
+                    <div class="search-result-item" data-id="${item.tmdbId || item.id}" data-type="${item.mediaType}">
                         <img src="${nposter}" alt="${ntitle}" class="search-result-poster">
                         <div class="search-result-info">
                             <div class="search-result-title">${ntitle}</div>

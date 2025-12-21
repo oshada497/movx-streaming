@@ -194,6 +194,40 @@ const DB = {
         return true;
     },
 
+    // --- Search Content ---
+
+    async search(query) {
+        if (!query || query.length < 2) return [];
+
+        const searchQuery = query.toLowerCase().trim();
+
+        // Search movies
+        const { data: movies, error: moviesError } = await supabaseClient
+            .from('movies')
+            .select('*')
+            .ilike('title', `%${searchQuery}%`);
+
+        if (moviesError) {
+            console.error('Error searching movies:', moviesError);
+        }
+
+        // Search TV shows
+        const { data: shows, error: showsError } = await supabaseClient
+            .from('tv_shows')
+            .select('*')
+            .ilike('title', `%${searchQuery}%`);
+
+        if (showsError) {
+            console.error('Error searching TV shows:', showsError);
+        }
+
+        // Combine and mark media types
+        const markedMovies = (movies || []).map(m => ({ ...m, mediaType: 'movie' }));
+        const markedShows = (shows || []).map(s => ({ ...s, mediaType: 'tv' }));
+
+        return [...markedMovies, ...markedShows];
+    },
+
     // --- Unified Content ---
 
     async getAllContent() {

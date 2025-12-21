@@ -364,23 +364,23 @@ class MovXApp {
         const searchModal = document.getElementById('searchModal');
         const searchResults = document.getElementById('searchResults');
 
-        // Search in TMDB (User likely wants discovery)
-        const results = await TMDB.search(query);
+        // Search in local database (your site's content)
+        const results = await DB.search(query);
 
         if (results.length === 0) {
-            searchResults.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 20px;">No results found</p>';
+            searchResults.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 20px;">No results found in your library</p>';
             searchModal.classList.add('active');
             return;
         }
 
         searchResults.innerHTML = results.slice(0, 8).map(item => {
-            const title = item.title || item.name;
-            const year = (item.release_date || item.first_air_date || '').substring(0, 4);
-            const type = item.media_type === 'tv' ? 'TV Show' : 'Movie';
-            const poster = TMDB.getImageUrl(item.poster_path, 'thumbnail');
+            const title = item.title;
+            const year = item.year || '';
+            const type = item.mediaType === 'tv' ? 'TV Show' : 'Movie';
+            const poster = item.poster || 'https://via.placeholder.com/300x450/1a1a1a/666666?text=No+Poster';
 
             return `
-                <div class="search-result-item" data-id="${item.id}" data-type="${item.media_type}">
+                <div class="search-result-item" data-id="${item.tmdbId || item.id}" data-type="${item.mediaType}">
                     <img src="${poster}" alt="${title}" class="search-result-poster">
                     <div class="search-result-info">
                         <div class="search-result-title">${title}</div>
