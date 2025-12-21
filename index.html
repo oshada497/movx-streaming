@@ -195,16 +195,15 @@
                     <label>Display Name</label>
                     <input type="text" id="profileNameInput" placeholder="Enter your name">
                 </div>
-                <div class="form-group">
-                    <label>Avatar URL</label>
-                    <input type="text" id="profileAvatarInput" placeholder="https://example.com/avatar.jpg">
+                <!-- Avatar URL input removed -->
+                <input type="hidden" id="profileAvatarInput">
+
+                <div class="profile-actions">
+                    <button class="btn btn-primary" id="saveProfileBtn">Save</button>
+                    <button class="btn btn-danger" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
                 </div>
-                <button class="btn btn-primary" id="saveProfileBtn">Save Changes</button>
-                <div class="divider"></div>
-                <button class="btn btn-danger" id="logoutBtn"
-                    style="width: 100%; background: #e50914; margin-top: 10px;">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </button>
             </div>
         </div>
     </div>
