@@ -6,6 +6,8 @@ if (typeof supabase === 'undefined') {
 }
 
 const supabaseClient = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+// Expose as global 'supabase' for app.js to use
+window.supabase = supabaseClient;
 
 const DB = {
     // --- Movies ---
