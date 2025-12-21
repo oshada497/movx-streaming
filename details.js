@@ -104,8 +104,8 @@ async function loadDetails(id, type) {
 
         const source = videoSource;
 
-        // HLS Support Detection
-        if (Hls.isSupported() && (source.includes('.m3u8'))) {
+        // HLS Support Detection (check if URL contains .m3u8 anywhere)
+        if (Hls.isSupported() && source.includes('.m3u8')) {
             const hls = new Hls();
             hls.loadSource(source);
             hls.attachMedia(video);
@@ -131,7 +131,7 @@ async function loadDetails(id, type) {
                 window.player = new Plyr(video, defaultOptions);
             });
         } else {
-            // Default HTML5 Video (MP4/WebM)
+            // Default HTML5 Video (MP4/WebM) - Works for your FB CDN links
             video.src = source;
             window.player = new Plyr(video, {
                 controls: [
