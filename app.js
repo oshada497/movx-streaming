@@ -365,13 +365,6 @@ class MovXApp {
         const searchResults = document.getElementById('searchResults');
 
         // Search in TMDB (User likely wants discovery)
-        constresults = await TMDB.search(query);
-        // We could also search local DB?
-        // For now sticking to TMDB as "Search to Add" or "Search Universe"
-        // But the main site "Search" usually searches available content. 
-        // The previous implementation searched TMDB.
-        // Let's improve it: Search TMDB AND Local DB? 
-        // Or just TMDB as before since we redirect to details page which handles flow.
         const results = await TMDB.search(query);
 
         if (results.length === 0) {

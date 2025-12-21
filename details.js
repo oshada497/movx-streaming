@@ -8,6 +8,66 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
+    // Bind Search Events
+    const searchInput = document.getElementById('searchInput');
+    const searchModal = document.getElementById('searchModal');
+    let searchTimeout = null;
+
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        const query = e.target.value.trim();
+
+        if (query.length < 2) {
+            searchModal.classList.remove('active');
+            return;
+        }
+
+        searchTimeout = setTimeout(async () => {
+            const results = await TMDB.search(query);
+            const searchResults = document.getElementById('searchResults');
+
+            if (results.length === 0) {
+                searchResults.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 20px;">No results found</p>';
+                searchModal.classList.add('active');
+                return;
+            }
+
+            searchResults.innerHTML = results.slice(0, 8).map(item => {
+                const title = item.title || item.name;
+                const year = (item.release_date || item.first_air_date || '').substring(0, 4);
+                const type = item.media_type === 'tv' ? 'TV Show' : 'Movie';
+                const poster = TMDB.getImageUrl(item.poster_path, 'thumbnail');
+
+                return `
+                    <div class="search-result-item" data-id="${item.id}" data-type="${item.media_type}">
+                        <img src="${poster}" alt="${title}" class="search-result-poster">
+                        <div class="search-result-info">
+                            <div class="search-result-title">${title}</div>
+                            <div class="search-result-meta">${type} • ${year}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Bind click events
+            searchResults.querySelectorAll('.search-result-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const nid = item.dataset.id;
+                    const ntype = item.dataset.type;
+                    window.location.href = `details.html?id=${nid}&type=${ntype}`;
+                });
+            });
+
+            searchModal.classList.add('active');
+        }, 300);
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.search-container') && !e.target.closest('.search-modal')) {
+            searchModal.classList.remove('active');
+        }
+    });
+
     await loadDetails(id, type);
 });
 
