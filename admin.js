@@ -223,7 +223,7 @@ class AdminApp {
                 tmdbId: details.id,
                 title: details.title || details.name,
                 description: details.overview,
-                platform: 'MOVX',
+                platform: 'FBFLIX',
                 year: (details.release_date || details.first_air_date || '').substring(0, 4),
                 rating: details.vote_average,
                 genres: details.genres?.map(g => g.name) || [],
@@ -424,7 +424,7 @@ class AdminApp {
                         <span>${item.year || 'N/A'}</span>
                         <span>⭐ ${rating}</span>
                     </div>
-                    <div class="platform">${item.platform || 'MOVX'}</div>
+                    <div class="platform">${item.platform || 'FBFLIX'}</div>
                 </div>
             </div>
         `;
@@ -613,7 +613,7 @@ class AdminApp {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `movx-library-${new Date().toISOString().split('T')[0]}.json`;
+        a.download = `fbflix-library-${new Date().toISOString().split('T')[0]}.json`;
         a.click();
         URL.revokeObjectURL(url);
 

@@ -1,4 +1,4 @@
-# MovX Streaming
+# FBFLIX Streaming
 
 A modern, beautiful movie and TV series streaming platform built with vanilla HTML, CSS, and JavaScript.
 

@@ -255,7 +255,7 @@ class MovXApp {
             {
                 title: 'Add Your First Movie',
                 description: 'Start your streaming journey by adding your favorite content to your library.',
-                platform: 'MOVX',
+                platform: 'FBFLIX',
                 year: '2024',
                 rating: 10,
                 genres: ['Tutorial'],
@@ -293,7 +293,7 @@ class MovXApp {
         }
 
         // Update content
-        document.getElementById('platformBadge').textContent = content.platform || 'MOVX';
+        document.getElementById('platformBadge').textContent = content.platform || 'FBFLIX';
         document.getElementById('heroTitle').textContent = content.title;
         document.getElementById('heroRating').textContent = content.rating ? Number(content.rating).toFixed(1) : 'N/A';
         document.getElementById('heroSeasons').textContent = content.seasons ? `${content.seasons} Season${content.seasons > 1 ? 's' : ''}` : content.runtime || '';
