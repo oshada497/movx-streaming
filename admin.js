@@ -7,11 +7,46 @@ class AdminApp {
     }
 
     async init() {
+        this.checkAuth(); // Check security first
         this.loadApiKey();
         this.bindEvents();
         await this.updateContentCount();
         await this.renderMovies();
         await this.renderTVShows();
+    }
+
+    checkAuth() {
+        const isAuthenticated = sessionStorage.getItem('movx_admin_auth');
+        const overlay = document.getElementById('loginOverlay');
+        const input = document.getElementById('adminPinInput');
+        const loginBtn = document.getElementById('adminLoginBtn');
+        const errorMsg = document.getElementById('loginError');
+
+        // Hardcoded PIN for now - User can change this in code if needed
+        const ADMIN_PIN = 'admin123';
+
+        if (isAuthenticated === 'true') {
+            overlay.style.display = 'none';
+        } else {
+            overlay.style.display = 'flex';
+
+            const handleLogin = () => {
+                if (input.value === ADMIN_PIN) {
+                    sessionStorage.setItem('movx_admin_auth', 'true');
+                    overlay.style.display = 'none';
+                    input.value = '';
+                } else {
+                    errorMsg.style.display = 'block';
+                    input.value = '';
+                    setTimeout(() => errorMsg.style.display = 'none', 3000);
+                }
+            };
+
+            loginBtn.addEventListener('click', handleLogin);
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleLogin();
+            });
+        }
     }
 
     loadApiKey() {
