@@ -180,7 +180,10 @@ async function loadDetails(id, type) {
 
             // Handle HLS Quality Levels
             hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
+                // Get available qualities (heights) and deduplicate
                 const availableQualities = hls.levels.map((l) => l.height);
+                const uniqueQualities = [...new Set(availableQualities)].sort((a, b) => b - a); // Descending order
+
                 // Initialize Plyr
                 const defaultOptions = {
                     controls: [
@@ -188,9 +191,10 @@ async function loadDetails(id, type) {
                         'progress', 'current-time', 'duration', 'mute',
                         'volume', 'captions', 'settings', 'pip', 'airplay', 'fullscreen'
                     ],
+                    settings: ['quality', 'speed', 'loop'], // Explicitly enable settings
                     quality: {
-                        default: availableQualities[0], // Top quality
-                        options: availableQualities, // All quality options
+                        default: uniqueQualities[0], // Top quality
+                        options: uniqueQualities, // All unique quality options
                         forced: true,
                         onChange: (e) => updateQuality(e),
                     }
