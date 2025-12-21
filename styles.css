@@ -1321,15 +1321,28 @@ img {
         /* Space for bottom nav if we decide to add one */
     }
 
+    /* SHOW hero poster on mobile - moved to top with flexbox reorder */
     .hero-right {
-        display: none;
-        /* Hide hero poster image to save space */
+        display: flex !important;
+        order: 1;
+    }
+
+    .hero-left {
+        order: 2;
     }
 
     .hero-content {
+        flex-direction: column;
         justify-content: center;
         text-align: center;
-        padding: 120px 20px 60px;
+        padding: 100px 20px 60px;
+        gap: 20px;
+    }
+
+    .hero-poster {
+        width: 150px;
+        height: 225px;
+        margin: 0 auto;
     }
 
     .hero-left {
@@ -1365,8 +1378,13 @@ img {
     }
 
     .hero-title {
-        font-size: 2.5rem;
+        font-size: 2rem;
         margin-bottom: 10px;
+    }
+
+    .hero-poster {
+        width: 130px;
+        height: 195px;
     }
 
     .hero-actions {
@@ -1381,80 +1399,55 @@ img {
         padding: 12px;
     }
 
-    /* Scrollable Cards */
+    /* Grid Cards - 3 columns on tablet/mobile */
     .content-row {
-        display: flex;
-        overflow-x: auto;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
         gap: 12px;
-        padding-bottom: 10px;
-        scroll-snap-type: x mandatory;
-        padding-left: 20px;
-        /* Align with container */
-        margin: 0 -20px;
-        /* Bleed out */
-        width: calc(100% + 40px);
-        -webkit-overflow-scrolling: touch;
-        /* Smooth scroll on iOS */
     }
 
     .content-card {
-        flex: 0 0 140px;
-        /* Fixed width for cards */
-        scroll-snap-align: start;
+        width: 100%;
+        aspect-ratio: 2/3;
+    }
+
+    .content-section {
+        padding: 20px 16px;
     }
 
     .section-header {
-        padding: 0 20px;
+        margin-bottom: 16px;
     }
 
-    /* Search Bar Optimization */
-    /* Search Bar Optimization */
+    .section-title {
+        font-size: 1.2rem;
+    }
+
+    /* Search Bar - keep visible on mobile */
     .search-container {
-        width: 40px;
-        /* Collapsed width */
-        background: transparent;
-        border: none;
-        justify-content: flex-end;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 50px;
+        padding: 2px 5px;
     }
 
     .search-input {
-        width: 0;
-        padding: 0;
-        opacity: 0;
-        pointer-events: none;
-        transition: width 0.3s ease, opacity 0.3s ease;
+        width: 100px;
+        font-size: 0.85rem;
+    }
+
+    .search-input:focus {
+        width: 140px;
     }
 
     .search-icon {
-        display: none;
-        /* Hide internal icon since we use the button */
-    }
-
-    .search-container:focus-within {
-        width: 100%;
-        position: absolute;
-        left: 0;
-        top: 0;
-        height: 100%;
-        background: var(--bg-secondary);
-        z-index: 1002;
-        padding: 0 10px;
-        border-radius: 0;
-        justify-content: space-between;
-    }
-
-    .search-container:focus-within .search-input {
-        width: 100%;
-        padding: 10px;
-        opacity: 1;
-        pointer-events: auto;
+        padding: 0 8px;
+        font-size: 0.8rem;
     }
 
     .search-btn {
-        background: transparent;
-        border: none;
-        color: var(--text-primary);
-        font-size: 1.2rem;
+        width: 32px;
+        height: 32px;
     }
 
     /* Player Controls */
@@ -1471,17 +1464,86 @@ img {
 
 @media (max-width: 480px) {
     .header {
-        padding: 0 15px;
+        padding: 0 12px;
+        height: 50px;
     }
 
     .logo-text {
-        font-size: 1.2rem;
+        font-size: 1rem;
     }
 
     .logo-icon {
+        width: 26px;
+        height: 26px;
+    }
+
+    .logo-dots .dot {
+        width: 5px;
+        height: 5px;
+    }
+
+    /* Hero on small phones */
+    .hero-content {
+        padding: 80px 16px 40px;
+    }
+
+    .hero-poster {
+        width: 110px;
+        height: 165px;
+    }
+
+    .hero-title {
+        font-size: 1.5rem;
+    }
+
+    .hero-description {
+        font-size: 0.85rem;
+        -webkit-line-clamp: 2;
+    }
+
+    .genre-tag {
+        font-size: 0.75rem;
+        padding: 4px 10px;
+    }
+
+    /* 2 columns on small phones */
+    .content-row {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .content-section {
+        padding: 16px 12px;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+    }
+
+    .rating-badge {
+        top: 6px;
+        left: 6px;
+        padding: 3px 6px;
+        font-size: 0.65rem;
+    }
+
+    .rating-badge i {
+        font-size: 0.55rem;
+    }
+
+    /* Search on small phones */
+    .search-input {
+        width: 80px;
+        font-size: 0.8rem;
+    }
+
+    .search-input:focus {
+        width: 120px;
+    }
+
+    .search-btn {
         width: 28px;
         height: 28px;
-        font-size: 1rem;
     }
 
     /* Platform Grid */
