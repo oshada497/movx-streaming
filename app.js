@@ -254,7 +254,7 @@ class MovXApp {
         this.heroContent = [
             {
                 title: 'Add Your First Movie',
-                description: 'Go to the Admin Panel to add movies and TV shows. Use the gear icon in the sidebar or visit admin.html directly.',
+                description: 'Start your streaming journey by adding your favorite content to your library.',
                 platform: 'MOVX',
                 year: '2024',
                 rating: 10,
