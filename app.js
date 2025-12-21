@@ -42,11 +42,13 @@ class MovXApp {
                     if (error) console.error('Sign out error:', error);
                 } else {
                     // Login with Google
-                    console.log('Initiating Google Sign-In...');
+                    const redirectUrl = window.location.href; // Use full validation URL
+                    console.log('Initiating Google Sign-In with redirect to:', redirectUrl);
+
                     const { data, error } = await supabase.auth.signInWithOAuth({
                         provider: 'google',
                         options: {
-                            redirectTo: window.location.origin + window.location.pathname // Safer redirect URL
+                            redirectTo: redirectUrl
                         }
                     });
                     if (error) console.error('Sign in error:', error);
