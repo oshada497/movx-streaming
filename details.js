@@ -90,7 +90,10 @@ async function loadDetails(id, type) {
     const videoSection = document.getElementById('video-player-section');
     const watchBtn = document.getElementById('watchBtn');
 
-    if (details.videoUrl) {
+    // Robust check for Video URL (handles videoUrl or videourl)
+    const videoSource = details.videoUrl || details.videourl || '';
+
+    if (videoSource) {
         // Setup Player
         const video = document.getElementById('player');
 
@@ -99,7 +102,7 @@ async function loadDetails(id, type) {
             window.player.destroy();
         }
 
-        const source = details.videoUrl;
+        const source = videoSource;
 
         // HLS Support Detection
         if (Hls.isSupported() && (source.includes('.m3u8'))) {
