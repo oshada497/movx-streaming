@@ -1974,10 +1974,171 @@ img {
     color: var(--text-muted);
 }
 
-/* Search Modal Responsive */
+/* ===== MOBILE RESPONSIVE STYLES ===== */
+
+/* Tablet - 1024px and below */
+@media (max-width: 1024px) {
+    .content-row {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+    }
+
+    .hero-content {
+        padding: 120px 40px 100px;
+    }
+
+    .hero-title {
+        font-size: 3rem;
+    }
+
+    .content-section {
+        padding: 24px 40px;
+    }
+
+    .episodes-section {
+        padding: 24px 40px;
+    }
+}
+
+/* Mobile Landscape / Small Tablet - 768px and below */
 @media (max-width: 768px) {
+    .header {
+        top: 10px;
+        width: 96%;
+        height: 50px;
+        padding: 0 16px;
+        border-radius: 30px;
+    }
+
+    .main-nav {
+        display: none;
+    }
+
+    .logo-text {
+        font-size: 1.1rem;
+    }
+
+    .logo-icon {
+        width: 32px;
+        height: 32px;
+    }
+
+    .search-container {
+        padding: 2px 4px;
+    }
+
+    .search-input {
+        width: 120px;
+        font-size: 0.85rem;
+        padding: 8px 0;
+    }
+
+    .search-input:focus {
+        width: 150px;
+    }
+
+    .search-btn {
+        width: 34px;
+        height: 34px;
+    }
+
+    .icon-btn {
+        width: 34px;
+        height: 34px;
+    }
+
+    /* Hero Section Mobile */
+    .hero {
+        height: auto;
+        min-height: 100vh;
+    }
+
+    .hero-content {
+        flex-direction: column;
+        padding: 90px 20px 40px;
+        text-align: center;
+        gap: 24px;
+    }
+
+    .hero-left {
+        order: 2;
+    }
+
+    .hero-right {
+        order: 1;
+    }
+
+    /* SHOW HERO POSTER ON MOBILE */
+    .hero-poster {
+        width: 140px;
+        height: 210px;
+        margin: 0 auto;
+    }
+
+    .hero-title {
+        font-size: 2rem;
+    }
+
+    .hero-meta {
+        justify-content: center;
+    }
+
+    .hero-description {
+        max-width: 100%;
+        font-size: 0.9rem;
+    }
+
+    .hero-genres {
+        justify-content: center;
+    }
+
+    .hero-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .hero-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .hero-controls {
+        bottom: 20px;
+        right: 20px;
+    }
+
+    .hero-nav {
+        left: 10px;
+        right: 10px;
+    }
+
+    .hero-nav-btn {
+        width: 40px;
+        height: 40px;
+        opacity: 1;
+    }
+
+    /* Content Grid - 3 columns on tablet */
+    .content-row {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+    }
+
+    .content-section {
+        padding: 20px;
+    }
+
+    .section-title {
+        font-size: 1.2rem;
+    }
+
+    .episodes-section {
+        padding: 20px;
+    }
+
+    /* Search Modal */
     .search-modal {
-        top: 80px;
+        top: 70px;
         width: 95%;
         max-height: 60vh;
     }
@@ -1994,5 +2155,213 @@ img {
 
     .search-result-title {
         font-size: 0.9rem;
+    }
+
+    /* Footer */
+    .site-footer-simple .footer-inner {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+    }
+
+    .footer-left {
+        flex-direction: column;
+        gap: 8px;
+    }
+}
+
+/* Mobile Portrait - 480px and below */
+@media (max-width: 480px) {
+    .header {
+        height: 48px;
+        padding: 0 12px;
+    }
+
+    .logo-text {
+        font-size: 1rem;
+    }
+
+    .logo-icon {
+        width: 28px;
+        height: 28px;
+    }
+
+    .logo-dots .dot {
+        width: 5px;
+        height: 5px;
+    }
+
+    .search-input {
+        width: 100px;
+        font-size: 0.8rem;
+    }
+
+    .search-input:focus {
+        width: 130px;
+    }
+
+    .search-icon {
+        padding: 0 8px;
+        font-size: 0.8rem;
+    }
+
+    /* Hero on small mobile */
+    .hero-content {
+        padding: 80px 16px 30px;
+    }
+
+    .hero-poster {
+        width: 120px;
+        height: 180px;
+    }
+
+    .hero-title {
+        font-size: 1.6rem;
+    }
+
+    .platform-badge {
+        font-size: 0.75rem;
+    }
+
+    .hero-meta {
+        gap: 10px;
+        font-size: 0.8rem;
+    }
+
+    .imdb-logo {
+        font-size: 0.6rem;
+        padding: 2px 4px;
+    }
+
+    .hero-description {
+        font-size: 0.85rem;
+        line-height: 1.5;
+    }
+
+    .genre-tag {
+        font-size: 0.75rem;
+        padding: 4px 10px;
+    }
+
+    .btn {
+        padding: 12px 20px;
+        font-size: 0.9rem;
+    }
+
+    /* Content Grid - 2 columns on small mobile */
+    .content-row {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .content-section {
+        padding: 16px 12px;
+    }
+
+    .section-header {
+        margin-bottom: 14px;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+    }
+
+    .see-more {
+        font-size: 0.8rem;
+    }
+
+    /* Cards on mobile */
+    .content-card {
+        border-radius: var(--radius-md);
+    }
+
+    .rating-badge {
+        top: 6px;
+        left: 6px;
+        padding: 3px 6px;
+        font-size: 0.65rem;
+    }
+
+    .rating-badge i {
+        font-size: 0.55rem;
+    }
+
+    .card-overlay {
+        padding: 10px;
+    }
+
+    .card-title {
+        font-size: 0.75rem;
+        margin-bottom: 4px;
+    }
+
+    .card-meta {
+        font-size: 0.65rem;
+        gap: 4px;
+    }
+
+    /* Episodes */
+    .episode-card {
+        flex: 0 0 220px;
+    }
+
+    .episode-thumbnail {
+        height: 130px;
+    }
+
+    .episode-info {
+        padding: 10px;
+    }
+
+    .episode-number {
+        font-size: 0.75rem;
+    }
+
+    .episode-title {
+        font-size: 0.85rem;
+    }
+
+    /* Search Modal on small mobile */
+    .search-modal {
+        top: 65px;
+        width: 94%;
+        max-height: 55vh;
+    }
+
+    .search-results {
+        padding: 8px;
+    }
+
+    .search-result-item {
+        padding: 8px;
+        gap: 10px;
+    }
+
+    .search-result-poster {
+        width: 40px;
+        height: 60px;
+    }
+
+    .search-result-title {
+        font-size: 0.85rem;
+    }
+
+    .search-result-meta {
+        font-size: 0.7rem;
+    }
+
+    /* Footer on small mobile */
+    .site-footer-simple {
+        padding: 20px 12px;
+    }
+
+    .footer-copyright {
+        font-size: 0.75rem;
+    }
+
+    .social-link-sm {
+        width: 32px;
+        height: 32px;
+        font-size: 0.85rem;
     }
 }

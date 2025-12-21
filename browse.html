@@ -54,6 +54,54 @@
             color: var(--accent-primary);
             font-size: 2rem;
         }
+
+        /* Mobile Responsive for Browse Page */
+        @media (max-width: 768px) {
+            .browse-page {
+                padding-top: 80px;
+            }
+
+            .browse-container {
+                width: 95%;
+                padding-bottom: 40px;
+            }
+
+            .browse-header {
+                margin-bottom: 20px;
+            }
+
+            .browse-title {
+                font-size: 1.5rem;
+            }
+
+            .results-count {
+                font-size: 0.8rem;
+            }
+
+            .content-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .browse-page {
+                padding-top: 70px;
+            }
+
+            .browse-container {
+                width: 96%;
+            }
+
+            .browse-title {
+                font-size: 1.3rem;
+            }
+
+            .content-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+        }
     </style>
 </head>
 
