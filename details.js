@@ -244,7 +244,12 @@ async function loadDetails(id, type) {
 
     // --- Episodes Logic ---
     if (type === 'tv') {
-        const episodes = await DB.getEpisodes(storedItem ? storedItem.id : null);
+        const itemId = storedItem ? storedItem.id : null;
+        console.log('[Details] Checking episodes for:', { type, tmdbId: id, dbId: itemId, storedItem });
+
+        const episodes = await DB.getEpisodes(itemId);
+        console.log('[Details] Episodes fetched:', episodes);
+
         if (episodes && episodes.length > 0) {
             const epSection = document.getElementById('episodes-section');
             const epContainer = document.getElementById('episodes-list-container');
