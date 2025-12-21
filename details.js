@@ -85,6 +85,10 @@ async function loadDetails(id, type) {
     // Description
     document.getElementById('description').textContent = details.overview || details.description || 'No description available.';
 
+    // DEBUGGING: Print details to console to verify videoUrl existence
+    console.log('Fetched Details:', details);
+    console.log('Video URL (Camel):', details.videoUrl);
+    console.log('Video URL (Lower):', details.videourl);
 
     // Video Player Logic (Plyr + HLS.js)
     const videoSection = document.getElementById('video-player-section');
@@ -92,8 +96,10 @@ async function loadDetails(id, type) {
 
     // Robust check for Video URL (handles videoUrl or videourl)
     const videoSource = details.videoUrl || details.videourl || '';
+    console.log('Detected Video Source:', videoSource);
 
     if (videoSource) {
+        console.log('Initializing Player...');
         // Setup Player
         const video = document.getElementById('player');
 
