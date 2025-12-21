@@ -164,6 +164,9 @@ async function loadDetails(id, type) {
         // Setup Player
         const video = document.getElementById('player');
 
+        // Set video poster (thumbnail)
+        video.poster = backdropUrl || posterUrl || '';
+
         // Destroy existing Plyr instance if any
         if (window.plyrPlayer && typeof window.plyrPlayer.destroy === 'function') {
             window.plyrPlayer.destroy();
