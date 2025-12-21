@@ -12,8 +12,58 @@ class MovXApp {
 
     async init() {
         this.bindEvents();
+        this.setupAuth(); // Initialize Google Auth
         await this.loadContent();
         this.startHeroSlider();
+    }
+
+    async setupAuth() {
+        const authBtn = document.getElementById('authBtn');
+
+        // Check current session
+        const { data: { session } } = await supabase.auth.getSession();
+        this.updateAuthUI(session);
+
+        // Listen for auth changes
+        supabase.auth.onAuthStateChange((_event, session) => {
+            this.updateAuthUI(session);
+        });
+
+        // Handle Login/Logout Click
+        authBtn.addEventListener('click', async () => {
+            if (this.currentSession) {
+                // Logout
+                await supabase.auth.signOut();
+            } else {
+                // Login with Google
+                await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.href // Redirect back to this page
+                    }
+                });
+            }
+        });
+    }
+
+    updateAuthUI(session) {
+        this.currentSession = session;
+        const authBtn = document.getElementById('authBtn');
+
+        if (session) {
+            // Logged In: Show User Avatar or Logout Icon
+            const avatarUrl = session.user.user_metadata.avatar_url;
+            if (avatarUrl) {
+                authBtn.innerHTML = `<img src="${avatarUrl}" style="width: 28px; height: 28px; border-radius: 50%;">`;
+            } else {
+                authBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i>';
+            }
+            authBtn.title = `Logged in as ${session.user.email}. Click to Logout.`;
+        } else {
+            // Logged Out: Show Google Icon
+            authBtn.innerHTML = '<i class="fab fa-google"></i>';
+            authBtn.title = 'Login with Google';
+        }
     }
 
     bindEvents() {

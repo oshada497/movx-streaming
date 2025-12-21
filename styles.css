@@ -323,6 +323,19 @@ img {
     color: var(--accent-yellow) !important;
 }
 
+#authBtn {
+    margin-left: 8px;
+    margin-right: 8px;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+}
+
+#authBtn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
 /* ===== Sidebar ===== */
 .sidebar {
     position: fixed;
