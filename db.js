@@ -25,13 +25,23 @@ const DB = {
 
     async addMovie(movie) {
         // Remove 'id' if it's just a local timestamp, let Supabase handle Ids or use tmdbId as unique
-        // We will use tmdbId to check existence
         const existing = await this.getMovieByTmdbId(movie.tmdbId);
         if (existing) return false;
 
+        // Sanitize object to remove properties that don't exist in the 'movies' table (like 'seasons')
+        const allowedFields = [
+            'tmdbId', 'title', 'description', 'platform', 'year', 'rating',
+            'genres', 'backdrop', 'poster', 'ageRating', 'runtime', 'videoUrl'
+        ];
+
+        const cleanMovie = {};
+        allowedFields.forEach(field => {
+            if (movie[field] !== undefined) cleanMovie[field] = movie[field];
+        });
+
         const { data, error } = await supabaseClient
             .from('movies')
-            .insert([movie])
+            .insert([cleanMovie])
             .select();
 
         if (error) {
@@ -46,22 +56,29 @@ const DB = {
             .from('movies')
             .select('*')
             .eq('tmdbId', tmdbId)
-            .single();
+            .maybeSingle(); // Use maybeSingle() to avoid 406 errors when content doesn't exist yet
 
-        if (error && error.code !== 'PGRST116') { // PGRST116 is 'not found'
-            console.error('Error fetching movie:', error);
+        if (error) {
+            // console.error('Error fetching movie:', error);
         }
-        return data; // returns null if not found
+        return data;
     },
 
     async updateMovie(id, updates) {
-        // id here is the Supabase ID (UUID or numeric) or our local ID?
-        // Admin app uses timestamps for IDs currently. 
-        // We should probably rely on the 'id' column from Supabase which we get when we fetch.
+        // Sanitize updates
+        const allowedFields = [
+            'tmdbId', 'title', 'description', 'platform', 'year', 'rating',
+            'genres', 'backdrop', 'poster', 'ageRating', 'runtime', 'videoUrl'
+        ];
+
+        const cleanUpdates = {};
+        allowedFields.forEach(field => {
+            if (updates[field] !== undefined) cleanUpdates[field] = updates[field];
+        });
 
         const { data, error } = await supabaseClient
             .from('movies')
-            .update(updates)
+            .update(cleanUpdates)
             .eq('id', id)
             .select();
 
@@ -104,9 +121,20 @@ const DB = {
         const existing = await this.getTVShowByTmdbId(show.tmdbId);
         if (existing) return false;
 
+        // Sanitize object
+        const allowedFields = [
+            'tmdbId', 'title', 'description', 'platform', 'year', 'rating',
+            'genres', 'backdrop', 'poster', 'ageRating', 'seasons', 'videoUrl'
+        ];
+
+        const cleanShow = {};
+        allowedFields.forEach(field => {
+            if (show[field] !== undefined) cleanShow[field] = show[field];
+        });
+
         const { data, error } = await supabaseClient
             .from('tv_shows')
-            .insert([show])
+            .insert([cleanShow])
             .select();
 
         if (error) {
@@ -121,15 +149,26 @@ const DB = {
             .from('tv_shows')
             .select('*')
             .eq('tmdbId', tmdbId)
-            .single();
+            .maybeSingle();
 
         return data;
     },
 
     async updateTVShow(id, updates) {
+        // Sanitize updates
+        const allowedFields = [
+            'tmdbId', 'title', 'description', 'platform', 'year', 'rating',
+            'genres', 'backdrop', 'poster', 'ageRating', 'seasons', 'videoUrl'
+        ];
+
+        const cleanUpdates = {};
+        allowedFields.forEach(field => {
+            if (updates[field] !== undefined) cleanUpdates[field] = updates[field];
+        });
+
         const { data, error } = await supabaseClient
             .from('tv_shows')
-            .update(updates)
+            .update(cleanUpdates)
             .eq('id', id)
             .select();
 
