@@ -163,9 +163,23 @@ async function loadDetails(id, type) {
         console.log('Initializing Player...');
         // Setup Player
         const video = document.getElementById('player');
+        const finalPosterUrl = backdropUrl || posterUrl || '';
 
-        // Set video poster (thumbnail)
-        video.poster = backdropUrl || posterUrl || '';
+        // Set video poster attribute
+        video.poster = finalPosterUrl;
+
+        // Force poster via CSS to ensure it displays (fixes desktop issues)
+        if (finalPosterUrl) {
+            const style = document.createElement('style');
+            style.innerHTML = `
+                .plyr__poster {
+                    background-image: url("${finalPosterUrl}") !important;
+                    background-size: cover !important;
+                    background-position: center !important;
+                }
+            `;
+            document.head.appendChild(style);
+        }
 
         // Destroy existing Plyr instance if any
         if (window.plyrPlayer && typeof window.plyrPlayer.destroy === 'function') {
@@ -202,7 +216,7 @@ async function loadDetails(id, type) {
                         onChange: (e) => updateQuality(e),
                     },
                     iconUrl: 'https://cdn.plyr.io/3.7.8/plyr.svg', // Ensure icons load
-                    poster: video.poster // Explicitly pass poster
+                    poster: finalPosterUrl // Explicitly pass poster URL
                 };
                 window.plyrPlayer = new Plyr(video, defaultOptions);
             });
@@ -215,7 +229,7 @@ async function loadDetails(id, type) {
                     'progress', 'current-time', 'duration', 'mute',
                     'volume', 'settings', 'pip', 'airplay', 'fullscreen'
                 ],
-                poster: video.poster // Explicitly pass poster for standard video
+                poster: finalPosterUrl // Explicitly pass poster URL
             });
         }
 
