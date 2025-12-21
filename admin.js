@@ -546,14 +546,24 @@ class AdminApp {
     }
 
     async saveEdit(id, type) {
+        const titleInput = document.getElementById('editTitle');
+        const descInput = document.getElementById('editDescription');
+        const platformInput = document.getElementById('editPlatform');
+        const yearInput = document.getElementById('editYear');
+        const videoInput = document.getElementById('editVideoUrl');
+        const posterInput = document.getElementById('editPoster');
+
         const updates = {
-            title: document.getElementById('editTitle').value.trim(),
-            description: document.getElementById('editDescription').value.trim(),
-            platform: document.getElementById('editPlatform').value,
-            year: document.getElementById('editYear').value,
-            videoUrl: document.getElementById('editVideoUrl').value.trim(),
-            poster: document.getElementById('editPoster').value.trim()
+            title: titleInput ? titleInput.value.trim() : '',
+            description: descInput ? descInput.value.trim() : '',
+            platform: platformInput ? platformInput.value : '',
+            year: yearInput ? yearInput.value : '',
+            poster: posterInput ? posterInput.value.trim() : ''
         };
+
+        if (videoInput) {
+            updates.videoUrl = videoInput.value.trim();
+        }
 
         let result;
         if (type === 'movie') {
