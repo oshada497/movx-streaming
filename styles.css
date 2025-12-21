@@ -173,24 +173,39 @@ img {
 }
 
 .logo-icon {
-    width: 34px;
-    height: 34px;
-    background: #fbbf24;
-    /* Yellow similar to reference */
-    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    background: rgba(251, 191, 36, 0.1);
+    border: 1px solid rgba(251, 191, 36, 0.2);
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #000;
-    font-size: 1.2rem;
-    box-shadow: 0 0 15px rgba(251, 191, 36, 0.2);
+    transition: all 0.3s;
+}
+
+.logo-icon:hover {
+    background: rgba(251, 191, 36, 0.15);
+}
+
+.logo-dots {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px;
+}
+
+.logo-dots .dot {
+    width: 6px;
+    height: 6px;
+    background: #fbbf24;
+    border-radius: 2px;
 }
 
 .logo-text {
     color: #fff;
-    font-size: 1.4rem;
-    font-weight: 800;
-    letter-spacing: 0.5px;
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: 1px;
 }
 
 .logo-x {
