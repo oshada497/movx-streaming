@@ -30,18 +30,31 @@ class MovXApp {
         });
 
         // Handle Login/Logout Click
+        // Handle Login/Logout Click
         authBtn.addEventListener('click', async () => {
-            if (this.currentSession) {
-                // Logout
-                await supabase.auth.signOut();
-            } else {
-                // Login with Google
-                await supabase.auth.signInWithOAuth({
-                    provider: 'google',
-                    options: {
-                        redirectTo: window.location.href // Redirect back to this page
-                    }
-                });
+            console.log('Auth button clicked'); // DEBUG LOG
+
+            try {
+                if (this.currentSession) {
+                    // Logout
+                    console.log('Signing out...');
+                    const { error } = await supabase.auth.signOut();
+                    if (error) console.error('Sign out error:', error);
+                } else {
+                    // Login with Google
+                    console.log('Initiating Google Sign-In...');
+                    const { data, error } = await supabase.auth.signInWithOAuth({
+                        provider: 'google',
+                        options: {
+                            redirectTo: window.location.href // Redirect back to this page
+                        }
+                    });
+                    if (error) console.error('Sign in error:', error);
+                    else console.log('Sign in started:', data);
+                }
+            } catch (err) {
+                console.error('Unexpected auth error:', err);
+                alert('Authentication failed. Check console for details.');
             }
         });
     }
