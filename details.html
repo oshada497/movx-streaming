@@ -17,6 +17,16 @@
             --plyr-color-main: #e50914;
             border-radius: 12px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            aspect-ratio: 16/9;
+            /* Enforce aspect ratio */
+            background: #000;
+        }
+
+        .plyr video {
+            object-fit: contain;
+            /* Ensure video fits without distortion, but fills space */
+            height: 100%;
+            width: 100%;
         }
 
         .video-section {
