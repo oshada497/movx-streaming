@@ -173,6 +173,19 @@ async function loadDetails(id, type) {
         playerContent.innerHTML = '';
         if (window.plyrPlayer && typeof window.plyrPlayer.pause === 'function') window.plyrPlayer.pause();
     });
+
+    // Hide Loader and Reveal Content
+    setTimeout(() => {
+        const loader = document.getElementById('loadingOverlay');
+        const containers = document.querySelectorAll('.details-container, .video-section');
+
+        if (loader) {
+            loader.style.opacity = '0';
+            setTimeout(() => loader.style.display = 'none', 500);
+        }
+
+        containers.forEach(el => el.classList.add('content-visible'));
+    }, 300); // Short delay for smoothness
 }
 
 function updateQuality(newQuality) {
