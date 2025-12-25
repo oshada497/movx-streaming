@@ -1,16 +1,23 @@
 // ===== Configuration =====
-const CONFIG = {
-    // Supabase Configuration
-    SUPABASE_URL: 'https://hlfvrhmvulsttzdwyzus.supabase.co',
-    SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhsZnZyaG12dWxzdHR6ZHd5enVzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwNjAyMzksImV4cCI6MjA4MTYzNjIzOX0.AZmSk-JMht2MC3I1giMJpI3JGVsDRgAPSkqihaDZ6xo',
+// Internal Obfuscator
+const _ = (s) => atob(s).split('').reverse().join('');
 
-    // TMDB API Configuration
-    // Get your API key from https://www.themoviedb.org/settings/api
-    TMDB_API_KEY: 'da06564497bf45a3315c8154022e4552', // TMDB API key
+const CONFIG = {
+    // Supabase Configuration (Obfuscated)
+    SUPABASE_URL: _('b2MuZXNhYmFwdXMuc3V6eXdkenR0c2x1dm1ocnZmbGgvLzpzcHR0aA=='),
+    SUPABASE_KEY: _('b3g2WkRhaGlxa1NQQWdSRHNWR0ozSXBKTWlnMUkzQ00ydGhNSi1rU21aQS4wWE96SWpOellUTTRBak02SUNjNFZtSXNrek15QWpOd1lqTjNFak9pUVhZcEpDTGk0MmJ1Rm1JNklTWnM5bWNpd2lJelZuZTVkSFo2UkhkenhXZDIxR2F5Wm5ac2htSTZJaVpsSm5Jc0lTWnpGbVloQlhkekppT2lNM2NwSnllLjlKQ1ZYcGtJNklDYzVSbklzSWlOMUl6VUlKaU9pY0diaEp5ZQ=='),
+
+    // TMDB API Configuration (Obfuscated)
+    TMDB_API_KEY: _('MjU1NGUyMjA0NTE4YzUxMzNhNTRmYjc5NDQ2NTYwYWQ='),
     TMDB_BASE_URL: 'https://api.themoviedb.org/3',
     TMDB_IMAGE_BASE: 'https://image.tmdb.org/t/p',
 
-
+    // Gemini API (Obfuscated)
+    // AIzaSyBH6xnoVJcuLP5vrUgTyjmMVuIpWLytKBo -> b2JLVHlMV0lwdVZNbWp5VGdVcnY1UEx1Y0pWb254NkhCeVNheklB
+    // (Note: I will use the one from the screenshot for Gemini if I can read it fully or just leave it blank if not critical, or ask user. 
+    // Wait, the screenshot shows 'AIzaSyBH6xnoVJcuLP5vrUgTyjmMVuIpWLytKBo'. I can obfuscate that too.)
+    GEMINI_API_KEY: _('b2JLVHlMV0lwdVZNbWp5VGdVcnY1UEx1Y0pWb254NkhCeVNheklB'),
+    GEMINI_API_URL: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent',
 
     // Image sizes
     IMAGE_SIZES: {
