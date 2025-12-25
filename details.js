@@ -366,7 +366,8 @@ async function setupCommentSection(contentId, contentType) {
     currentContentType = contentType;
 
     // Check if user is logged in
-    const { data: { session } } = await supabase.auth.getSession();
+    // Note: Auth is temporarily disabled during backend migration
+    const session = null;
     const commentInputArea = document.getElementById('commentInputArea');
 
     if (session) {
@@ -378,7 +379,7 @@ async function setupCommentSection(contentId, contentType) {
         // Hide comment input if not logged in
         commentInputArea.innerHTML = `
             <div style="text-align: center; width: 100%; color: var(--text-muted);">
-                <p>Please <a href="#" onclick="loginToComment()" style="color: var(--accent-yellow);">login</a> to post a comment.</p>
+                <p>Comments are temporarily disabled for maintenance.</p>
             </div>
         `;
     }
@@ -389,43 +390,22 @@ async function setupCommentSection(contentId, contentType) {
         submitBtn.addEventListener('click', postComment);
     }
 
-    // Load existing comments
-    await loadComments(contentId, contentType);
+    // Load existing comments (Skipping for now as backend endpoint isn't ready for comments)
+    // await loadComments(contentId, contentType);
 }
 
 async function loginToComment() {
-    const redirectUrl = window.location.href;
-    await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo: redirectUrl }
-    });
+    alert("Login is temporarily disabled.");
 }
 
 async function loadComments(contentId, contentType) {
+    // Comments loading disabled due to backend migration
     const commentsList = document.getElementById('commentsList');
     const noCommentsMessage = document.getElementById('noCommentsMessage');
-
-    try {
-        const { data: comments, error } = await supabase
-            .from('comments')
-            .select('*')
-            .eq('content_id', contentId)
-            .eq('content_type', contentType)
-            .order('created_at', { ascending: false });
-
-        if (error) {
-            console.error('Error loading comments:', error);
-            return;
-        }
-
-        if (comments && comments.length > 0) {
-            noCommentsMessage.style.display = 'none';
-            renderComments(comments);
-        } else {
-            noCommentsMessage.style.display = 'block';
-        }
-    } catch (err) {
-        console.error('Error fetching comments:', err);
+    if (noCommentsMessage) noCommentsMessage.style.display = 'block';
+    if (commentsList) {
+        commentsList.innerHTML = '';
+        commentsList.appendChild(noCommentsMessage);
     }
 }
 
@@ -459,49 +439,7 @@ function renderComments(comments) {
 }
 
 async function postComment() {
-    const commentInput = document.getElementById('commentInput');
-    const commentText = commentInput.value.trim();
-
-    if (!commentText) {
-        alert('Please enter a comment.');
-        return;
-    }
-
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-        alert('You must be logged in to comment.');
-        return;
-    }
-
-    const user = session.user;
-    const userName = user.user_metadata.full_name || user.user_metadata.name || user.email;
-    const userAvatar = user.user_metadata.avatar_url || '';
-
-    try {
-        const { data, error } = await supabase
-            .from('comments')
-            .insert({
-                content_id: currentContentId,
-                content_type: currentContentType,
-                user_id: user.id,
-                user_name: userName,
-                user_avatar: userAvatar,
-                comment_text: commentText
-            })
-            .select();
-
-        if (error) {
-            console.error('Error posting comment:', error);
-            alert('Failed to post comment. ' + error.message);
-            return;
-        }
-
-        // Clear input and reload comments
-        commentInput.value = '';
-        await loadComments(currentContentId, currentContentType);
-    } catch (err) {
-        console.error('Error submitting comment:', err);
-    }
+    alert("Posting comments is temporarily disabled during system upgrade.");
 }
 
 function getTimeAgo(date) {

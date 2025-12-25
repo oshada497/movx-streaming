@@ -5,15 +5,24 @@ export default {
         const path = url.pathname;
         const method = request.method;
 
-        // CORS Headers
-        const corsHeaders = {
+        // Security & CORS Headers
+        const responseHeaders = {
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
             'Access-Control-Allow-Headers': 'Content-Type',
+            // HSTS: Enforce HTTPS for 1 year
+            'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
+            // X-Frame-Options: Prevent clickjacking (deny iframes)
+            'X-Frame-Options': 'DENY',
+            // CSP: Basic policy to allow scripts/images but block malicious content
+            // Note: Adjust 'connect-src' to allow your API URL
+            'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.plyr.io https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.plyr.io https://cdnjs.cloudflare.com; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; connect-src 'self' https:;",
+            // Content Type enforcement
+            'X-Content-Type-Options': 'nosniff'
         };
 
         if (method === 'OPTIONS') {
-            return new Response(null, { headers: corsHeaders });
+            return new Response(null, { headers: responseHeaders });
         }
 
         try {
@@ -61,12 +70,12 @@ export default {
                 if (method === 'DELETE') return deleteSupabaseContent(env, 'episodes', id);
             }
 
-            return new Response('Not Found', { status: 404, headers: corsHeaders });
+            return new Response('Not Found', { status: 404, headers: responseHeaders });
 
         } catch (err) {
             return new Response(JSON.stringify({ error: err.message }), {
                 status: 500,
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+                headers: { ...responseHeaders, 'Content-Type': 'application/json' }
             });
         }
     }
@@ -86,11 +95,20 @@ async function handleTmdbRequest(request, env, subPath) {
     });
 
     const data = await response.json();
+    // Re-define responseHeaders here or pass it down.
+    // Simpler: Just reconstruct essential CORS+Security headers locally or use helper.
+    // For brevity/correctness in this replace block, I will inline standard ones + CORS to ensure they persist.
+    const secureHeaders = {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
+        'X-Frame-Options': 'DENY',
+        'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.plyr.io https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.plyr.io https://cdnjs.cloudflare.com; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; connect-src 'self' https:;",
+        'X-Content-Type-Options': 'nosniff'
+    };
+
     return new Response(JSON.stringify(data), {
-        headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-        }
+        headers: secureHeaders
     });
 }
 
@@ -109,8 +127,15 @@ async function handleTranslateRequest(request, env) {
     });
 
     const data = await response.json();
+    const secureHeaders = {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
+        'X-Frame-Options': 'DENY',
+        'X-Content-Type-Options': 'nosniff'
+    };
     return new Response(JSON.stringify(data), {
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+        headers: secureHeaders
     });
 }
 
@@ -124,8 +149,16 @@ async function getSupabaseContent(env, table) {
             'Authorization': `Bearer ${env.SUPABASE_KEY}`
         }
     });
+
+    const secureHeaders = {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
+        'X-Frame-Options': 'DENY'
+    };
+
     return new Response(response.body, {
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+        headers: secureHeaders
     });
 }
 
@@ -144,7 +177,7 @@ async function addSupabaseContent(request, env, table) {
         body: JSON.stringify(body)
     });
 
-    return new Response(response.body, { headers: { 'Access-Control-Allow-Origin': '*' } });
+    return new Response(response.body, { headers: { 'Access-Control-Allow-Origin': '*', 'Strict-Transport-Security': 'max-age=31536000' } });
 }
 
 async function updateSupabaseContent(request, env, table, id) {
@@ -161,7 +194,7 @@ async function updateSupabaseContent(request, env, table, id) {
         body: JSON.stringify(body)
     });
 
-    return new Response(response.body, { headers: { 'Access-Control-Allow-Origin': '*' } });
+    return new Response(response.body, { headers: { 'Access-Control-Allow-Origin': '*', 'Strict-Transport-Security': 'max-age=31536000' } });
 }
 
 async function deleteSupabaseContent(env, table, id) {
@@ -173,7 +206,7 @@ async function deleteSupabaseContent(env, table, id) {
             'Authorization': `Bearer ${env.SUPABASE_KEY}`
         }
     });
-    return new Response(response.body, { headers: { 'Access-Control-Allow-Origin': '*' } });
+    return new Response(response.body, { headers: { 'Access-Control-Allow-Origin': '*', 'Strict-Transport-Security': 'max-age=31536000' } });
 }
 
 async function getEpisodes(request, env) {
@@ -193,6 +226,6 @@ async function getEpisodes(request, env) {
     });
 
     return new Response(response.body, {
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Strict-Transport-Security': 'max-age=31536000', 'X-Frame-Options': 'DENY' }
     });
 }
