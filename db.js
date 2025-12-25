@@ -63,6 +63,14 @@ const DB = {
             .select('*')
             .order('created_at', { ascending: false });
 
+        // Decrypt URLs
+        if (data) {
+            data.forEach(m => {
+                if (m.videoUrl) m.videoUrl = Security.decrypt(m.videoUrl);
+                if (m.facebookVideoId) m.facebookVideoId = Security.decrypt(m.facebookVideoId);
+            });
+        }
+
         if (error) {
             console.error('Error fetching movies:', error);
             return [];
@@ -86,7 +94,14 @@ const DB = {
 
         const cleanMovie = {};
         allowedFields.forEach(field => {
-            if (movie[field] !== undefined) cleanMovie[field] = movie[field];
+            if (movie[field] !== undefined) {
+                // Obfuscate Video URL and FB ID
+                if (field === 'videoUrl' || field === 'facebookVideoId') {
+                    cleanMovie[field] = movie[field] ? Security.encrypt(movie[field]) : movie[field];
+                } else {
+                    cleanMovie[field] = movie[field];
+                }
+            }
         });
 
         const { data, error } = await supabaseClient
@@ -109,6 +124,11 @@ const DB = {
             .eq('tmdbId', tmdbId)
             .maybeSingle(); // Use maybeSingle() to avoid 406 errors when content doesn't exist yet
 
+        if (data) {
+            if (data.videoUrl) data.videoUrl = Security.decrypt(data.videoUrl);
+            if (data.facebookVideoId) data.facebookVideoId = Security.decrypt(data.facebookVideoId);
+        }
+
         if (error) {
             // console.error('Error fetching movie:', error);
         }
@@ -124,7 +144,13 @@ const DB = {
 
         const cleanUpdates = {};
         allowedFields.forEach(field => {
-            if (updates[field] !== undefined) cleanUpdates[field] = updates[field];
+            if (updates[field] !== undefined) {
+                if (field === 'videoUrl' || field === 'facebookVideoId') {
+                    cleanUpdates[field] = updates[field] ? Security.encrypt(updates[field]) : updates[field];
+                } else {
+                    cleanUpdates[field] = updates[field];
+                }
+            }
         });
 
         const { data, error } = await supabaseClient
@@ -167,6 +193,13 @@ const DB = {
             .select('*')
             .order('created_at', { ascending: false });
 
+        if (data) {
+            data.forEach(s => {
+                if (s.videoUrl) s.videoUrl = Security.decrypt(s.videoUrl);
+                if (s.facebookVideoId) s.facebookVideoId = Security.decrypt(s.facebookVideoId);
+            });
+        }
+
         if (error) {
             console.error('Error fetching tv shows:', error);
             return [];
@@ -189,7 +222,13 @@ const DB = {
 
         const cleanShow = {};
         allowedFields.forEach(field => {
-            if (show[field] !== undefined) cleanShow[field] = show[field];
+            if (show[field] !== undefined) {
+                if (field === 'videoUrl' || field === 'facebookVideoId') {
+                    cleanShow[field] = show[field] ? Security.encrypt(show[field]) : show[field];
+                } else {
+                    cleanShow[field] = show[field];
+                }
+            }
         });
 
         const { data, error } = await supabaseClient
@@ -212,6 +251,11 @@ const DB = {
             .eq('tmdbId', tmdbId)
             .maybeSingle();
 
+        if (data) {
+            if (data.videoUrl) data.videoUrl = Security.decrypt(data.videoUrl);
+            if (data.facebookVideoId) data.facebookVideoId = Security.decrypt(data.facebookVideoId);
+        }
+
         return data;
     },
 
@@ -224,7 +268,13 @@ const DB = {
 
         const cleanUpdates = {};
         allowedFields.forEach(field => {
-            if (updates[field] !== undefined) cleanUpdates[field] = updates[field];
+            if (updates[field] !== undefined) {
+                if (field === 'videoUrl' || field === 'facebookVideoId') {
+                    cleanUpdates[field] = updates[field] ? Security.encrypt(updates[field]) : updates[field];
+                } else {
+                    cleanUpdates[field] = updates[field];
+                }
+            }
         });
 
         const { data, error } = await supabaseClient
@@ -265,6 +315,13 @@ const DB = {
             .order('season_number', { ascending: true })
             .order('episode_number', { ascending: true });
 
+        if (data) {
+            data.forEach(ep => {
+                if (ep.video_url) ep.video_url = Security.decrypt(ep.video_url);
+                if (ep.facebook_video_id) ep.facebook_video_id = Security.decrypt(ep.facebook_video_id);
+            });
+        }
+
         if (error) {
             console.error('Error fetching episodes:', error);
             return [];
@@ -273,6 +330,10 @@ const DB = {
     },
 
     async addEpisode(episode) {
+        // Obfuscate
+        if (episode.video_url) episode.video_url = Security.encrypt(episode.video_url);
+        if (episode.facebook_video_id) episode.facebook_video_id = Security.encrypt(episode.facebook_video_id);
+
         const { data, error } = await supabaseClient
             .from('episodes')
             .insert([episode])
@@ -287,6 +348,9 @@ const DB = {
     },
 
     async updateEpisode(id, updates) {
+        if (updates.video_url) updates.video_url = Security.encrypt(updates.video_url);
+        if (updates.facebook_video_id) updates.facebook_video_id = Security.encrypt(updates.facebook_video_id);
+
         const { error } = await supabaseClient
             .from('episodes')
             .update(updates)
