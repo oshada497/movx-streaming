@@ -13,6 +13,44 @@ const API = {
         }
     },
 
+    // --- Direct TMDB Calls (Bypassing Worker) ---
+    async searchDirect(query, apiKey) {
+        if (!apiKey) return [];
+        const url = `https://api.themoviedb.org/3/search/multi?api_key=${apiKey}&query=${encodeURIComponent(query)}&include_adult=false`;
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+            return data.results || [];
+        } catch (e) {
+            console.error('Direct Search Failed', e);
+            return [];
+        }
+    },
+
+    async getDetailsDirect(type, id, apiKey) {
+        if (!apiKey) return null;
+        const url = `https://api.themoviedb.org/3/${type}/${id}?api_key=${apiKey}&append_to_response=credits,videos,similar,recommendations,external_ids`;
+        try {
+            const res = await fetch(url);
+            return await res.json();
+        } catch (e) {
+            console.error('Direct Details Failed', e);
+            return null;
+        }
+    },
+
+    async getSeasonDetailsDirect(tvId, seasonNumber, apiKey) {
+        if (!apiKey) return null;
+        const url = `https://api.themoviedb.org/3/tv/${tvId}/season/${seasonNumber}?api_key=${apiKey}`;
+        try {
+            const res = await fetch(url);
+            return await res.json();
+        } catch (e) {
+            console.error('Direct Season Details Failed', e);
+            return null;
+        }
+    },
+
     // --- TMDB ---
     async getTrending(type = 'all', timeWindow = 'week') {
         const data = await this.fetch(`/api/tmdb/trending/${type}/${timeWindow}`);
