@@ -159,7 +159,7 @@ class Auth {
                 </div>
                 <div class="profile-body">
                     <div class="profile-avatar-large">
-                        <img id="modalProfileAvatar" src="" alt="Profile">
+                        <img id="modalProfileAvatar" src="" alt="Profile" referrerpolicy="no-referrer">
                     </div>
                     <div class="form-group">
                         <label>Display Name</label>
@@ -259,7 +259,7 @@ class Auth {
                 const name = this.getUserName();
 
                 if (avatar) {
-                    authBtn.innerHTML = `<img src="${avatar}" alt="${name}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-primary);">`;
+                    authBtn.innerHTML = `<img src="${avatar}" alt="${name}" referrerpolicy="no-referrer" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-primary);">`;
                 } else {
                     authBtn.innerHTML = '<i class="fas fa-user-circle" style="font-size: 1.5rem;"></i>';
                 }
