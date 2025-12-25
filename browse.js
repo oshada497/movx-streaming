@@ -108,6 +108,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Render Grid
     renderGrid(items, contentGrid);
+
+    // Initialize Auth UI
+    window.auth.setupHeaderUI();
 });
 
 function renderGrid(items, container) {

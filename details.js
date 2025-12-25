@@ -69,6 +69,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     await loadDetails(id, type);
+
+    // Initialize Auth UI
+    window.auth.setupHeaderUI();
 });
 
 async function loadDetails(id, type) {
