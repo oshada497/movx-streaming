@@ -20,7 +20,18 @@ You must update your Google OAuth Client to allow the new Worker redirect URI.
    *(Keep your existing ones if you want, but this new one is required for the new flow).*
 4. Save the changes.
 
-## 3. How it Works
+## 3. Configure Supabase Dashboard
+Supabase needs to know that your Worker is allowed to handle auth redirects.
+
+1. Go to your **Supabase Dashboard** > **Authentication** > **URL Configuration**.
+2. Under **Redirect URLs**, click **Add URL**.
+3. Add your Worker's callback URL:
+   ```
+   https://movx-streaming-backend.samename253.workers.dev/auth/callback
+   ```
+4. Click **Save**.
+
+## 4. How it Works
 1. **User clicks Login**: Frontend redirects to `https://movx-streaming-backend.../auth/login`.
 2. **Worker**: Redirects user to Google.
 3. **Google**: Authenticates user and redirects back to `.../auth/callback`.
