@@ -437,8 +437,7 @@ async function loadComments(contentId, contentType) {
     }
 }
 
-    }
-}
+
 
 function renderComments(comments) {
     const commentsList = document.getElementById('commentsList');
