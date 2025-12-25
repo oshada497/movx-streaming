@@ -190,7 +190,8 @@ class AdminApp {
         grid.innerHTML = '<div class="loading-spinner"></div>';
 
         try {
-            const results = await API.search(query);
+            // Use Direct Search with Client Key
+            const results = await API.searchDirect(query, CONFIG.API_API_KEY);
 
             if (results.length === 0) {
                 grid.innerHTML = '<p class="placeholder-text">No results found</p>';
@@ -790,7 +791,7 @@ class AdminApp {
         const btnSave = document.getElementById('btnSaveSeason');
 
         // 1. Fetch TV Details from API to get seasons
-        const tmdbDetails = await API.getTVDetails(tmdbId);
+        const tmdbDetails = await API.getDetailsDirect('tv', tmdbId, CONFIG.API_API_KEY);
         if (!tmdbDetails || !tmdbDetails.seasons) {
             seasonSelect.innerHTML = '<option>Error loading seasons</option>';
             return;
@@ -811,7 +812,7 @@ class AdminApp {
             btnSave.style.display = 'none';
 
             // Fetch API Season Details (Episodes)
-            const seasonData = await API.getSeasonDetails(tmdbId, seasonNum);
+            const seasonData = await API.getSeasonDetailsDirect(tmdbId, seasonNum, CONFIG.API_API_KEY);
             // Fetch our Saved Episodes (Local DB)
             const savedEpisodes = await DB.getEpisodes(tvShowId); // This returns ALL seasons
 
