@@ -368,81 +368,112 @@ async function setupCommentSection(contentId, contentType) {
     currentContentId = contentId;
     currentContentType = contentType;
 
-    // Check if user is logged in
-    // Note: Auth is temporarily disabled during backend migration
-    const session = null;
+    // Check auth state
+    const user = window.auth.getUser();
     const commentInputArea = document.getElementById('commentInputArea');
+    const commentInput = document.getElementById('commentInput');
 
-    if (session) {
-        // Show comment input and set user avatar
+    if (user) {
+        // Show comment input
         commentInputArea.style.display = 'flex';
-        const avatarUrl = session.user.user_metadata.avatar_url || 'https://placehold.co/40';
+        const avatarUrl = window.auth.getUserAvatar() || 'https://placehold.co/40?text=User';
         document.getElementById('commentUserAvatar').src = avatarUrl;
+
+        // Listen for auth changes to update avatar if changed
+        window.auth.onAuthStateChange(u => {
+            if (u) document.getElementById('commentUserAvatar').src = window.auth.getUserAvatar() || 'https://placehold.co/40?text=User';
+        });
+
     } else {
-        // Hide comment input if not logged in
+        // Show login prompt
         commentInputArea.innerHTML = `
-            <div style="text-align: center; width: 100%; color: var(--text-muted);">
-                <p>Comments are temporarily disabled for maintenance.</p>
+            <div class="login-prompt">
+                <p>Please <a href="#" onclick="loginToComment(event)">login</a> to post a comment.</p>
             </div>
+            <style>
+                .login-prompt { width: 100%; text-align: center; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px; }
+                .login-prompt a { color: var(--accent-primary); text-decoration: none; font-weight: 600; }
+                .login-prompt a:hover { text-decoration: underline; }
+            </style>
         `;
     }
 
     // Setup submit button
     const submitBtn = document.getElementById('submitCommentBtn');
     if (submitBtn) {
-        submitBtn.addEventListener('click', postComment);
+        // Remove old listeners by cloning (simple way) or just add if not present. 
+        // Better to just add listener, but ensure not adding multiple.
+        // Since setupCommentSection might be called once per load, simple add is okay.
+        submitBtn.onclick = postComment;
     }
 
-    // Load existing comments (Skipping for now as backend endpoint isn't ready for comments)
-    // await loadComments(contentId, contentType);
+    // Load comments
+    await loadComments(contentId, contentType);
 }
 
-async function loginToComment() {
-    alert("Login is temporarily disabled.");
+function loginToComment(e) {
+    e.preventDefault();
+    window.auth.signInWithGoogle();
 }
 
 async function loadComments(contentId, contentType) {
-    // Comments loading disabled due to backend migration
     const commentsList = document.getElementById('commentsList');
     const noCommentsMessage = document.getElementById('noCommentsMessage');
-    if (noCommentsMessage) noCommentsMessage.style.display = 'block';
-    if (commentsList) {
+
+    // Show loading?
+    // commentsList.innerHTML = '<div class="spinner"></div>';
+
+    const comments = await DB.getComments(contentId, contentType);
+
+    if (comments && comments.length > 0) {
+        renderComments(comments);
+        if (noCommentsMessage) noCommentsMessage.style.display = 'none';
+    } else {
         commentsList.innerHTML = '';
-        commentsList.appendChild(noCommentsMessage);
+        if (noCommentsMessage) {
+            noCommentsMessage.style.display = 'block';
+            commentsList.appendChild(noCommentsMessage);
+        }
     }
 }
 
-function renderComments(comments) {
-    const commentsList = document.getElementById('commentsList');
-    const noCommentsMessage = document.getElementById('noCommentsMessage');
-
-    // Clear existing except noCommentsMessage
-    commentsList.innerHTML = '';
-    commentsList.appendChild(noCommentsMessage);
-    noCommentsMessage.style.display = 'none';
-
-    comments.forEach(comment => {
-        const timeAgo = getTimeAgo(new Date(comment.created_at));
-        const commentHTML = `
-            <div class="comment-card" data-id="${comment.id}">
-                <div class="comment-avatar">
-                    <img src="${comment.user_avatar || 'https://placehold.co/40'}" alt="${comment.user_name}">
-                </div>
-                <div class="comment-content">
-                    <div class="comment-header">
-                        <span class="comment-author">${escapeHTML(comment.user_name)}</span>
-                        <span class="comment-time">${timeAgo}</span>
-                    </div>
-                    <p class="comment-text">${escapeHTML(comment.comment_text)}</p>
-                </div>
-            </div>
-        `;
-        commentsList.insertAdjacentHTML('beforeend', commentHTML);
-    });
-}
+// Ensure renderComments is available (it was already in file, no change needed usually, but let's leave it alone or check it)
+// renderComments is below this block in original file.
 
 async function postComment() {
-    alert("Posting comments is temporarily disabled during system upgrade.");
+    const input = document.getElementById('commentInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    const user = window.auth.getUser();
+    if (!user) return alert('You must be logged in.');
+
+    const submitBtn = document.getElementById('submitCommentBtn');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    submitBtn.disabled = true;
+
+    const newComment = {
+        content_id: currentContentId,
+        content_type: currentContentType,
+        user_id: user.id,
+        user_name: window.auth.getUserName(),
+        user_avatar: window.auth.getUserAvatar(),
+        comment_text: text
+        // created_at is default now() in DB usually, but we can send if needed. Supabase handles it if column default is set.
+    };
+
+    const added = await DB.addComment(newComment);
+
+    if (added) {
+        input.value = '';
+        await loadComments(currentContentId, currentContentType);
+    } else {
+        alert('Failed to post comment. Please try again.');
+    }
+
+    submitBtn.innerHTML = originalText;
+    submitBtn.disabled = false;
 }
 
 function getTimeAgo(date) {

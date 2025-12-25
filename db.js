@@ -279,7 +279,41 @@ const DB = {
     getWatchlist() { return Storage.getWatchlist(); },
     addToWatchlist(item) { return Storage.addToWatchlist(item); },
     removeFromWatchlist(id, type) { return Storage.removeFromWatchlist(id, type); },
-    isInWatchlist(id, type) { return Storage.isInWatchlist(id, type); }
+    isInWatchlist(id, type) { return Storage.isInWatchlist(id, type); },
+
+    // --- Comments (Direct Supabase) ---
+    async getComments(contentId, contentType) {
+        if (!window.auth || !window.auth.supabase) return [];
+
+        const { data, error } = await window.auth.supabase
+            .from('comments')
+            .select('*')
+            .eq('content_id', contentId)
+            .eq('content_type', contentType)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Error fetching comments:', error);
+            return [];
+        }
+        return data;
+    },
+
+    async addComment(comment) {
+        if (!window.auth || !window.auth.supabase) return false;
+
+        const { data, error } = await window.auth.supabase
+            .from('comments')
+            .insert([comment])
+            .select();
+
+        if (error) {
+            console.error('Error adding comment:', error);
+            // If error is code 42P01 (undefined_table), we should notify user, but console error is fine for now
+            return null;
+        }
+        return data ? data[0] : null;
+    }
 };
 
 window.DB = DB;
