@@ -73,7 +73,7 @@ class AdminApp {
     loadApiKey() {
         const savedKey = localStorage.getItem('movx_tmdb_api_key');
         if (savedKey) {
-            CONFIG.TMDB_API_KEY = savedKey;
+            CONFIG.API_API_KEY = savedKey;
             document.getElementById('tmdbApiKey').value = savedKey;
         }
     }
@@ -84,10 +84,10 @@ class AdminApp {
             btn.addEventListener('click', () => this.switchTab(btn.dataset.tab));
         });
 
-        // TMDB Search
-        document.getElementById('searchBtn').addEventListener('click', () => this.searchTMDB());
+        // API Search
+        document.getElementById('searchBtn').addEventListener('click', () => this.searchAPI());
         document.getElementById('tmdbSearch').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.searchTMDB();
+            if (e.key === 'Enter') this.searchAPI();
         });
 
         // Manual add form
@@ -174,15 +174,15 @@ class AdminApp {
         if (tabId === 'tvshows') this.renderTVShows();
     }
 
-    async searchTMDB() {
+    async searchAPI() {
         const query = document.getElementById('tmdbSearch').value.trim();
         if (!query) {
             this.showToast('Please enter a search query', 'error');
             return;
         }
 
-        if (CONFIG.TMDB_API_KEY === 'YOUR_TMDB_API_KEY') {
-            this.showToast('Please set your TMDB API key in Settings', 'error');
+        if (CONFIG.API_API_KEY === 'YOUR_API_API_KEY') {
+            this.showToast('Please set your API API key in Settings', 'error');
             return;
         }
 
@@ -190,7 +190,7 @@ class AdminApp {
         grid.innerHTML = '<div class="loading-spinner"></div>';
 
         try {
-            const results = await TMDB.search(query);
+            const results = await API.search(query);
 
             if (results.length === 0) {
                 grid.innerHTML = '<p class="placeholder-text">No results found</p>';
@@ -214,13 +214,13 @@ class AdminApp {
             grid.querySelectorAll('.add-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    this.addFromTMDB(btn.dataset.id, btn.dataset.type, btn);
+                    this.addFromAPI(btn.dataset.id, btn.dataset.type, btn);
                 });
             });
 
         } catch (error) {
             console.error('Search error:', error);
-            grid.innerHTML = '<p class="placeholder-text">Error searching TMDB. Check your API key.</p>';
+            grid.innerHTML = '<p class="placeholder-text">Error searching API. Check your API key.</p>';
         }
     }
 
@@ -228,7 +228,7 @@ class AdminApp {
         const title = item.title || item.name;
         const year = (item.release_date || item.first_air_date || '').substring(0, 4);
         const type = item.media_type === 'tv' ? 'TV Show' : 'Movie';
-        const poster = TMDB.getImageUrl(item.poster_path, 'poster');
+        const poster = API.getImageUrl(item.poster_path, 'poster');
         const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
 
         // Check if already added
@@ -251,16 +251,16 @@ class AdminApp {
         `;
     }
 
-    async addFromTMDB(id, type, button) {
+    async addFromAPI(id, type, button) {
         button.innerHTML = '<span class="loading-spinner"></span>';
         button.disabled = true;
 
         try {
             let details;
             if (type === 'movie') {
-                details = await TMDB.getMovieDetails(id);
+                details = await API.getMovieDetails(id);
             } else {
-                details = await TMDB.getTVDetails(id);
+                details = await API.getTVDetails(id);
             }
 
             if (!details) {
@@ -275,8 +275,8 @@ class AdminApp {
                 year: (details.release_date || details.first_air_date || '').substring(0, 4),
                 rating: details.vote_average,
                 genres: details.genres?.map(g => g.name) || [],
-                backdrop: TMDB.getBackdropUrl(details.backdrop_path),
-                poster: TMDB.getImageUrl(details.poster_path),
+                backdrop: API.getBackdropUrl(details.backdrop_path),
+                poster: API.getImageUrl(details.poster_path),
                 ageRating: details.adult ? '18+' : 'PG-13',
                 runtime: details.runtime ? `${details.runtime} min` : null,
                 seasons: details.number_of_seasons || null,
@@ -680,7 +680,7 @@ class AdminApp {
         }
 
         localStorage.setItem('movx_tmdb_api_key', key);
-        CONFIG.TMDB_API_KEY = key;
+        CONFIG.API_API_KEY = key;
         this.showToast('API key saved!', 'success');
     }
 
@@ -782,15 +782,15 @@ class AdminApp {
         }, 3000);
     }
 
-    // --- Improved Episodes Logic (TMDB Based) ---
+    // --- Improved Episodes Logic (API Based) ---
     async setupEpisodesManager(tvShowId, tmdbId) {
         window.adminApp = this;
         const seasonSelect = document.getElementById('seasonSelect');
         const list = document.getElementById('episodesList');
         const btnSave = document.getElementById('btnSaveSeason');
 
-        // 1. Fetch TV Details from TMDB to get seasons
-        const tmdbDetails = await TMDB.getTVDetails(tmdbId);
+        // 1. Fetch TV Details from API to get seasons
+        const tmdbDetails = await API.getTVDetails(tmdbId);
         if (!tmdbDetails || !tmdbDetails.seasons) {
             seasonSelect.innerHTML = '<option>Error loading seasons</option>';
             return;
@@ -810,13 +810,13 @@ class AdminApp {
             list.innerHTML = '<div style="text-align:center; padding: 20px;"><div class="spinner"></div><p>Loading metadata...</p></div>';
             btnSave.style.display = 'none';
 
-            // Fetch TMDB Season Details (Episodes)
-            const seasonData = await TMDB.getSeasonDetails(tmdbId, seasonNum);
+            // Fetch API Season Details (Episodes)
+            const seasonData = await API.getSeasonDetails(tmdbId, seasonNum);
             // Fetch our Saved Episodes (Local DB)
             const savedEpisodes = await DB.getEpisodes(tvShowId); // This returns ALL seasons
 
             if (!seasonData || !seasonData.episodes) {
-                list.innerHTML = '<p>Error loading episodes from TMDB</p>';
+                list.innerHTML = '<p>Error loading episodes from API</p>';
                 return;
             }
 
