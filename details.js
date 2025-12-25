@@ -437,8 +437,40 @@ async function loadComments(contentId, contentType) {
     }
 }
 
-// Ensure renderComments is available (it was already in file, no change needed usually, but let's leave it alone or check it)
-// renderComments is below this block in original file.
+    }
+}
+
+function renderComments(comments) {
+    const commentsList = document.getElementById('commentsList');
+    const noCommentsMessage = document.getElementById('noCommentsMessage');
+
+    // Clear existing except noCommentsMessage if we want, but usually we prefer full wipe if replacing
+    commentsList.innerHTML = '';
+    if (noCommentsMessage) {
+        commentsList.appendChild(noCommentsMessage); // Keep it but hidden
+        noCommentsMessage.style.display = 'none';
+    }
+
+    comments.forEach(comment => {
+        const timeAgo = getTimeAgo(new Date(comment.created_at));
+        const commentHTML = `
+            <div class="comment-card" data-id="${comment.id}">
+                <div class="comment-avatar">
+                    <img src="${comment.user_avatar || 'https://placehold.co/40'}" alt="${escapeHTML(comment.user_name || 'User')}" referrerpolicy="no-referrer">
+                </div>
+                <div class="comment-content">
+                    <div class="comment-header">
+                        <span class="comment-author">${escapeHTML(comment.user_name || 'Anonymous')}</span>
+                        <span class="comment-time">${timeAgo}</span>
+                    </div>
+                    <p class="comment-text">${escapeHTML(comment.comment_text)}</p>
+                </div>
+            </div>
+        `;
+        commentsList.insertAdjacentHTML('beforeend', commentHTML);
+    });
+}
+
 
 async function postComment() {
     const input = document.getElementById('commentInput');
