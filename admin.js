@@ -303,7 +303,6 @@ class AdminApp {
                     <label>Title</label>
                     <input type="text" value="${content.title}" readonly style="opacity: 0.7; cursor: not-allowed;">
                 </div>
-                </div>
                  <div class="form-group" style="${isTv ? 'display:none;' : ''}">
                     <label>Video / Stream URL (CDN)</label>
                     <input type="url" id="addVideoUrl" placeholder="https://example.com/video.mp4" autofocus>
