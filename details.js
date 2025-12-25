@@ -368,44 +368,60 @@ async function setupCommentSection(contentId, contentType) {
     currentContentId = contentId;
     currentContentType = contentType;
 
-    // Check auth state
-    const user = window.auth.getUser();
-    const commentInputArea = document.getElementById('commentInputArea');
-    const commentInput = document.getElementById('commentInput');
+    // Define UI update logic
+    const updateCommentUI = (user) => {
+        const commentInputArea = document.getElementById('commentInputArea');
+        if (!commentInputArea) return;
 
-    if (user) {
-        // Show comment input
-        commentInputArea.style.display = 'flex';
-        const avatarUrl = window.auth.getUserAvatar() || 'https://placehold.co/40?text=User';
-        document.getElementById('commentUserAvatar').src = avatarUrl;
+        if (user) {
+            // Restore input area if it was replaced by login prompt
+            if (commentInputArea.querySelector('.login-prompt')) {
+                commentInputArea.innerHTML = `
+                <div class="comment-avatar">
+                    <img id="commentUserAvatar" src="" alt="Your Avatar">
+                </div>
+                <div class="comment-form">
+                    <textarea id="commentInput" placeholder="Write a comment..." rows="2"></textarea>
+                    <button class="btn btn-primary" id="submitCommentBtn">Post Comment</button>
+                </div>
+                `;
+                // Re-bind submit button for restored DOM
+                const newSubmitBtn = document.getElementById('submitCommentBtn');
+                if (newSubmitBtn) newSubmitBtn.onclick = postComment;
+            }
 
-        // Listen for auth changes to update avatar if changed
-        window.auth.onAuthStateChange(u => {
-            if (u) document.getElementById('commentUserAvatar').src = window.auth.getUserAvatar() || 'https://placehold.co/40?text=User';
-        });
+            commentInputArea.style.display = 'flex';
+            const avatarUrl = window.auth.getUserAvatar() || 'https://placehold.co/40?text=User';
+            const avatarImg = document.getElementById('commentUserAvatar');
+            if (avatarImg) avatarImg.src = avatarUrl;
+        } else {
+            // Show login prompt
+            commentInputArea.innerHTML = `
+                <div class="login-prompt">
+                    <p>Please <a href="#" onclick="loginToComment(event)">login</a> to post a comment.</p>
+                </div>
+                <style>
+                    .login-prompt { width: 100%; text-align: center; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px; }
+                    .login-prompt a { color: var(--accent-primary); text-decoration: none; font-weight: 600; }
+                    .login-prompt a:hover { text-decoration: underline; }
+                </style>
+            `;
+        }
+    };
 
-    } else {
-        // Show login prompt
-        commentInputArea.innerHTML = `
-            <div class="login-prompt">
-                <p>Please <a href="#" onclick="loginToComment(event)">login</a> to post a comment.</p>
-            </div>
-            <style>
-                .login-prompt { width: 100%; text-align: center; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px; }
-                .login-prompt a { color: var(--accent-primary); text-decoration: none; font-weight: 600; }
-                .login-prompt a:hover { text-decoration: underline; }
-            </style>
-        `;
-    }
+    // Initial check (wait for auth ready if not present)
+    window.auth.ready.then(() => {
+        updateCommentUI(window.auth.currentUser);
+    });
 
-    // Setup submit button
+    // Listen for future changes
+    window.auth.onAuthStateChange((user) => {
+        updateCommentUI(user);
+    });
+
+    // Setup submit button (initial attempt, though updateCommentUI handles it for dynamic swaps)
     const submitBtn = document.getElementById('submitCommentBtn');
-    if (submitBtn) {
-        // Remove old listeners by cloning (simple way) or just add if not present. 
-        // Better to just add listener, but ensure not adding multiple.
-        // Since setupCommentSection might be called once per load, simple add is okay.
-        submitBtn.onclick = postComment;
-    }
+    if (submitBtn) submitBtn.onclick = postComment;
 
     // Load comments
     await loadComments(contentId, contentType);
