@@ -76,6 +76,12 @@ const DB = {
             // Decrypt on client side (Worker sends encrypted data)
             if (data && window.Security) {
                 data.forEach(m => {
+                    // Normalize keys (DB is snake_case, App is camelCase)
+                    m.tmdbId = m.tmdb_id || m.tmdbId;
+                    m.ageRating = m.age_rating || m.ageRating;
+                    m.videoUrl = m.video_url || m.videoUrl;
+                    m.facebookVideoId = m.facebook_video_id || m.facebookVideoId;
+
                     if (m.videoUrl) m.videoUrl = Security.decrypt(m.videoUrl);
                     if (m.facebookVideoId) m.facebookVideoId = Security.decrypt(m.facebookVideoId);
                 });
@@ -99,15 +105,35 @@ const DB = {
             if (cleanMovie.facebookVideoId) cleanMovie.facebookVideoId = Security.encrypt(cleanMovie.facebookVideoId);
         }
 
+        // Map to snake_case for Supabase
+        const dbMovie = {
+            tmdb_id: cleanMovie.tmdbId,
+            title: cleanMovie.title,
+            description: cleanMovie.description,
+            platform: cleanMovie.platform,
+            year: cleanMovie.year,
+            rating: cleanMovie.rating,
+            genres: cleanMovie.genres,
+            backdrop: cleanMovie.backdrop,
+            poster: cleanMovie.poster,
+            age_rating: cleanMovie.ageRating,
+            runtime: cleanMovie.runtime,
+            seasons: cleanMovie.seasons,
+            video_url: cleanMovie.videoUrl,
+            facebook_video_id: cleanMovie.facebookVideoId
+        };
+
         try {
             const res = await fetch(`${CONFIG.API_BASE_URL}/api/movies`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(cleanMovie)
+                body: JSON.stringify(dbMovie)
             });
             if (res.ok) {
                 clearCache();
                 return true;
+            } else {
+                console.error('Add movie failed:', await res.text());
             }
         } catch (e) { console.error(e); }
         return false;
@@ -146,6 +172,12 @@ const DB = {
 
             if (data && window.Security) {
                 data.forEach(s => {
+                    // Normalize keys
+                    s.tmdbId = s.tmdb_id || s.tmdbId;
+                    s.ageRating = s.age_rating || s.ageRating;
+                    s.videoUrl = s.video_url || s.videoUrl;
+                    s.facebookVideoId = s.facebook_video_id || s.facebookVideoId;
+
                     if (s.videoUrl) s.videoUrl = Security.decrypt(s.videoUrl);
                     if (s.facebookVideoId) s.facebookVideoId = Security.decrypt(s.facebookVideoId);
                 });
@@ -163,15 +195,34 @@ const DB = {
             if (cleanShow.facebookVideoId) cleanShow.facebookVideoId = Security.encrypt(cleanShow.facebookVideoId);
         }
 
+        const dbShow = {
+            tmdb_id: cleanShow.tmdbId,
+            title: cleanShow.title || cleanShow.name, // handle name property
+            description: cleanShow.description,
+            platform: cleanShow.platform,
+            year: cleanShow.year,
+            rating: cleanShow.rating,
+            genres: cleanShow.genres,
+            backdrop: cleanShow.backdrop,
+            poster: cleanShow.poster,
+            age_rating: cleanShow.ageRating,
+            runtime: cleanShow.runtime,
+            seasons: cleanShow.seasons,
+            video_url: cleanShow.videoUrl,
+            facebook_video_id: cleanShow.facebookVideoId
+        };
+
         try {
             const res = await fetch(`${CONFIG.API_BASE_URL}/api/tv`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(cleanShow)
+                body: JSON.stringify(dbShow)
             });
             if (res.ok) {
                 clearCache();
                 return true;
+            } else {
+                console.error('Add TV failed:', await res.text());
             }
         } catch (e) { console.error(e); }
         return false;
@@ -184,11 +235,20 @@ const DB = {
             if (cleanUpdates.facebookVideoId) cleanUpdates.facebookVideoId = Security.encrypt(cleanUpdates.facebookVideoId);
         }
 
+        const dbUpdates = {};
+        if (cleanUpdates.title !== undefined) dbUpdates.title = cleanUpdates.title;
+        if (cleanUpdates.description !== undefined) dbUpdates.description = cleanUpdates.description;
+        if (cleanUpdates.platform !== undefined) dbUpdates.platform = cleanUpdates.platform;
+        if (cleanUpdates.year !== undefined) dbUpdates.year = cleanUpdates.year;
+        if (cleanUpdates.poster !== undefined) dbUpdates.poster = cleanUpdates.poster;
+        if (cleanUpdates.videoUrl !== undefined) dbUpdates.video_url = cleanUpdates.videoUrl;
+        if (cleanUpdates.facebookVideoId !== undefined) dbUpdates.facebook_video_id = cleanUpdates.facebookVideoId;
+
         try {
             const res = await fetch(`${CONFIG.API_BASE_URL}/api/tv/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(cleanUpdates)
+                body: JSON.stringify(dbUpdates)
             });
             if (res.ok) {
                 clearCache();
@@ -198,7 +258,7 @@ const DB = {
         return false;
     },
 
-    // --- Episodes (Currently just LocalStorage or not fully mocked in worker yet? 
+    // --- Episodes (Currently just LocalStorage or not fully mocked in worker yet?
     // --- Episodes ---
 
     async getEpisodes(tvShowId) {

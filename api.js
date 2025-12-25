@@ -78,11 +78,20 @@ const API = {
     // --- Helper to get image URLs ---
     getImageUrl(path, size = 'w500') {
         if (!path) {
-            // Return a dark SVG Data URI (No network request needed)
-            // Color: #1a1a1a background, #666666 text
+            // Return a dark SVG Data URI
             return 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MDAiIGhlaWdodD0iNzUwIiB2aWV3Qm94PSIwIDAgNTAwIDc1MCI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iIzFhMWExYSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSI0MCIgZmlsbD0iIzY2NjY2NiI+Tm8gSW1hZ2U8L3RleHQ+PC9zdmc+';
         }
-        return `${CONFIG.TMDB_IMAGE_BASE}/${size}${path}`;
+
+        // Handle named sizes (e.g. 'poster' -> 'w342')
+        let realSize = size;
+        if (CONFIG.IMAGE_SIZES && CONFIG.IMAGE_SIZES[size]) {
+            realSize = CONFIG.IMAGE_SIZES[size];
+        } else if (size === 'poster') {
+            // Fallback if CONFIG not found or key missing
+            realSize = 'w500';
+        }
+
+        return `${CONFIG.TMDB_IMAGE_BASE}/${realSize}${path}`;
     },
 
     getBackdropUrl(path) {
