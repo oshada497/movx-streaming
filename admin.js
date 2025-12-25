@@ -2,7 +2,7 @@
 
 // List of admin email addresses (add your email here)
 const ADMIN_EMAILS = [
-    'oshadakalindu@gmail.com'  // Replace with your admin email(s)
+    'admin@example.com'  // Replace with your admin email(s)
 ];
 
 class AdminApp {
