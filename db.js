@@ -1,6 +1,10 @@
 
 // ===== Database Connection (via Worker Backend) =====
 
+// ===== Database Connection (via Worker Backend) =====
+
+// Cache Configuration for Backend Calls
+
 // Cache Configuration for Backend Calls
 const CACHE_DURATION = 5 * 60 * 1000; // 5 mins
 const CACHE_KEYS = {

@@ -24,7 +24,7 @@ class MovXApp {
         this.updateAuthUI(null);
 
         authBtn.addEventListener('click', async () => {
-            alert('Login is currently disabled for maintenance.');
+            alert('Login is currently disabled for maintenance. Backend-only auth coming soon.');
         });
 
         // Profile Modal Events (keep for future use but basically inactive)
