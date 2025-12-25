@@ -181,8 +181,8 @@ class AdminApp {
             return;
         }
 
-        if (CONFIG.API_API_KEY === 'YOUR_API_API_KEY') {
-            this.showToast('Please set your API API key in Settings', 'error');
+        if (!CONFIG.API_API_KEY || CONFIG.API_API_KEY === 'YOUR_API_API_KEY') {
+            this.showToast('Please set your TMDB API key in Settings', 'error');
             return;
         }
 

@@ -10,6 +10,9 @@ const CONFIG = {
     // TMDB Base URL (for Images only, API calls go through backend)
     TMDB_IMAGE_BASE: 'https://image.tmdb.org/t/p',
 
+    // API Key (Client-side for Admin)
+    API_API_KEY: 'YOUR_API_API_KEY',
+
     // Image sizes
     IMAGE_SIZES: {
         poster: 'w342', // Optimized from w500
