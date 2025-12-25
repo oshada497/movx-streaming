@@ -1,0 +1,10 @@
+name = "movx-streaming-backend"
+main = "worker.js"
+compatibility_date = "2023-12-01"
+
+[vars]
+# These are placeholders. You MUST set these in your Cloudflare Dashboard or via 'wrangler secret put'
+# SUPABASE_URL = "..."
+# SUPABASE_KEY = "..." 
+# TMDB_READ_TOKEN = "..." (or API Key)
+# GEMINI_API_KEY = "..."
