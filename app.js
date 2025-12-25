@@ -237,6 +237,10 @@ class MovXApp {
         if (allContent.length > 0) {
             // Use stored content for hero
             this.heroContent = allContent.slice(0, 5);
+
+            // Preload all hero images for smooth transitions
+            this.preloadAllHeroImages();
+
             this.updateHero();
         } else {
             // Show demo content if no content is added
@@ -247,6 +251,19 @@ class MovXApp {
         await this.renderMoviesRow();
         await this.renderTVShowsRow();
         this.renderTrendingRow(allContent);
+    }
+
+    preloadAllHeroImages() {
+        this.heroContent.forEach(content => {
+            if (content.backdrop) {
+                const img = new Image();
+                img.src = content.backdrop;
+            }
+            if (content.poster) {
+                const img = new Image();
+                img.src = content.poster;
+            }
+        });
     }
 
     showDemoContent() {
@@ -285,21 +302,26 @@ class MovXApp {
         heroLeft.classList.add('animating');
         heroPoster.classList.add('animating');
 
-        // Update background with smooth fade
+        // Preload and update background with smooth fade
         if (content.backdrop) {
-            // Temporarily fade out for smooth transition
-            heroBackground.style.opacity = '0.7';
-            
-            setTimeout(() => {
-                heroBackground.style.backgroundImage = `url(${content.backdrop})`;
-                heroBackground.style.opacity = '1';
-            }, 200);
+            // Preload the image first
+            const img = new Image();
+            img.onload = () => {
+                // Only transition once image is loaded
+                heroBackground.style.opacity = '0.7';
+
+                setTimeout(() => {
+                    heroBackground.style.backgroundImage = `url(${content.backdrop})`;
+                    heroBackground.style.opacity = '1';
+                }, 150);
+            };
+            img.src = content.backdrop;
         } else {
             heroBackground.style.opacity = '0.7';
             setTimeout(() => {
                 heroBackground.style.backgroundImage = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)';
                 heroBackground.style.opacity = '1';
-            }, 200);
+            }, 150);
         }
 
         // Update content
@@ -343,6 +365,19 @@ class MovXApp {
             this.renderEpisodes(content.episodes);
         } else {
             episodesSection.style.display = 'none';
+        }
+
+        // Preload next image in background for even smoother transitions
+        this.preloadNextHeroImage();
+    }
+
+    preloadNextHeroImage() {
+        const nextIndex = (this.currentHeroIndex + 1) % this.heroContent.length;
+        const nextContent = this.heroContent[nextIndex];
+
+        if (nextContent && nextContent.backdrop) {
+            const img = new Image();
+            img.src = nextContent.backdrop;
         }
     }
 
