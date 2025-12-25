@@ -88,6 +88,40 @@ class AdminApp {
             tvFields.style.display = e.target.value === 'tv' ? 'grid' : 'none';
         });
 
+        // Translation button
+        const translateBtn = document.getElementById('translateDescBtn');
+        if (translateBtn) {
+            translateBtn.addEventListener('click', async () => {
+                const descTextarea = document.getElementById('manualDescription');
+                const originalText = descTextarea.value.trim();
+
+                if (!originalText) {
+                    this.showToast('Please enter a description first', 'error');
+                    return;
+                }
+
+                // Disable button and show loading state
+                translateBtn.disabled = true;
+                translateBtn.classList.add('translating');
+                const originalHTML = translateBtn.innerHTML;
+                translateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Translating...';
+
+                try {
+                    const translatedText = await translator.translateToSinhala(originalText);
+                    descTextarea.value = translatedText;
+                    this.showToast('Translation complete!', 'success');
+                } catch (error) {
+                    console.error('Translation error:', error);
+                    this.showToast('Translation failed. Check API key in config.js', 'error');
+                } finally {
+                    // Re-enable button
+                    translateBtn.disabled = false;
+                    translateBtn.classList.remove('translating');
+                    translateBtn.innerHTML = originalHTML;
+                }
+            });
+        }
+
         // Settings - API Key
         document.getElementById('saveApiKey').addEventListener('click', () => this.saveApiKey());
 
