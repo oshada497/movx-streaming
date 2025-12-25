@@ -1,4 +1,4 @@
-
+// ===== Worker Logic =====
 export default {
     async fetch(request, env) {
         const url = new URL(request.url);
@@ -7,9 +7,9 @@ export default {
 
         // Security & CORS Headers
         const responseHeaders = {
-            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Origin': '*', // Adjust logic below for credentials
             'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
             // HSTS: Enforce HTTPS for 1 year
             'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
             // X-Frame-Options: Prevent clickjacking (deny iframes)
@@ -20,10 +20,66 @@ export default {
             'X-Content-Type-Options': 'nosniff'
         };
 
+        // Handle CORS Preflight
         if (method === 'OPTIONS') {
             return new Response(null, { headers: responseHeaders });
         }
 
+        // Initialize Supabase (Use specific secrets for Auth)
+        // Ensure you have SUPABASE_URL and SUPABASE_KEY (Anon or Service Role depending on need) in env
+        const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+        const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_KEY, {
+            auth: {
+                autoRefreshToken: false,
+                persistSession: false,
+                detectSessionInUrl: false
+            }
+        });
+
+        // ---------------- AUTH ROUTES ----------------
+
+        // 1. Login Redirect
+        if (path === '/auth/login') {
+            const frontendUrl = url.searchParams.get('redirect_to') || 'https://fbflix.online';
+            const { data, error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: `${url.origin}/auth/callback?next=${encodeURIComponent(frontendUrl)}`,
+                    scopes: 'email profile'
+                }
+            });
+
+            if (error) return new Response(JSON.stringify({ error: error.message }), { status: 400, headers: responseHeaders });
+            return Response.redirect(data.url);
+        }
+
+        // 2. Auth Callback
+        if (path === '/auth/callback') {
+            const code = url.searchParams.get('code');
+            const next = url.searchParams.get('next') || 'https://fbflix.online';
+
+            if (code) {
+                const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+                if (error) return new Response('Auth Error: ' + error.message, { status: 400 });
+
+                // Start building redirect response
+                // We will set the session token in a secure HttpOnly cookie
+                // And another non-HttpOnly cookie for JS to know we are logged in (optional but helpful)
+                const accessToken = data.session.access_token;
+                const refreshToken = data.session.refresh_token;
+
+                // Simple HTML response to trigger window.opener refresh or redirect
+                // Ideally, we redirect back to the app with the tokens in cookies
+
+                // Note: For cross-domain (worker val -> github pages), Cookies can be tricky due to SameSite policies.
+                // We will append the token as a hash fragment for the frontend to handle for now, 
+                // as that is robust for separate domains without complex cookie setups.
+                return Response.redirect(`${next}#access_token=${accessToken}&refresh_token=${refreshToken}&type=recovery`);
+            }
+            return new Response('No code provided', { status: 400 });
+        }
+
+        // ---------------- API ROUTES ----------------
         try {
             // ===== TMDB Proxy =====
             if (path.startsWith('/api/tmdb')) {

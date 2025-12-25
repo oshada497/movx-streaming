@@ -20,33 +20,88 @@ class MovXApp {
     setupAuth() {
         const authBtn = document.getElementById('authBtn');
 
-        // Auth temporarily disabled during backend migration
-        this.updateAuthUI(null);
+        // 1. Check for tokens in URL (Callback from backend)
+        this.handleAuthCallback();
 
+        // 2. Check for existing local session (simulated persistence)
+        const storedSession = localStorage.getItem('movx_session');
+        if (storedSession) {
+            try {
+                this.currentSession = JSON.parse(storedSession);
+                this.updateAuthUI(this.currentSession);
+            } catch (e) {
+                console.error("Invalid session", e);
+                localStorage.removeItem('movx_session');
+            }
+        } else {
+            this.updateAuthUI(null);
+        }
+
+        // 3. Login Button -> Redirect to Backend
         authBtn.addEventListener('click', async () => {
-            alert('Login is currently disabled for maintenance. Backend-only auth coming soon.');
+            if (this.currentSession) {
+                // Logout
+                localStorage.removeItem('movx_session');
+                this.currentSession = null;
+                this.updateAuthUI(null);
+                alert("Logged out successfully.");
+                window.location.reload();
+            } else {
+                // Redirect to Cloudflare Worker Auth Endpoint
+                const redirectUrl = window.location.href;
+                window.location.href = `${CONFIG.API_BASE_URL}/auth/login?redirect_to=${encodeURIComponent(redirectUrl)}`;
+            }
         });
+    }
 
-        // Profile Modal Events (keep for future use but basically inactive)
-        const closeProfile = document.getElementById('closeProfileModal');
-        if (closeProfile) {
-            closeProfile.addEventListener('click', () => {
-                document.getElementById('profileModal').classList.remove('active');
-            });
+    handleAuthCallback() {
+        // Parse hash fragment #access_token=...&refresh_token=...
+        const hash = window.location.hash.substring(1);
+        const params = new URLSearchParams(hash);
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token');
+
+        if (accessToken) {
+            // We have a token! Create a session object.
+            // In a real app, we might decode the JWT to get user info, 
+            // but here we'll just store it and assume valid. 
+            // Ideally we'd fetch user profile from an /auth/me endpoint on the worker.
+
+            this.currentSession = {
+                access_token: accessToken,
+                refresh_token: refreshToken,
+                user: { email: 'Authenticated User', user_metadata: { avatar_url: '' } } // Placeholder until we fetch profile
+            };
+
+            // Save to local storage for persistence across reloads
+            localStorage.setItem('movx_session', JSON.stringify(this.currentSession));
+
+            // Clean URL
+            window.history.replaceState(null, null, window.location.pathname + window.location.search);
+
+            this.updateAuthUI(this.currentSession);
+            alert("Login successful!");
         }
     }
 
-    // openProfileModal, saveProfile removed for brevity/safety until backend auth is ready
+    // openProfileModal logic ... (kept simplified)
     openProfileModal() { }
     saveProfile() { }
 
     updateAuthUI(session) {
         this.currentSession = session;
         const authBtn = document.getElementById('authBtn');
-        if (authBtn) {
-            // Always show generic login icon for now
+        if (!authBtn) return;
+
+        if (session) {
+            // Logged In
+            authBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i>';
+            authBtn.title = 'Logout';
+            // If we had a real user profile fetch, we'd show the avatar here
+        } else {
+            // Logged Out
             authBtn.innerHTML = '<i class="fab fa-google"></i>';
-            authBtn.title = 'Login Disabled';
+            authBtn.title = 'Login with Google';
         }
     }
 
