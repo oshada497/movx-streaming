@@ -260,6 +260,17 @@ const DB = {
     },
 
     // --- Unified ---
+    async search(query) {
+        if (!query || query.trim().length < 2) return [];
+        const allContent = await this.getAllContent();
+        const lowerQuery = query.toLowerCase();
+
+        return allContent.filter(item => {
+            const title = (item.title || item.name || '').toLowerCase();
+            return title.includes(lowerQuery);
+        });
+    },
+
     async getAllContent() {
         const [m, t] = await Promise.all([this.getMovies(), this.getTVShows()]);
         return [...m.map(x => ({ ...x, mediaType: 'movie' })), ...t.map(x => ({ ...x, mediaType: 'tv' }))].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
