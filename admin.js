@@ -381,7 +381,8 @@ class AdminApp {
             poster: document.getElementById('manualPoster').value.trim(),
             backdrop: document.getElementById('manualBackdrop').value.trim(),
             ageRating: document.getElementById('manualAgeRating').value,
-            videoUrl: document.getElementById('manualVideoUrl').value.trim()
+            videoUrl: document.getElementById('manualVideoUrl').value.trim(),
+            facebookVideoId: document.getElementById('manualFacebookVideoId').value.trim()
         };
 
         if (type === 'tv') {
@@ -535,6 +536,10 @@ class AdminApp {
                     <label>Video URL</label>
                     <input type="url" id="editVideoUrl" value="${content.videoUrl || ''}" placeholder="https://...">
                 </div>
+                 <div class="form-group">
+                    <label>Facebook Video ID</label>
+                    <input type="text" id="editFacebookVideoId" value="${content.facebookVideoId || ''}" placeholder="e.g. 123456789">
+                </div>
                 ` : ''}
 
                 <div class="form-group">
@@ -597,6 +602,11 @@ class AdminApp {
 
         if (videoInput) {
             updates.videoUrl = videoInput.value.trim();
+        }
+
+        const fbInput = document.getElementById('editFacebookVideoId');
+        if (fbInput) {
+            updates.facebookVideoId = fbInput.value.trim();
         }
 
         let result;
@@ -815,6 +825,12 @@ class AdminApp {
                                 placeholder="Paste CDN URL here..."
                                 style="width: 100%; background: var(--bg-primary);">
                         </div>
+                        <div class="form-group" style="margin-bottom: 0; margin-top: 5px;">
+                            <input type="text" class="ep-fbid-input"
+                                value="${saved ? (saved.facebook_video_id || '') : ''}"
+                                placeholder="Facebook Video ID"
+                                style="width: 100%; background: var(--bg-primary);">
+                        </div>
                     </div>
                  `;
             }).join('');
@@ -833,16 +849,23 @@ class AdminApp {
 
             for (const input of inputs) {
                 const url = input.value.trim();
+                // Find corresponding FB ID input (it's the next sibling's child usually, or we can select by index if we iterate carefully, but let's query relative)
+                // Actually, the loop 'for (const input of inputs)' makes it hard to get the sibling reliable unless structure is fixed.
+                // Let's change the selector strategy above or in this loop.
+                // Helper:
+                const parent = input.closest('.episode-item');
+                const fbIdInput = parent.querySelector('.ep-fbid-input');
+                const fbId = fbIdInput ? fbIdInput.value.trim() : null;
+
                 const savedId = input.dataset.savedId;
                 const season = parseInt(input.dataset.season);
                 const number = parseInt(input.dataset.number);
                 const title = input.dataset.title;
 
-                if (url) {
+                if (url || fbId) { // Save if either URL or FB ID is present
                     if (savedId) {
                         // Update existing
-                        // Check if changed? avoiding separate call if possible, but safe to update
-                        await DB.updateEpisode(savedId, { video_url: url });
+                        await DB.updateEpisode(savedId, { video_url: url, facebook_video_id: fbId });
                         updatedCount++;
                     } else {
                         // Add new
@@ -851,13 +874,13 @@ class AdminApp {
                             season_number: season,
                             episode_number: number,
                             title: title,
-                            video_url: url
+                            video_url: url,
+                            facebook_video_id: fbId
                         });
                         addedCount++;
                     }
-                } else if (savedId && !url) {
-                    // If URL removed, delete entry? Or keep as blank?
-                    // Usually delete logic is safer to keep DB clean
+                } else if (savedId && !url && !fbId) {
+                    // If both removed, delete entry
                     await DB.deleteEpisode(savedId);
                     input.dataset.savedId = ''; // Remove ID
                 }

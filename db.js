@@ -81,7 +81,7 @@ const DB = {
         // Sanitize object to remove properties that don't exist in the 'movies' table (like 'seasons')
         const allowedFields = [
             'tmdbId', 'title', 'description', 'platform', 'year', 'rating',
-            'genres', 'backdrop', 'poster', 'ageRating', 'runtime', 'videoUrl'
+            'genres', 'backdrop', 'poster', 'ageRating', 'runtime', 'videoUrl', 'facebookVideoId'
         ];
 
         const cleanMovie = {};
@@ -119,7 +119,7 @@ const DB = {
         // Sanitize updates
         const allowedFields = [
             'tmdbId', 'title', 'description', 'platform', 'year', 'rating',
-            'genres', 'backdrop', 'poster', 'ageRating', 'runtime', 'videoUrl'
+            'genres', 'backdrop', 'poster', 'ageRating', 'runtime', 'videoUrl', 'facebookVideoId'
         ];
 
         const cleanUpdates = {};
@@ -184,7 +184,7 @@ const DB = {
         // Sanitize object
         const allowedFields = [
             'tmdbId', 'title', 'description', 'platform', 'year', 'rating',
-            'genres', 'backdrop', 'poster', 'ageRating', 'seasons', 'videoUrl'
+            'genres', 'backdrop', 'poster', 'ageRating', 'seasons', 'videoUrl', 'facebookVideoId'
         ];
 
         const cleanShow = {};
@@ -219,7 +219,7 @@ const DB = {
         // Sanitize updates
         const allowedFields = [
             'tmdbId', 'title', 'description', 'platform', 'year', 'rating',
-            'genres', 'backdrop', 'poster', 'ageRating', 'seasons', 'videoUrl'
+            'genres', 'backdrop', 'poster', 'ageRating', 'seasons', 'videoUrl', 'facebookVideoId'
         ];
 
         const cleanUpdates = {};
