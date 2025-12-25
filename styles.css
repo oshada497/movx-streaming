@@ -258,9 +258,12 @@ img {
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 50px;
     /* Fully rounded */
-    padding: 2px 5px;
+    padding: 2px 10px;
+    /* Slightly more side padding, minimal vertical */
     overflow: hidden;
     transition: all var(--transition-fast);
+    height: 34px;
+    /* Explicit smaller height */
 }
 
 .search-container:focus-within {
@@ -269,9 +272,11 @@ img {
 }
 
 .search-icon {
-    padding: 0 12px;
+    padding-right: 8px;
+    /* Reduced from 12px */
     color: var(--text-muted);
-    font-size: 0.85rem;
+    font-size: 0.8rem;
+    /* Slightly smaller */
 }
 
 .search-input {
@@ -280,14 +285,17 @@ img {
     border: none;
     outline: none;
     color: var(--text-primary);
-    font-size: 0.9rem;
-    padding: 10px 0;
-    width: 200px;
+    font-size: 0.85rem;
+    /* Smaller font */
+    padding: 0;
+    width: 180px;
+    /* Start smaller */
     transition: width var(--transition-normal);
+    height: 100%;
 }
 
 .search-input:focus {
-    width: 280px;
+    width: 240px;
 }
 
 .search-input::placeholder {
@@ -295,17 +303,20 @@ img {
 }
 
 .search-btn {
-    width: 40px;
-    height: 40px;
+    width: 30px;
+    /* Smaller button/area */
+    height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--bg-glass);
+    background: transparent;
+    /* No background */
     border: none;
-    border-left: 1px solid var(--border-color);
+    /* No border */
     color: var(--text-secondary);
     cursor: pointer;
     transition: all var(--transition-fast);
+    padding: 0;
 }
 
 .search-btn:hover {
