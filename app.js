@@ -285,11 +285,21 @@ class MovXApp {
         heroLeft.classList.add('animating');
         heroPoster.classList.add('animating');
 
-        // Update background
+        // Update background with smooth fade
         if (content.backdrop) {
-            heroBackground.style.backgroundImage = `url(${content.backdrop})`;
+            // Temporarily fade out for smooth transition
+            heroBackground.style.opacity = '0.7';
+            
+            setTimeout(() => {
+                heroBackground.style.backgroundImage = `url(${content.backdrop})`;
+                heroBackground.style.opacity = '1';
+            }, 200);
         } else {
-            heroBackground.style.backgroundImage = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)';
+            heroBackground.style.opacity = '0.7';
+            setTimeout(() => {
+                heroBackground.style.backgroundImage = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)';
+                heroBackground.style.opacity = '1';
+            }, 200);
         }
 
         // Update content
