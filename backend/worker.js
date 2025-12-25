@@ -14,9 +14,8 @@ export default {
             'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
             // X-Frame-Options: Prevent clickjacking (deny iframes)
             'X-Frame-Options': 'DENY',
-            // CSP: Basic policy to allow scripts/images but block malicious content
-            // Note: Adjust 'connect-src' to allow your API URL
-            'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.plyr.io https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.plyr.io https://cdnjs.cloudflare.com; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; connect-src 'self' https:;",
+            // CSP: Relaxed policy to allow external media and scripts
+            'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.plyr.io https://cdnjs.cloudflare.com https://static.cloudflareinsights.com; media-src 'self' https://*.fbcdn.net https://scontent-*.fbcdn.net blob: data:; img-src 'self' https://image.tmdb.org https://via.placeholder.com data: blob:; connect-src 'self' https://*.fbcdn.net https://api.themoviedb.org https://*.supabase.co https://*.workers.dev; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;",
             // Content Type enforcement
             'X-Content-Type-Options': 'nosniff'
         };
@@ -103,7 +102,7 @@ async function handleTmdbRequest(request, env, subPath) {
         'Access-Control-Allow-Origin': '*',
         'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
         'X-Frame-Options': 'DENY',
-        'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.plyr.io https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.plyr.io https://cdnjs.cloudflare.com; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; connect-src 'self' https:;",
+        'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.plyr.io https://cdnjs.cloudflare.com https://static.cloudflareinsights.com; media-src 'self' https://*.fbcdn.net https://scontent-*.fbcdn.net blob: data:; img-src 'self' https://image.tmdb.org https://via.placeholder.com data: blob:; connect-src 'self' https://*.fbcdn.net https://api.themoviedb.org https://*.supabase.co https://*.workers.dev; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;",
         'X-Content-Type-Options': 'nosniff'
     };
 
