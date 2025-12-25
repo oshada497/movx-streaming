@@ -15,7 +15,7 @@ export default {
             // X-Frame-Options: Prevent clickjacking (deny iframes)
             'X-Frame-Options': 'DENY',
             // CSP: Fixed invalid wildcard syntax
-            'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.plyr.io https://cdnjs.cloudflare.com https://static.cloudflareinsights.com; media-src 'self' https://*.fbcdn.net https://scontent-cdg4-1.xx.fbcdn.net https://scontent-cdg4-2.xx.fbcdn.net https://scontent-cdg4-3.xx.fbcdn.net https://scontent-cdg4-4.xx.fbcdn.net blob: data:; img-src 'self' https://image.tmdb.org https://placehold.co data: blob:; connect-src 'self' https://*.fbcdn.net https://scontent-cdg4-1.xx.fbcdn.net https://scontent-cdg4-2.xx.fbcdn.net https://scontent-cdg4-3.xx.fbcdn.net https://scontent-cdg4-4.xx.fbcdn.net https://api.themoviedb.org https://*.supabase.co https://*.workers.dev https://cdn.plyr.io https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.plyr.io;",
+            'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.plyr.io https://cdnjs.cloudflare.com https://static.cloudflareinsights.com; media-src 'self' https://*.fbcdn.net https://scontent-cdg4-1.xx.fbcdn.net https://scontent-cdg4-2.xx.fbcdn.net https://scontent-cdg4-3.xx.fbcdn.net https://scontent-cdg4-4.xx.fbcdn.net blob: data:; img-src 'self' https://*.tmdb.org https://image.tmdb.org https://placehold.co data: blob:; connect-src 'self' https://*.fbcdn.net https://scontent-cdg4-1.xx.fbcdn.net https://scontent-cdg4-2.xx.fbcdn.net https://scontent-cdg4-3.xx.fbcdn.net https://scontent-cdg4-4.xx.fbcdn.net https://api.themoviedb.org https://*.supabase.co https://*.workers.dev https://cdn.plyr.io https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.plyr.io;",
             // Content Type enforcement
             'X-Content-Type-Options': 'nosniff'
         };
@@ -25,62 +25,54 @@ export default {
             return new Response(null, { headers: responseHeaders });
         }
 
-        // Initialize Supabase (Use specific secrets for Auth)
-        // Ensure you have SUPABASE_URL and SUPABASE_KEY (Anon or Service Role depending on need) in env
-        const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-        const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_KEY, {
-            auth: {
-                autoRefreshToken: false,
-                persistSession: false,
-                detectSessionInUrl: false
-            }
-        });
-
-        // ---------------- AUTH ROUTES ----------------
-
-        // 1. Login Redirect
-        if (path === '/auth/login') {
-            const frontendUrl = url.searchParams.get('redirect_to') || 'https://fbflix.online';
-            const { data, error } = await supabase.auth.signInWithOAuth({
-                provider: 'google',
-                options: {
-                    redirectTo: `${url.origin}/auth/callback?next=${encodeURIComponent(frontendUrl)}`,
-                    scopes: 'email profile'
-                }
-            });
-
-            if (error) return new Response(JSON.stringify({ error: error.message }), { status: 400, headers: responseHeaders });
-            return Response.redirect(data.url);
-        }
-
-        // 2. Auth Callback
-        if (path === '/auth/callback') {
-            const code = url.searchParams.get('code');
-            const next = url.searchParams.get('next') || 'https://fbflix.online';
-
-            if (code) {
-                const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-                if (error) return new Response('Auth Error: ' + error.message, { status: 400 });
-
-                // Start building redirect response
-                // We will set the session token in a secure HttpOnly cookie
-                // And another non-HttpOnly cookie for JS to know we are logged in (optional but helpful)
-                const accessToken = data.session.access_token;
-                const refreshToken = data.session.refresh_token;
-
-                // Simple HTML response to trigger window.opener refresh or redirect
-                // Ideally, we redirect back to the app with the tokens in cookies
-
-                // Note: For cross-domain (worker val -> github pages), Cookies can be tricky due to SameSite policies.
-                // We will append the token as a hash fragment for the frontend to handle for now, 
-                // as that is robust for separate domains without complex cookie setups.
-                return Response.redirect(`${next}#access_token=${accessToken}&refresh_token=${refreshToken}&type=recovery`);
-            }
-            return new Response('No code provided', { status: 400 });
-        }
-
         // ---------------- API ROUTES ----------------
         try {
+            // ---------------- AUTH ROUTES ----------------
+            // For OAuth, we need to use Supabase client, but only for auth endpoints
+            if (path === '/auth/login' || path === '/auth/callback') {
+                // Use Supabase client only for auth operations
+                const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+                const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_KEY, {
+                    auth: {
+                        autoRefreshToken: false,
+                        persistSession: false,
+                        detectSessionInUrl: false
+                    }
+                });
+
+                // 1. Login Redirect
+                if (path === '/auth/login') {
+                    const frontendUrl = url.searchParams.get('redirect_to') || 'https://fbflix.online';
+                    const { data, error } = await supabase.auth.signInWithOAuth({
+                        provider: 'google',
+                        options: {
+                            redirectTo: `${url.origin}/auth/callback?next=${encodeURIComponent(frontendUrl)}`,
+                            scopes: 'email profile'
+                        }
+                    });
+
+                    if (error) return new Response(JSON.stringify({ error: error.message }), { status: 400, headers: responseHeaders });
+                    return Response.redirect(data.url);
+                }
+
+                // 2. Auth Callback
+                if (path === '/auth/callback') {
+                    const code = url.searchParams.get('code');
+                    const next = url.searchParams.get('next') || 'https://fbflix.online';
+
+                    if (code) {
+                        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+                        if (error) return new Response('Auth Error: ' + error.message, { status: 400, headers: responseHeaders });
+
+                        const accessToken = data.session.access_token;
+                        const refreshToken = data.session.refresh_token;
+
+                        // Redirect with tokens as hash fragment for cross-domain compatibility
+                        return Response.redirect(`${next}#access_token=${accessToken}&refresh_token=${refreshToken}&type=recovery`);
+                    }
+                    return new Response('No code provided', { status: 400, headers: responseHeaders });
+                }
+            }
             // ===== TMDB Proxy =====
             if (path.startsWith('/api/tmdb')) {
                 const tmdbPath = path.replace('/api/tmdb', '');
@@ -162,69 +154,140 @@ export default {
 // --- Supabase Helpers ---
 
 async function getSupabaseContent(env, table, headers) {
-    const url = `${env.SUPABASE_URL}/rest/v1/${table}?select=*&order=created_at.desc`;
-    const response = await fetch(url, {
-        headers: {
-            'apikey': env.SUPABASE_KEY,
-            'Authorization': `Bearer ${env.SUPABASE_KEY}`
-        }
-    });
-    return new Response(response.body, { headers: { ...headers, 'Content-Type': 'application/json' } });
+    try {
+        const url = `${env.SUPABASE_URL}/rest/v1/${table}?select=*&order=created_at.desc`;
+        const response = await fetch(url, {
+            headers: {
+                'apikey': env.SUPABASE_KEY,
+                'Authorization': `Bearer ${env.SUPABASE_KEY}`
+            }
+        });
+
+        const data = await response.text();
+        const status = response.ok ? 200 : response.status;
+
+        return new Response(data, {
+            status,
+            headers: { ...headers, 'Content-Type': 'application/json' }
+        });
+    } catch (error) {
+        return new Response(JSON.stringify({ error: error.message, table }), {
+            status: 500,
+            headers: { ...headers, 'Content-Type': 'application/json' }
+        });
+    }
 }
 
 async function addSupabaseContent(request, env, table, headers) {
-    const body = await request.json();
-    const url = `${env.SUPABASE_URL}/rest/v1/${table}`;
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-            'apikey': env.SUPABASE_KEY,
-            'Authorization': `Bearer ${env.SUPABASE_KEY}`,
-            'Content-Type': 'application/json',
-            'Prefer': 'return=representation'
-        },
-        body: JSON.stringify(body)
-    });
-    return new Response(response.body, { headers: { ...headers, 'Content-Type': 'application/json' } });
+    try {
+        const body = await request.json();
+        const url = `${env.SUPABASE_URL}/rest/v1/${table}`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'apikey': env.SUPABASE_KEY,
+                'Authorization': `Bearer ${env.SUPABASE_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=representation'
+            },
+            body: JSON.stringify(body)
+        });
+
+        const data = await response.text();
+        const status = response.ok ? 200 : response.status;
+
+        return new Response(data, {
+            status,
+            headers: { ...headers, 'Content-Type': 'application/json' }
+        });
+    } catch (error) {
+        return new Response(JSON.stringify({ error: error.message }), {
+            status: 500,
+            headers: { ...headers, 'Content-Type': 'application/json' }
+        });
+    }
 }
 
 async function updateSupabaseContent(request, env, table, id, headers) {
-    const body = await request.json();
-    const url = `${env.SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`;
-    const response = await fetch(url, {
-        method: 'PATCH',
-        headers: {
-            'apikey': env.SUPABASE_KEY,
-            'Authorization': `Bearer ${env.SUPABASE_KEY}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(body)
-    });
-    return new Response(response.body, { headers: { ...headers, 'Content-Type': 'application/json' } });
+    try {
+        const body = await request.json();
+        const url = `${env.SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`;
+        const response = await fetch(url, {
+            method: 'PATCH',
+            headers: {
+                'apikey': env.SUPABASE_KEY,
+                'Authorization': `Bearer ${env.SUPABASE_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(body)
+        });
+
+        const data = await response.text();
+        const status = response.ok ? 200 : response.status;
+
+        return new Response(data, {
+            status,
+            headers: { ...headers, 'Content-Type': 'application/json' }
+        });
+    } catch (error) {
+        return new Response(JSON.stringify({ error: error.message }), {
+            status: 500,
+            headers: { ...headers, 'Content-Type': 'application/json' }
+        });
+    }
 }
 
 async function deleteSupabaseContent(env, table, id, headers) {
-    const url = `${env.SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`;
-    const response = await fetch(url, {
-        method: 'DELETE',
-        headers: {
-            'apikey': env.SUPABASE_KEY,
-            'Authorization': `Bearer ${env.SUPABASE_KEY}`
-        }
-    });
-    return new Response(response.body, { headers: headers });
+    try {
+        const url = `${env.SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`;
+        const response = await fetch(url, {
+            method: 'DELETE',
+            headers: {
+                'apikey': env.SUPABASE_KEY,
+                'Authorization': `Bearer ${env.SUPABASE_KEY}`
+            }
+        });
+
+        const data = await response.text();
+        const status = response.ok ? 204 : response.status;
+
+        return new Response(data || null, {
+            status,
+            headers
+        });
+    } catch (error) {
+        return new Response(JSON.stringify({ error: error.message }), {
+            status: 500,
+            headers: { ...headers, 'Content-Type': 'application/json' }
+        });
+    }
 }
 
 async function getEpisodes(request, env, headers) {
-    const url = new URL(request.url);
-    const tvId = url.searchParams.get('tv_show_id');
-    let supabaseUrl = `${env.SUPABASE_URL}/rest/v1/episodes?select=*&order=season_number.asc,episode_number.asc`;
-    if (tvId) supabaseUrl += `&tv_show_id=eq.${tvId}`;
-    const response = await fetch(supabaseUrl, {
-        headers: {
-            'apikey': env.SUPABASE_KEY,
-            'Authorization': `Bearer ${env.SUPABASE_KEY}`
-        }
-    });
-    return new Response(response.body, { headers: { ...headers, 'Content-Type': 'application/json' } });
+    try {
+        const url = new URL(request.url);
+        const tvId = url.searchParams.get('tv_show_id');
+        let supabaseUrl = `${env.SUPABASE_URL}/rest/v1/episodes?select=*&order=season_number.asc,episode_number.asc`;
+        if (tvId) supabaseUrl += `&tv_show_id=eq.${tvId}`;
+
+        const response = await fetch(supabaseUrl, {
+            headers: {
+                'apikey': env.SUPABASE_KEY,
+                'Authorization': `Bearer ${env.SUPABASE_KEY}`
+            }
+        });
+
+        const data = await response.text();
+        const status = response.ok ? 200 : response.status;
+
+        return new Response(data, {
+            status,
+            headers: { ...headers, 'Content-Type': 'application/json' }
+        });
+    } catch (error) {
+        return new Response(JSON.stringify({ error: error.message }), {
+            status: 500,
+            headers: { ...headers, 'Content-Type': 'application/json' }
+        });
+    }
 }
