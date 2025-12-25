@@ -27,52 +27,8 @@ export default {
 
         // ---------------- API ROUTES ----------------
         try {
-            // ---------------- AUTH ROUTES ----------------
-            // For OAuth, we need to use Supabase client, but only for auth endpoints
-            if (path === '/auth/login' || path === '/auth/callback') {
-                // Use Supabase client only for auth operations
-                const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
-                const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_KEY, {
-                    auth: {
-                        autoRefreshToken: false,
-                        persistSession: false,
-                        detectSessionInUrl: false
-                    }
-                });
-
-                // 1. Login Redirect
-                if (path === '/auth/login') {
-                    const frontendUrl = url.searchParams.get('redirect_to') || 'https://fbflix.online';
-                    const { data, error } = await supabase.auth.signInWithOAuth({
-                        provider: 'google',
-                        options: {
-                            redirectTo: `${url.origin}/auth/callback?next=${encodeURIComponent(frontendUrl)}`,
-                            scopes: 'email profile'
-                        }
-                    });
-
-                    if (error) return new Response(JSON.stringify({ error: error.message }), { status: 400, headers: responseHeaders });
-                    return Response.redirect(data.url);
-                }
-
-                // 2. Auth Callback
-                if (path === '/auth/callback') {
-                    const code = url.searchParams.get('code');
-                    const next = url.searchParams.get('next') || 'https://fbflix.online';
-
-                    if (code) {
-                        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-                        if (error) return new Response('Auth Error: ' + error.message, { status: 400, headers: responseHeaders });
-
-                        const accessToken = data.session.access_token;
-                        const refreshToken = data.session.refresh_token;
-
-                        // Redirect with tokens as hash fragment for cross-domain compatibility
-                        return Response.redirect(`${next}#access_token=${accessToken}&refresh_token=${refreshToken}&type=recovery`);
-                    }
-                    return new Response('No code provided', { status: 400, headers: responseHeaders });
-                }
-            }
+            // Note: OAuth routes removed due to ESM import issues in Workers
+            // Watchlist functionality works with localStorage on frontend
             // ===== TMDB Proxy =====
             if (path.startsWith('/api/tmdb')) {
                 const tmdbPath = path.replace('/api/tmdb', '');
