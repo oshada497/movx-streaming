@@ -116,7 +116,7 @@ const DB = {
             genres: cleanMovie.genres,
             backdrop: cleanMovie.backdrop,
             poster: cleanMovie.poster,
-            age_rating: cleanMovie.ageRating,
+            ageRating: cleanMovie.ageRating, // Reverted to camelCase
             runtime: cleanMovie.runtime,
             seasons: cleanMovie.seasons,
             video_url: cleanMovie.videoUrl,
@@ -205,7 +205,7 @@ const DB = {
             genres: cleanShow.genres,
             backdrop: cleanShow.backdrop,
             poster: cleanShow.poster,
-            age_rating: cleanShow.ageRating,
+            ageRating: cleanShow.ageRating, // Reverted to camelCase
             runtime: cleanShow.runtime,
             seasons: cleanShow.seasons,
             video_url: cleanShow.videoUrl,
