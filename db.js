@@ -76,12 +76,6 @@ const DB = {
             // Decrypt on client side (Worker sends encrypted data)
             if (data && window.Security) {
                 data.forEach(m => {
-                    // Normalize keys (DB is snake_case, App is camelCase)
-                    m.tmdbId = m.tmdb_id || m.tmdbId;
-                    m.ageRating = m.age_rating || m.ageRating;
-                    m.videoUrl = m.video_url || m.videoUrl;
-                    m.facebookVideoId = m.facebook_video_id || m.facebookVideoId;
-
                     if (m.videoUrl) m.videoUrl = Security.decrypt(m.videoUrl);
                     if (m.facebookVideoId) m.facebookVideoId = Security.decrypt(m.facebookVideoId);
                 });
@@ -105,9 +99,9 @@ const DB = {
             if (cleanMovie.facebookVideoId) cleanMovie.facebookVideoId = Security.encrypt(cleanMovie.facebookVideoId);
         }
 
-        // Map to snake_case for Supabase
+        // Reverted to camelCase to match DB schema
         const dbMovie = {
-            tmdb_id: cleanMovie.tmdbId,
+            tmdbId: cleanMovie.tmdbId,
             title: cleanMovie.title,
             description: cleanMovie.description,
             platform: cleanMovie.platform,
@@ -116,11 +110,11 @@ const DB = {
             genres: cleanMovie.genres,
             backdrop: cleanMovie.backdrop,
             poster: cleanMovie.poster,
-            ageRating: cleanMovie.ageRating, // Reverted to camelCase
+            ageRating: cleanMovie.ageRating,
             runtime: cleanMovie.runtime,
             seasons: cleanMovie.seasons,
-            video_url: cleanMovie.videoUrl,
-            facebook_video_id: cleanMovie.facebookVideoId
+            videoUrl: cleanMovie.videoUrl,
+            facebookVideoId: cleanMovie.facebookVideoId
         };
 
         try {
@@ -172,12 +166,6 @@ const DB = {
 
             if (data && window.Security) {
                 data.forEach(s => {
-                    // Normalize keys
-                    s.tmdbId = s.tmdb_id || s.tmdbId;
-                    s.ageRating = s.age_rating || s.ageRating;
-                    s.videoUrl = s.video_url || s.videoUrl;
-                    s.facebookVideoId = s.facebook_video_id || s.facebookVideoId;
-
                     if (s.videoUrl) s.videoUrl = Security.decrypt(s.videoUrl);
                     if (s.facebookVideoId) s.facebookVideoId = Security.decrypt(s.facebookVideoId);
                 });
@@ -196,7 +184,7 @@ const DB = {
         }
 
         const dbShow = {
-            tmdb_id: cleanShow.tmdbId,
+            tmdbId: cleanShow.tmdbId,
             title: cleanShow.title || cleanShow.name, // handle name property
             description: cleanShow.description,
             platform: cleanShow.platform,
@@ -205,11 +193,11 @@ const DB = {
             genres: cleanShow.genres,
             backdrop: cleanShow.backdrop,
             poster: cleanShow.poster,
-            ageRating: cleanShow.ageRating, // Reverted to camelCase
+            ageRating: cleanShow.ageRating,
             runtime: cleanShow.runtime,
             seasons: cleanShow.seasons,
-            video_url: cleanShow.videoUrl,
-            facebook_video_id: cleanShow.facebookVideoId
+            videoUrl: cleanShow.videoUrl,
+            facebookVideoId: cleanShow.facebookVideoId
         };
 
         try {
@@ -241,8 +229,8 @@ const DB = {
         if (cleanUpdates.platform !== undefined) dbUpdates.platform = cleanUpdates.platform;
         if (cleanUpdates.year !== undefined) dbUpdates.year = cleanUpdates.year;
         if (cleanUpdates.poster !== undefined) dbUpdates.poster = cleanUpdates.poster;
-        if (cleanUpdates.videoUrl !== undefined) dbUpdates.video_url = cleanUpdates.videoUrl;
-        if (cleanUpdates.facebookVideoId !== undefined) dbUpdates.facebook_video_id = cleanUpdates.facebookVideoId;
+        if (cleanUpdates.videoUrl !== undefined) dbUpdates.videoUrl = cleanUpdates.videoUrl;
+        if (cleanUpdates.facebookVideoId !== undefined) dbUpdates.facebookVideoId = cleanUpdates.facebookVideoId;
 
         try {
             const res = await fetch(`${CONFIG.API_BASE_URL}/api/tv/${id}`, {
