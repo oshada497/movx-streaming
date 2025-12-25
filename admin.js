@@ -256,12 +256,21 @@ class AdminApp {
         button.innerHTML = '<span class="loading-spinner"></span>';
         button.disabled = true;
 
+        if (!CONFIG.API_API_KEY) {
+            this.showToast('API Key missing. Please save it in Settings.', 'error');
+            button.innerHTML = '<i class="fas fa-plus"></i> Add';
+            button.disabled = false;
+            return;
+        }
+
         try {
             let details;
+            // Use Direct Details with Client Key
+            const apiKey = CONFIG.API_API_KEY;
             if (type === 'movie') {
-                details = await API.getMovieDetails(id);
+                details = await API.getDetailsDirect('movie', id, apiKey);
             } else {
-                details = await API.getTVDetails(id);
+                details = await API.getDetailsDirect('tv', id, apiKey);
             }
 
             if (!details) {
