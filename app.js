@@ -331,32 +331,7 @@ class MovXApp {
         document.getElementById('heroSeasons').textContent = content.seasons ? `${content.seasons} Season${content.seasons > 1 ? 's' : ''}` : content.runtime || '';
         document.getElementById('heroYear').textContent = content.year || '';
         document.getElementById('heroAgeRating').textContent = content.ageRating || 'PG-13';
-
-        // Translate description to Sinhala automatically
-        const descriptionElement = document.getElementById('heroDescription');
-        const originalDescription = content.description || content.overview || 'No description available.';
-
-        // Show loading indicator while translating
-        descriptionElement.textContent = 'පරිවර්තනය කරමින්...';
-        descriptionElement.style.opacity = '0.6';
-
-        // Translate to Sinhala using Gemini API
-        if (window.translator) {
-            try {
-                const translatedDescription = await window.translator.translateToSinhala(originalDescription);
-                descriptionElement.textContent = translatedDescription;
-                descriptionElement.style.opacity = '1';
-            } catch (error) {
-                console.error('Translation failed:', error);
-                // Fallback to original description if translation fails
-                descriptionElement.textContent = originalDescription;
-                descriptionElement.style.opacity = '1';
-            }
-        } else {
-            // Translator not available, show original
-            descriptionElement.textContent = originalDescription;
-            descriptionElement.style.opacity = '1';
-        }
+        document.getElementById('heroDescription').textContent = content.description || content.overview || 'No description available.';
 
         // Update genres
         const genresContainer = document.getElementById('heroGenres');

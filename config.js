@@ -10,10 +10,7 @@ const CONFIG = {
     TMDB_BASE_URL: 'https://api.themoviedb.org/3',
     TMDB_IMAGE_BASE: 'https://image.tmdb.org/t/p',
 
-    // Gemini API Configuration (for Sinhala translation)
-    // Get your API key from https://aistudio.google.com/app/apikey
-    GEMINI_API_KEY: 'AIzaSyBH6xnoVJcuLP5vrUgTyjmMVuIpWLytKBo',
-    GEMINI_API_URL: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent',
+
 
     // Image sizes
     IMAGE_SIZES: {

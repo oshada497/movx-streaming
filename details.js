@@ -142,31 +142,8 @@ async function loadDetails(id, type) {
         `<span class="details-genre-tag">${g}</span>`
     ).join('');
 
-    // Description - Translate to Sinhala automatically
-    const descriptionElement = document.getElementById('description');
-    const originalDescription = details.overview || details.description || 'No description available.';
-
-    // Show loading indicator while translating
-    descriptionElement.textContent = 'පරිවර්තනය කරමින්...';
-    descriptionElement.style.opacity = '0.6';
-
-    // Translate to Sinhala using Gemini API
-    if (window.translator) {
-        try {
-            const translatedDescription = await window.translator.translateToSinhala(originalDescription);
-            descriptionElement.textContent = translatedDescription;
-            descriptionElement.style.opacity = '1';
-        } catch (error) {
-            console.error('Translation failed:', error);
-            // Fallback to original description if translation fails
-            descriptionElement.textContent = originalDescription;
-            descriptionElement.style.opacity = '1';
-        }
-    } else {
-        // Translator not available, show original
-        descriptionElement.textContent = originalDescription;
-        descriptionElement.style.opacity = '1';
-    }
+    // Description
+    document.getElementById('description').textContent = details.overview || details.description || 'No description available.';
 
 
     // DEBUGGING: Print details to console to verify videoUrl existence
