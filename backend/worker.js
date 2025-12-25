@@ -7,15 +7,15 @@ export default {
 
         // Security & CORS Headers
         const responseHeaders = {
-            'Access-Control-Allow-Origin': '*', // Adjust logic below for credentials
+            'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
             'Access-Control-Allow-Headers': 'Content-Type, Authorization',
             // HSTS: Enforce HTTPS for 1 year
             'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
             // X-Frame-Options: Prevent clickjacking (deny iframes)
             'X-Frame-Options': 'DENY',
-            // CSP: Specific policy for Facebook CDNs and others
-            'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.plyr.io https://cdnjs.cloudflare.com https://static.cloudflareinsights.com; media-src 'self' https://*.fbcdn.net https://scontent-*.fbcdn.net https://scontent-cdg4-1.xx.fbcdn.net https://scontent-cdg4-2.xx.fbcdn.net https://scontent-cdg4-3.xx.fbcdn.net https://scontent-cdg4-4.xx.fbcdn.net blob: data:; img-src 'self' https://image.tmdb.org https://via.placeholder.com data: blob:; connect-src 'self' https://*.fbcdn.net https://scontent-cdg4-1.xx.fbcdn.net https://scontent-cdg4-2.xx.fbcdn.net https://scontent-cdg4-3.xx.fbcdn.net https://scontent-cdg4-4.xx.fbcdn.net https://api.themoviedb.org https://*.supabase.co https://*.workers.dev https://cdn.plyr.io https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.plyr.io;",
+            // CSP: Fixed invalid wildcard syntax
+            'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.plyr.io https://cdnjs.cloudflare.com https://static.cloudflareinsights.com; media-src 'self' https://*.fbcdn.net https://scontent-cdg4-1.xx.fbcdn.net https://scontent-cdg4-2.xx.fbcdn.net https://scontent-cdg4-3.xx.fbcdn.net https://scontent-cdg4-4.xx.fbcdn.net blob: data:; img-src 'self' https://image.tmdb.org https://placehold.co data: blob:; connect-src 'self' https://*.fbcdn.net https://scontent-cdg4-1.xx.fbcdn.net https://scontent-cdg4-2.xx.fbcdn.net https://scontent-cdg4-3.xx.fbcdn.net https://scontent-cdg4-4.xx.fbcdn.net https://api.themoviedb.org https://*.supabase.co https://*.workers.dev https://cdn.plyr.io https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.plyr.io;",
             // Content Type enforcement
             'X-Content-Type-Options': 'nosniff'
         };
@@ -83,46 +83,69 @@ export default {
         try {
             // ===== TMDB Proxy =====
             if (path.startsWith('/api/tmdb')) {
-                return handleTmdbRequest(request, env, path.replace('/api/tmdb', ''));
+                const tmdbPath = path.replace('/api/tmdb', '');
+                const tmdbUrl = `https://api.themoviedb.org/3${tmdbPath}${url.search}`;
+                const tmdbResponse = await fetch(tmdbUrl, {
+                    headers: {
+                        'Authorization': `Bearer ${env.TMDB_READ_TOKEN}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const tmdbData = await tmdbResponse.json();
+                return new Response(JSON.stringify(tmdbData), {
+                    headers: { ...responseHeaders, 'Content-Type': 'application/json' }
+                });
             }
 
             // ===== Gemini Proxy =====
             if (path === '/api/translate') {
-                return handleTranslateRequest(request, env);
+                const body = await request.json();
+                const text = body.text;
+                const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${env.GEMINI_API_KEY}`;
+                const geminiResponse = await fetch(geminiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: `Translate the following movie description to Sinhala:\n\n${text}` }] }]
+                    })
+                });
+                const geminiData = await geminiResponse.json();
+                return new Response(JSON.stringify(geminiData), {
+                    headers: { ...responseHeaders, 'Content-Type': 'application/json' }
+                });
             }
 
             // ===== Supabase Proxy (Movies) =====
             if (path === '/api/movies') {
-                if (method === 'GET') return getSupabaseContent(env, 'movies');
-                if (method === 'POST') return addSupabaseContent(request, env, 'movies');
+                if (method === 'GET') return getSupabaseContent(env, 'movies', responseHeaders);
+                if (method === 'POST') return addSupabaseContent(request, env, 'movies', responseHeaders);
             }
-            if (path.startsWith('/api/movies/')) { // DELETE / UPDATE
+            if (path.startsWith('/api/movies/')) {
                 const id = path.split('/').pop();
-                if (method === 'PUT') return updateSupabaseContent(request, env, 'movies', id);
-                if (method === 'DELETE') return deleteSupabaseContent(env, 'movies', id);
+                if (method === 'PUT') return updateSupabaseContent(request, env, 'movies', id, responseHeaders);
+                if (method === 'DELETE') return deleteSupabaseContent(env, 'movies', id, responseHeaders);
             }
 
             // ===== Supabase Proxy (TV Shows) =====
             if (path === '/api/tv') {
-                if (method === 'GET') return getSupabaseContent(env, 'tv_shows');
-                if (method === 'POST') return addSupabaseContent(request, env, 'tv_shows');
+                if (method === 'GET') return getSupabaseContent(env, 'tv_shows', responseHeaders);
+                if (method === 'POST') return addSupabaseContent(request, env, 'tv_shows', responseHeaders);
             }
             if (path.startsWith('/api/tv/')) {
                 const id = path.split('/').pop();
-                if (method === 'PUT') return updateSupabaseContent(request, env, 'tv_shows', id);
-                if (method === 'DELETE') return deleteSupabaseContent(env, 'tv_shows', id);
+                if (method === 'PUT') return updateSupabaseContent(request, env, 'tv_shows', id, responseHeaders);
+                if (method === 'DELETE') return deleteSupabaseContent(env, 'tv_shows', id, responseHeaders);
             }
 
             // ===== Supabase Proxy (Episodes) =====
             if (path === '/api/episodes') {
-                // Special case: GET usually filters by tv_show_id query param
-                if (method === 'GET') return getEpisodes(request, env);
-                if (method === 'POST') return addSupabaseContent(request, env, 'episodes');
+                if (method === 'GET') return getEpisodes(request, env, responseHeaders);
+                if (method === 'POST') return addSupabaseContent(request, env, 'episodes', responseHeaders);
             }
             if (path.startsWith('/api/episodes/')) {
                 const id = path.split('/').pop();
-                if (method === 'PUT') return updateSupabaseContent(request, env, 'episodes', id);
-                if (method === 'DELETE') return deleteSupabaseContent(env, 'episodes', id);
+                if (method === 'PUT') return updateSupabaseContent(request, env, 'episodes', id, responseHeaders);
+                if (method === 'DELETE') return deleteSupabaseContent(env, 'episodes', id, responseHeaders);
             }
 
             return new Response('Not Found', { status: 404, headers: responseHeaders });
@@ -136,67 +159,9 @@ export default {
     }
 };
 
-// --- Handlers ---
+// --- Supabase Helpers ---
 
-async function handleTmdbRequest(request, env, subPath) {
-    const url = new URL(request.url);
-    const tmdbUrl = `https://api.themoviedb.org/3${subPath}${url.search}`;
-
-    const response = await fetch(tmdbUrl, {
-        headers: {
-            'Authorization': `Bearer ${env.TMDB_READ_TOKEN}`, // Or use API Key param
-            'Content-Type': 'application/json'
-        }
-    });
-
-    const data = await response.json();
-    // Re-define responseHeaders here or pass it down.
-    // Simpler: Just reconstruct essential CORS+Security headers locally or use helper.
-    // For brevity/correctness in this replace block, I will inline standard ones + CORS to ensure they persist.
-    const secureHeaders = {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
-        'X-Frame-Options': 'DENY',
-        'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.plyr.io https://cdnjs.cloudflare.com https://static.cloudflareinsights.com; media-src 'self' https://*.fbcdn.net https://scontent-*.fbcdn.net https://scontent-cdg4-1.xx.fbcdn.net https://scontent-cdg4-2.xx.fbcdn.net https://scontent-cdg4-3.xx.fbcdn.net https://scontent-cdg4-4.xx.fbcdn.net blob: data:; img-src 'self' https://image.tmdb.org https://via.placeholder.com data: blob:; connect-src 'self' https://*.fbcdn.net https://scontent-cdg4-1.xx.fbcdn.net https://scontent-cdg4-2.xx.fbcdn.net https://scontent-cdg4-3.xx.fbcdn.net https://scontent-cdg4-4.xx.fbcdn.net https://api.themoviedb.org https://*.supabase.co https://*.workers.dev https://cdn.plyr.io https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.plyr.io;",
-        'X-Content-Type-Options': 'nosniff'
-    };
-
-    return new Response(JSON.stringify(data), {
-        headers: secureHeaders
-    });
-}
-
-async function handleTranslateRequest(request, env) {
-    const body = await request.json();
-    const text = body.text;
-
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${env.GEMINI_API_KEY}`;
-
-    const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            contents: [{ parts: [{ text: `Translate the following movie description to Sinhala:\n\n${text}` }] }]
-        })
-    });
-
-    const data = await response.json();
-    const secureHeaders = {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
-        'X-Frame-Options': 'DENY',
-        'X-Content-Type-Options': 'nosniff'
-    };
-    return new Response(JSON.stringify(data), {
-        headers: secureHeaders
-    });
-}
-
-// --- Supabase Helpers (Using REST API to avoid bulky client lib in Worker) ---
-
-async function getSupabaseContent(env, table) {
+async function getSupabaseContent(env, table, headers) {
     const url = `${env.SUPABASE_URL}/rest/v1/${table}?select=*&order=created_at.desc`;
     const response = await fetch(url, {
         headers: {
@@ -204,23 +169,12 @@ async function getSupabaseContent(env, table) {
             'Authorization': `Bearer ${env.SUPABASE_KEY}`
         }
     });
-
-    const secureHeaders = {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
-        'X-Frame-Options': 'DENY'
-    };
-
-    return new Response(response.body, {
-        headers: secureHeaders
-    });
+    return new Response(response.body, { headers: { ...headers, 'Content-Type': 'application/json' } });
 }
 
-async function addSupabaseContent(request, env, table) {
+async function addSupabaseContent(request, env, table, headers) {
     const body = await request.json();
     const url = `${env.SUPABASE_URL}/rest/v1/${table}`;
-
     const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -231,14 +185,12 @@ async function addSupabaseContent(request, env, table) {
         },
         body: JSON.stringify(body)
     });
-
-    return new Response(response.body, { headers: { 'Access-Control-Allow-Origin': '*', 'Strict-Transport-Security': 'max-age=31536000' } });
+    return new Response(response.body, { headers: { ...headers, 'Content-Type': 'application/json' } });
 }
 
-async function updateSupabaseContent(request, env, table, id) {
+async function updateSupabaseContent(request, env, table, id, headers) {
     const body = await request.json();
     const url = `${env.SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`;
-
     const response = await fetch(url, {
         method: 'PATCH',
         headers: {
@@ -248,11 +200,10 @@ async function updateSupabaseContent(request, env, table, id) {
         },
         body: JSON.stringify(body)
     });
-
-    return new Response(response.body, { headers: { 'Access-Control-Allow-Origin': '*', 'Strict-Transport-Security': 'max-age=31536000' } });
+    return new Response(response.body, { headers: { ...headers, 'Content-Type': 'application/json' } });
 }
 
-async function deleteSupabaseContent(env, table, id) {
+async function deleteSupabaseContent(env, table, id, headers) {
     const url = `${env.SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`;
     const response = await fetch(url, {
         method: 'DELETE',
@@ -261,26 +212,19 @@ async function deleteSupabaseContent(env, table, id) {
             'Authorization': `Bearer ${env.SUPABASE_KEY}`
         }
     });
-    return new Response(response.body, { headers: { 'Access-Control-Allow-Origin': '*', 'Strict-Transport-Security': 'max-age=31536000' } });
+    return new Response(response.body, { headers: headers });
 }
 
-async function getEpisodes(request, env) {
+async function getEpisodes(request, env, headers) {
     const url = new URL(request.url);
     const tvId = url.searchParams.get('tv_show_id');
-
     let supabaseUrl = `${env.SUPABASE_URL}/rest/v1/episodes?select=*&order=season_number.asc,episode_number.asc`;
-    if (tvId) {
-        supabaseUrl += `&tv_show_id=eq.${tvId}`;
-    }
-
+    if (tvId) supabaseUrl += `&tv_show_id=eq.${tvId}`;
     const response = await fetch(supabaseUrl, {
         headers: {
             'apikey': env.SUPABASE_KEY,
             'Authorization': `Bearer ${env.SUPABASE_KEY}`
         }
     });
-
-    return new Response(response.body, {
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Strict-Transport-Security': 'max-age=31536000', 'X-Frame-Options': 'DENY' }
-    });
+    return new Response(response.body, { headers: { ...headers, 'Content-Type': 'application/json' } });
 }

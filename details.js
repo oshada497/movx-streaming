@@ -373,7 +373,7 @@ async function setupCommentSection(contentId, contentType) {
     if (session) {
         // Show comment input and set user avatar
         commentInputArea.style.display = 'flex';
-        const avatarUrl = session.user.user_metadata.avatar_url || 'https://via.placeholder.com/40';
+        const avatarUrl = session.user.user_metadata.avatar_url || 'https://placehold.co/40';
         document.getElementById('commentUserAvatar').src = avatarUrl;
     } else {
         // Hide comment input if not logged in
@@ -423,7 +423,7 @@ function renderComments(comments) {
         const commentHTML = `
             <div class="comment-card" data-id="${comment.id}">
                 <div class="comment-avatar">
-                    <img src="${comment.user_avatar || 'https://via.placeholder.com/40'}" alt="${comment.user_name}">
+                    <img src="${comment.user_avatar || 'https://placehold.co/40'}" alt="${comment.user_name}">
                 </div>
                 <div class="comment-content">
                     <div class="comment-header">

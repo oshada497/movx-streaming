@@ -448,7 +448,7 @@ class AdminApp {
     }
 
     createContentItem(item, type) {
-        const poster = item.poster || 'https://via.placeholder.com/200x300/1a1a1a/666666?text=No+Poster';
+        const poster = item.poster || 'https://placehold.co/200x300/1a1a1a/666666?text=No+Poster';
         const rating = item.rating ? Number(item.rating).toFixed(1) : 'N/A';
         // Note: item.id is from Supabase (probably numeric or uuid)
         return `

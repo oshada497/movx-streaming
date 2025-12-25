@@ -339,7 +339,7 @@ class MovXApp {
 
         // Update poster
         const posterImg = document.getElementById('heroPosterImg');
-        posterImg.src = content.poster || 'https://via.placeholder.com/180x270/1a1a1a/666666?text=No+Poster';
+        posterImg.src = content.poster || 'https://placehold.co/180x270/1a1a1a/666666?text=No+Poster';
         posterImg.alt = content.title;
 
         // Update progress indicator
@@ -417,7 +417,7 @@ class MovXApp {
             const title = item.title;
             const year = item.year || '';
             const type = item.mediaType === 'tv' ? 'TV Show' : 'Movie';
-            const poster = item.poster || 'https://via.placeholder.com/300x450/1a1a1a/666666?text=No+Poster';
+            const poster = item.poster || 'https://placehold.co/300x450/1a1a1a/666666?text=No+Poster';
 
             return `
                 <div class="search-result-item" data-id="${item.tmdbId || item.id}" data-type="${item.mediaType}">
@@ -489,7 +489,7 @@ class MovXApp {
     }
 
     createContentCard(item, type) {
-        const poster = item.poster || 'https://via.placeholder.com/180x270/1a1a1a/666666?text=No+Poster';
+        const poster = item.poster || 'https://placehold.co/180x270/1a1a1a/666666?text=No+Poster';
         const rating = item.rating ? Number(item.rating).toFixed(1) : 'N/A';
 
         // Use tmdbId for linking if available, otherwise fallback (DB items should have tmdbId)
@@ -530,7 +530,7 @@ class MovXApp {
         const container = document.getElementById('episodesList');
         container.innerHTML = episodes.map((ep, index) => `
             <div class="episode-card" data-episode="${index + 1}">
-                <img src="${ep.thumbnail || 'https://via.placeholder.com/280x160/1a1a1a/666666?text=Episode'}" 
+                <img src="${ep.thumbnail || 'https://placehold.co/280x160/1a1a1a/666666?text=Episode'}" 
                      alt="Episode ${index + 1}" class="episode-thumbnail">
                 <div class="episode-info">
                     <div class="episode-number">S1-E${index + 1}</div>

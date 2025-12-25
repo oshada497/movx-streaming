@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const ntitle = item.title;
                 const nyear = item.year || '';
                 const ntype = item.mediaType === 'tv' ? 'TV Show' : 'Movie';
-                const nposter = item.poster || 'https://via.placeholder.com/300x450/1a1a1a/666666?text=No+Poster';
+                const nposter = item.poster || 'https://placehold.co/300x450/1a1a1a/666666?text=No+Poster';
 
                 return `
                     <div class="search-result-item" data-id="${item.tmdbId || item.id}" data-type="${item.mediaType}">
@@ -125,7 +125,7 @@ function renderGrid(items, container) {
 }
 
 function createCard(item) {
-    const poster = item.poster || 'https://via.placeholder.com/180x270/1a1a1a/666666?text=No+Poster';
+    const poster = item.poster || 'https://placehold.co/180x270/1a1a1a/666666?text=No+Poster';
     const rating = item.rating ? item.rating.toFixed(1) : 'N/A';
     const type = item.mediaType || 'movie';
     const link = `details.html?id=${item.tmdbId || item.id}&type=${type}`;

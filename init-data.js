@@ -31,12 +31,36 @@
 
         // Dummy Movies (Commented Out)
         /*
-        const dummyMovies = [ ... ];
+        const dummyMovies = [
+            {
+                tmdbId: 123,
+                title: 'Dummy Movie 1',
+                overview: 'This is a description...',
+                poster_path: 'https://placehold.co/342x513?text=Dummy+Movie',
+                backdrop_path: 'https://placehold.co/1280x720?text=Dummy+Backdrop',
+                release_date: '2024-01-01',
+                vote_average: 8.5,
+                media_type: 'movie',
+                video_url: '...',
+                facebook_video_id: '...'
+            }
+        ];
         */
 
         // Dummy TV Shows (Commented Out)
         /*
-        const dummyTVShows = [ ... ];
+        const dummyTVShows = [
+            {
+                tmdbId: 456,
+                name: 'Dummy TV Show 1',
+                overview: 'Description...',
+                poster_path: 'https://placehold.co/342x513?text=Dummy+TV',
+                backdrop_path: 'https://placehold.co/1280x720?text=Dummy+Backdrop_TV',
+                first_air_date: '2024-01-01',
+                vote_average: 9.0,
+                media_type: 'tv'
+            }
+        ];
         */
 
         // Reload content in app (even if empty, to clear loading states)
