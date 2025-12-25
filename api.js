@@ -77,7 +77,7 @@ const API = {
 
     // --- Helper to get image URLs ---
     getImageUrl(path, size = 'w500') {
-        if (!path) return 'https://placehold.co/500x750?text=No+Image';
+        if (!path) return 'https://placehold.co/500x750/1a1a1a/666666?text=No+Image';
         return `${CONFIG.TMDB_IMAGE_BASE}/${size}${path}`;
     },
 
