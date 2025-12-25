@@ -303,9 +303,14 @@ class AdminApp {
                     <label>Title</label>
                     <input type="text" value="${content.title}" readonly style="opacity: 0.7; cursor: not-allowed;">
                 </div>
+                </div>
                  <div class="form-group" style="${isTv ? 'display:none;' : ''}">
                     <label>Video / Stream URL (CDN)</label>
-                    <input type="url" id="addVideoUrl" ${isTv ? '' : 'required'} placeholder="https://example.com/video.mp4" autofocus>
+                    <input type="url" id="addVideoUrl" placeholder="https://example.com/video.mp4" autofocus>
+                </div>
+                 <div class="form-group" style="${isTv ? 'display:none;' : ''}">
+                    <label>Facebook Video ID (Optional)</label>
+                    <input type="text" id="addFacebookVideoId" placeholder="123456789">
                 </div>
                  <div class="form-group">
                     <label>Platform</label>
@@ -326,7 +331,10 @@ class AdminApp {
         const handleSubmit = async (e) => {
             e.preventDefault();
             const videoInput = document.getElementById('addVideoUrl');
+            const fbInput = document.getElementById('addFacebookVideoId');
+
             content.videoUrl = videoInput ? videoInput.value.trim() : '';
+            content.facebookVideoId = fbInput ? fbInput.value.trim() : '';
             content.platform = document.getElementById('addPlatform').value;
 
             if (await this.finalAddContent(content, type)) {
