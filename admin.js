@@ -26,12 +26,14 @@ class AdminApp {
         const errorMsg = document.getElementById('loginError');
         const loginMessage = document.getElementById('loginMessage');
 
-        // Check current session
-        const { data: { session } } = await supabase.auth.getSession();
+        // Wait for auth to be ready
+        await window.auth.ready;
 
-        if (session) {
+        const user = window.auth.getUser();
+
+        if (user) {
             // User is logged in - check if they're an admin
-            const userEmail = session.user.email;
+            const userEmail = user.email;
 
             if (ADMIN_EMAILS.includes(userEmail)) {
                 // Authorized admin
@@ -46,12 +48,17 @@ class AdminApp {
             // Not logged in - show login button
             overlay.style.display = 'flex';
 
-            loginBtn.addEventListener('click', async () => {
-                const redirectUrl = window.location.href;
-                await supabase.auth.signInWithOAuth({
-                    provider: 'google',
-                    options: { redirectTo: redirectUrl }
-                });
+            // Remove old listeners to avoid duplicates if re-init
+            const newLoginBtn = loginBtn.cloneNode(true);
+            loginBtn.parentNode.replaceChild(newLoginBtn, loginBtn);
+
+            newLoginBtn.addEventListener('click', async () => {
+                try {
+                    await window.auth.signInWithGoogle();
+                } catch (error) {
+                    console.error("Login failed", error);
+                    alert("Login failed: " + error.message);
+                }
             });
         }
     }

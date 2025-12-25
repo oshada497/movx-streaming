@@ -20,14 +20,59 @@ class MovXApp {
     setupAuth() {
         const authBtn = document.getElementById('authBtn');
 
-        // Hide auth button for now - OAuth has import issues in Workers
-        // Watchlist works with localStorage, no auth needed
-        if (authBtn) {
-            authBtn.style.display = 'none';
-        }
+        if (!authBtn) return;
 
-        // Keep this for future when auth is properly set up
-        this.currentSession = null;
+        // Show the auth button (it was hidden before)
+        authBtn.style.display = 'flex';
+
+        // Listen for auth state changes
+        window.auth.onAuthStateChange((user) => {
+            this.updateAuthUI(user);
+        });
+
+        // Handle auth button click
+        authBtn.addEventListener('click', async () => {
+            if (window.auth.isAuthenticated()) {
+                // Sign out
+                try {
+                    await window.auth.signOut();
+                    alert('Logged out successfully!');
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    alert('Failed to log out. Please try again.');
+                }
+            } else {
+                // Sign in with Google
+                try {
+                    await window.auth.signInWithGoogle();
+                    // Redirect will happen automatically
+                } catch (error) {
+                    console.error('Login error:', error);
+                    alert('Failed to log in. Please try again.');
+                }
+            }
+        });
+    }
+
+    updateAuthUI(user) {
+        const authBtn = document.getElementById('authBtn');
+        if (!authBtn) return;
+
+        if (user) {
+            // User is logged in
+            const avatar = window.auth.getUserAvatar();
+
+            if (avatar) {
+                authBtn.innerHTML = `<img src="${avatar}" alt="Profile" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">`;
+            } else {
+                authBtn.innerHTML = '<i class="fas fa-user-circle"></i>';
+            }
+            authBtn.title = `Logout (${window.auth.getUserEmail()})`;
+        } else {
+            // User is logged out
+            authBtn.innerHTML = '<i class="fab fa-google"></i>';
+            authBtn.title = 'Login with Google';
+        }
     }
 
     bindEvents() {

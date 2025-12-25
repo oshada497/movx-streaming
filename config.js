@@ -3,6 +3,10 @@ const CONFIG = {
     // Cloudflare Worker Backend URL
     API_BASE_URL: 'https://movx-streaming-backend.samename253.workers.dev',
 
+    // Supabase Configuration (for authentication)
+    SUPABASE_URL: 'https://hlfvrhmvulsttzdwyzus.supabase.co',
+    SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhsZnZyaG12dWxzdHR6ZHd5enVzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwNjAyMzksImV4cCI6MjA4MTYzNjIzOX0.AZmSk-JMht2MC3I1giMJpI3JGVsDRgAPSkqihaDZ6xo',
+
     // TMDB Base URL (for Images only, API calls go through backend)
     TMDB_IMAGE_BASE: 'https://image.tmdb.org/t/p',
 

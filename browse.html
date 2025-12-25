@@ -134,7 +134,14 @@
                 <i class="fas fa-search search-icon"></i>
                 <input type="text" id="searchInput" class="search-input" placeholder="Search movies & TV..."
                     autocomplete="off">
+                <button class="search-btn" id="searchBtn" aria-label="Search">
+                    <i class="fas fa-search"></i>
+                </button>
             </div>
+
+            <button id="authBtn" class="icon-btn" title="Login with Google" aria-label="Login with Google">
+                <i class="fab fa-google"></i>
+            </button>
         </div>
     </header>
 
@@ -184,13 +191,13 @@
         <div class="search-results" id="searchResults"></div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js?v=2.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js?v=2.3"></script>
+    <script src="security.js"></script>
     <script src="db.js"></script>
     <script src="api.js"></script>
     <script src="browse.js"></script>
-    <!-- Use basic app logic for search only if easy, but browse.js will handle most -->
-    <script src="security.js"></script>
 </body>
 
 </html>

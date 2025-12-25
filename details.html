@@ -348,7 +348,14 @@
                 <i class="fas fa-search search-icon"></i>
                 <input type="text" id="searchInput" class="search-input" placeholder="Search movies & TV..."
                     autocomplete="off">
+                <button class="search-btn" id="searchBtn" aria-label="Search">
+                    <i class="fas fa-search"></i>
+                </button>
             </div>
+
+            <button id="authBtn" class="icon-btn" title="Login with Google" aria-label="Login with Google">
+                <i class="fab fa-google"></i>
+            </button>
         </div>
     </header>
 
@@ -466,6 +473,7 @@
                 text-overflow: ellipsis;
                 display: -webkit-box;
                 -webkit-line-clamp: 2;
+                line-clamp: 2;
                 -webkit-box-orient: vertical;
             }
         </style>
@@ -541,6 +549,8 @@
     <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <script src="config.js?v=2.3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js?v=2.3"></script>
 
     <script src="db.js?v=2.3"></script>
     <script src="api.js?v=2.3"></script>
