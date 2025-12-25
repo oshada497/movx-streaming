@@ -1,9 +1,7 @@
 // ===== Admin Panel Application =====
 
 // List of admin email addresses (add your email here)
-const ADMIN_EMAILS = [
-    'admin@example.com'  // Replace with your admin email(s)
-];
+// List of admin email addresses is now managed in Supabase 'admin_whitelist' table
 
 class AdminApp {
     constructor() {
@@ -34,15 +32,24 @@ class AdminApp {
         if (user) {
             // User is logged in - check if they're an admin
             const userEmail = user.email;
+            let isAuthorized = false;
 
-            if (ADMIN_EMAILS.includes(userEmail)) {
+            try {
+                // Check against database whitelist
+                isAuthorized = await DB.isAdmin(userEmail);
+            } catch (err) {
+                console.error("Auth check failed", err);
+            }
+
+            if (isAuthorized) {
                 // Authorized admin
                 overlay.style.display = 'none';
             } else {
                 // Not an admin
-                loginMessage.textContent = `Signed in as ${userEmail}`;
+                loginMessage.textContent = `Signed in as ${userEmail} (Not Authorized)`;
                 loginBtn.style.display = 'none';
                 errorMsg.style.display = 'block';
+                errorMsg.textContent = "Access denied. Your email is not whitelisted.";
             }
         } else {
             // Not logged in - show login button

@@ -292,6 +292,24 @@ const DB = {
     removeFromWatchlist(id, type) { return Storage.removeFromWatchlist(id, type); },
     isInWatchlist(id, type) { return Storage.isInWatchlist(id, type); },
 
+    // --- Auth & Admin ---
+    async isAdmin(email) {
+        if (!window.auth || !window.auth.supabase) return false;
+
+        try {
+            const { data, error } = await window.auth.supabase
+                .from('admin_whitelist')
+                .select('email')
+                .eq('email', email)
+                .single();
+
+            return !!data && !error;
+        } catch (e) {
+            console.error('Admin check failed:', e);
+            return false;
+        }
+    },
+
     // --- Comments (Direct Supabase) ---
     async getComments(contentId, contentType) {
         if (!window.auth || !window.auth.supabase) return [];
