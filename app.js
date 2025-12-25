@@ -17,96 +17,36 @@ class MovXApp {
         this.startHeroSlider();
     }
 
-    async setupAuth() {
+    setupAuth() {
         const authBtn = document.getElementById('authBtn');
 
-        // Check current session
-        const { data: { session } } = await supabase.auth.getSession();
-        this.updateAuthUI(session);
+        // Auth temporarily disabled during backend migration
+        this.updateAuthUI(null);
 
-        // Listen for auth changes
-        supabase.auth.onAuthStateChange((_event, session) => {
-            this.updateAuthUI(session);
-        });
-
-        // Handle Login/Logout Click
-        // Handle Login/Logout Click
-        // Handle Login/Profile Click
         authBtn.addEventListener('click', async () => {
-            if (this.currentSession) {
-                // Open Profile Modal
-                this.openProfileModal();
-            } else {
-                // Login with Google
-                const redirectUrl = window.location.href;
-                await supabase.auth.signInWithOAuth({
-                    provider: 'google',
-                    options: { redirectTo: redirectUrl }
-                });
-            }
+            alert('Login is currently disabled for maintenance.');
         });
 
-        // Profile Modal Events
-        document.getElementById('closeProfileModal').addEventListener('click', () => {
-            document.getElementById('profileModal').classList.remove('active');
-        });
-
-        document.getElementById('logoutBtn').addEventListener('click', async () => {
-            await supabase.auth.signOut();
-            document.getElementById('profileModal').classList.remove('active');
-        });
-
-        document.getElementById('saveProfileBtn').addEventListener('click', () => this.saveProfile());
-    }
-
-    openProfileModal() {
-        const modal = document.getElementById('profileModal');
-        const user = this.currentSession.user;
-        const meta = user.user_metadata;
-
-        document.getElementById('profileNameInput').value = meta.full_name || meta.name || '';
-        document.getElementById('profileAvatarInput').value = meta.avatar_url || '';
-        document.getElementById('profileAvatarPreview').src = meta.avatar_url || 'https://via.placeholder.com/100';
-
-        modal.classList.add('active');
-    }
-
-    async saveProfile() {
-        const name = document.getElementById('profileNameInput').value;
-        const avatarUrl = document.getElementById('profileAvatarInput').value;
-
-        const { data, error } = await supabase.auth.updateUser({
-            data: { full_name: name, avatar_url: avatarUrl }
-        });
-
-        if (error) {
-            alert('Error updating profile: ' + error.message);
-        } else {
-            // Update local session reference
-            this.currentSession = { ...this.currentSession, user: data.user };
-            this.updateAuthUI(this.currentSession);
-            document.getElementById('profileModal').classList.remove('active'); // Close modal
-            alert('Profile updated successfully!');
+        // Profile Modal Events (keep for future use but basically inactive)
+        const closeProfile = document.getElementById('closeProfileModal');
+        if (closeProfile) {
+            closeProfile.addEventListener('click', () => {
+                document.getElementById('profileModal').classList.remove('active');
+            });
         }
     }
+
+    // openProfileModal, saveProfile removed for brevity/safety until backend auth is ready
+    openProfileModal() { }
+    saveProfile() { }
 
     updateAuthUI(session) {
         this.currentSession = session;
         const authBtn = document.getElementById('authBtn');
-
-        if (session) {
-            // Logged In: Show User Avatar or Logout Icon
-            const avatarUrl = session.user.user_metadata.avatar_url;
-            if (avatarUrl) {
-                authBtn.innerHTML = `<img src="${avatarUrl}" style="width: 28px; height: 28px; border-radius: 50%;">`;
-            } else {
-                authBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i>';
-            }
-            authBtn.title = `Logged in as ${session.user.email}. Click to Logout.`;
-        } else {
-            // Logged Out: Show Google Icon
+        if (authBtn) {
+            // Always show generic login icon for now
             authBtn.innerHTML = '<i class="fab fa-google"></i>';
-            authBtn.title = 'Login with Google';
+            authBtn.title = 'Login Disabled';
         }
     }
 

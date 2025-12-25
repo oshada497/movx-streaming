@@ -8,6 +8,36 @@ const CACHE_KEYS = {
     tvShows: 'movx_cache_tvshows'
 };
 
+// --- Storage Helper ---
+const Storage = {
+    getWatchlist() {
+        const stored = localStorage.getItem(CONFIG.STORAGE_KEYS.watchlist);
+        return stored ? JSON.parse(stored) : [];
+    },
+
+    addToWatchlist(item) {
+        const list = this.getWatchlist();
+        if (!list.some(i => i.tmdbId == item.tmdbId)) {
+            list.push({ ...item, addedAt: Date.now() });
+            localStorage.setItem(CONFIG.STORAGE_KEYS.watchlist, JSON.stringify(list));
+            return true;
+        }
+        return false;
+    },
+
+    removeFromWatchlist(id, type) {
+        let list = this.getWatchlist();
+        list = list.filter(i => !(i.tmdbId == id && i.mediaType == type));
+        localStorage.setItem(CONFIG.STORAGE_KEYS.watchlist, JSON.stringify(list));
+        return true;
+    },
+
+    isInWatchlist(id, type) {
+        const list = this.getWatchlist();
+        return list.some(i => i.tmdbId == id && i.mediaType == type);
+    }
+};
+
 function getFromCache(key) {
     try {
         const cached = sessionStorage.getItem(key);

@@ -8,7 +8,7 @@ const CONFIG = {
 
     // Image sizes
     IMAGE_SIZES: {
-        poster: 'w500',
+        poster: 'w342', // Optimized from w500
         backdrop: 'original',
         thumbnail: 'w300'
     },
