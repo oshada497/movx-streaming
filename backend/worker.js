@@ -49,6 +49,18 @@ export default {
                 if (method === 'DELETE') return deleteSupabaseContent(env, 'tv_shows', id);
             }
 
+            // ===== Supabase Proxy (Episodes) =====
+            if (path === '/api/episodes') {
+                // Special case: GET usually filters by tv_show_id query param
+                if (method === 'GET') return getEpisodes(request, env);
+                if (method === 'POST') return addSupabaseContent(request, env, 'episodes');
+            }
+            if (path.startsWith('/api/episodes/')) {
+                const id = path.split('/').pop();
+                if (method === 'PUT') return updateSupabaseContent(request, env, 'episodes', id);
+                if (method === 'DELETE') return deleteSupabaseContent(env, 'episodes', id);
+            }
+
             return new Response('Not Found', { status: 404, headers: corsHeaders });
 
         } catch (err) {
@@ -162,4 +174,25 @@ async function deleteSupabaseContent(env, table, id) {
         }
     });
     return new Response(response.body, { headers: { 'Access-Control-Allow-Origin': '*' } });
+}
+
+async function getEpisodes(request, env) {
+    const url = new URL(request.url);
+    const tvId = url.searchParams.get('tv_show_id');
+
+    let supabaseUrl = `${env.SUPABASE_URL}/rest/v1/episodes?select=*&order=season_number.asc,episode_number.asc`;
+    if (tvId) {
+        supabaseUrl += `&tv_show_id=eq.${tvId}`;
+    }
+
+    const response = await fetch(supabaseUrl, {
+        headers: {
+            'apikey': env.SUPABASE_KEY,
+            'Authorization': `Bearer ${env.SUPABASE_KEY}`
+        }
+    });
+
+    return new Response(response.body, {
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+    });
 }

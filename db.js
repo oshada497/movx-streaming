@@ -1,452 +1,251 @@
-// ===== Supabase Database Connection =====
 
-// Initialize Supabase Client
-if (typeof supabase === 'undefined') {
-    console.error('Supabase client library not loaded!');
-}
+// ===== Database Connection (via Worker Backend) =====
 
-const supabaseClient = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
-// Expose as global 'supabase' for app.js to use
-window.supabase = supabaseClient;
-
-// ===== Cache Configuration =====
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+// Cache Configuration for Backend Calls
+const CACHE_DURATION = 5 * 60 * 1000; // 5 mins
 const CACHE_KEYS = {
     movies: 'movx_cache_movies',
-    tvShows: 'movx_cache_tvshows',
-    allContent: 'movx_cache_all'
+    tvShows: 'movx_cache_tvshows'
 };
 
-// Cache helper functions
 function getFromCache(key) {
     try {
         const cached = sessionStorage.getItem(key);
         if (!cached) return null;
-
         const { data, timestamp } = JSON.parse(cached);
-        if (Date.now() - timestamp > CACHE_DURATION) {
-            sessionStorage.removeItem(key);
-            return null;
-        }
+        if (Date.now() - timestamp > CACHE_DURATION) return null;
         return data;
-    } catch (e) {
-        return null;
-    }
+    } catch { return null; }
 }
 
 function setCache(key, data) {
     try {
-        sessionStorage.setItem(key, JSON.stringify({
-            data,
-            timestamp: Date.now()
-        }));
-    } catch (e) {
-        // Storage full, clear old cache
-        sessionStorage.clear();
-    }
+        sessionStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
+    } catch { sessionStorage.clear(); }
 }
 
 function clearCache() {
-    Object.values(CACHE_KEYS).forEach(key => sessionStorage.removeItem(key));
+    Object.values(CACHE_KEYS).forEach(k => sessionStorage.removeItem(k));
 }
 
 const DB = {
     // --- Movies ---
-
     async getMovies() {
-        // Check cache first
         const cached = getFromCache(CACHE_KEYS.movies);
         if (cached) return cached;
 
-        const { data, error } = await supabaseClient
-            .from('movies')
-            .select('*')
-            .order('created_at', { ascending: false });
+        try {
+            const res = await fetch(`${CONFIG.API_BASE_URL}/api/movies`);
+            if (!res.ok) return [];
+            const data = await res.json();
 
-        // Decrypt URLs
-        if (data) {
-            data.forEach(m => {
-                if (m.videoUrl) m.videoUrl = Security.decrypt(m.videoUrl);
-                if (m.facebookVideoId) m.facebookVideoId = Security.decrypt(m.facebookVideoId);
-            });
-        }
+            // Decrypt on client side (Worker sends encrypted data)
+            if (data && window.Security) {
+                data.forEach(m => {
+                    if (m.videoUrl) m.videoUrl = Security.decrypt(m.videoUrl);
+                    if (m.facebookVideoId) m.facebookVideoId = Security.decrypt(m.facebookVideoId);
+                });
+            }
 
-        if (error) {
-            console.error('Error fetching movies:', error);
+            setCache(CACHE_KEYS.movies, data);
+            return data;
+        } catch (e) {
+            console.error('DB Error', e);
             return [];
         }
-
-        // Store in cache
-        setCache(CACHE_KEYS.movies, data || []);
-        return data || [];
     },
 
     async addMovie(movie) {
-        // Remove 'id' if it's just a local timestamp, let Supabase handle Ids or use tmdbId as unique
-        const existing = await this.getMovieByTmdbId(movie.tmdbId);
-        if (existing) return false;
+        // Local Encryption before sending to Worker (Double safety or just standard)
+        // Actually, we should encrypt here because the Worker is just a proxy and we don't want plaintext in transit if possible (though HTTPS protects it).
+        // Reuse Security logic from before
+        const cleanMovie = { ...movie };
+        if (window.Security) {
+            if (cleanMovie.videoUrl) cleanMovie.videoUrl = Security.encrypt(cleanMovie.videoUrl);
+            if (cleanMovie.facebookVideoId) cleanMovie.facebookVideoId = Security.encrypt(cleanMovie.facebookVideoId);
+        }
 
-        // Sanitize object to remove properties that don't exist in the 'movies' table (like 'seasons')
-        const allowedFields = [
-            'tmdbId', 'title', 'description', 'platform', 'year', 'rating',
-            'genres', 'backdrop', 'poster', 'ageRating', 'runtime', 'videoUrl', 'facebookVideoId'
-        ];
-
-        const cleanMovie = {};
-        allowedFields.forEach(field => {
-            if (movie[field] !== undefined) {
-                // Obfuscate Video URL and FB ID
-                if (field === 'videoUrl' || field === 'facebookVideoId') {
-                    cleanMovie[field] = movie[field] ? Security.encrypt(movie[field]) : movie[field];
-                } else {
-                    cleanMovie[field] = movie[field];
-                }
+        try {
+            const res = await fetch(`${CONFIG.API_BASE_URL}/api/movies`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(cleanMovie)
+            });
+            if (res.ok) {
+                clearCache();
+                return true;
             }
-        });
-
-        const { data, error } = await supabaseClient
-            .from('movies')
-            .insert([cleanMovie])
-            .select();
-
-        if (error) {
-            console.error('Error adding movie:', error);
-            return false;
-        }
-        clearCache(); // Invalidate cache
-        return true;
-    },
-
-    async getMovieByTmdbId(tmdbId) {
-        const { data, error } = await supabaseClient
-            .from('movies')
-            .select('*')
-            .eq('tmdbId', tmdbId)
-            .maybeSingle(); // Use maybeSingle() to avoid 406 errors when content doesn't exist yet
-
-        if (data) {
-            if (data.videoUrl) data.videoUrl = Security.decrypt(data.videoUrl);
-            if (data.facebookVideoId) data.facebookVideoId = Security.decrypt(data.facebookVideoId);
-        }
-
-        if (error) {
-            // console.error('Error fetching movie:', error);
-        }
-        return data;
+        } catch (e) { console.error(e); }
+        return false;
     },
 
     async updateMovie(id, updates) {
-        // Sanitize updates
-        const allowedFields = [
-            'tmdbId', 'title', 'description', 'platform', 'year', 'rating',
-            'genres', 'backdrop', 'poster', 'ageRating', 'runtime', 'videoUrl', 'facebookVideoId'
-        ];
+        const cleanUpdates = { ...updates };
+        if (window.Security) {
+            if (cleanUpdates.videoUrl) cleanUpdates.videoUrl = Security.encrypt(cleanUpdates.videoUrl);
+            if (cleanUpdates.facebookVideoId) cleanUpdates.facebookVideoId = Security.encrypt(cleanUpdates.facebookVideoId);
+        }
 
-        const cleanUpdates = {};
-        allowedFields.forEach(field => {
-            if (updates[field] !== undefined) {
-                if (field === 'videoUrl' || field === 'facebookVideoId') {
-                    cleanUpdates[field] = updates[field] ? Security.encrypt(updates[field]) : updates[field];
-                } else {
-                    cleanUpdates[field] = updates[field];
-                }
+        try {
+            const res = await fetch(`${CONFIG.API_BASE_URL}/api/movies/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(cleanUpdates)
+            });
+            if (res.ok) {
+                clearCache();
+                return true;
             }
-        });
-
-        const { data, error } = await supabaseClient
-            .from('movies')
-            .update(cleanUpdates)
-            .eq('id', id)
-            .select();
-
-        if (error) {
-            console.error('Error updating movie:', error);
-            return false;
-        }
-        clearCache(); // Invalidate cache
-        return true;
-    },
-
-    async removeMovie(id) {
-        const { error } = await supabaseClient
-            .from('movies')
-            .delete()
-            .eq('id', id);
-
-        if (error) {
-            console.error('Error deleting movie:', error);
-            return false;
-        }
-        clearCache(); // Invalidate cache
-        return true;
+        } catch (e) { console.error(e); }
+        return false;
     },
 
     // --- TV Shows ---
-
     async getTVShows() {
-        // Check cache first
         const cached = getFromCache(CACHE_KEYS.tvShows);
         if (cached) return cached;
 
-        const { data, error } = await supabaseClient
-            .from('tv_shows')
-            .select('*')
-            .order('created_at', { ascending: false });
+        try {
+            const res = await fetch(`${CONFIG.API_BASE_URL}/api/tv`);
+            if (!res.ok) return [];
+            const data = await res.json();
 
-        if (data) {
-            data.forEach(s => {
-                if (s.videoUrl) s.videoUrl = Security.decrypt(s.videoUrl);
-                if (s.facebookVideoId) s.facebookVideoId = Security.decrypt(s.facebookVideoId);
-            });
-        }
+            if (data && window.Security) {
+                data.forEach(s => {
+                    if (s.videoUrl) s.videoUrl = Security.decrypt(s.videoUrl);
+                    if (s.facebookVideoId) s.facebookVideoId = Security.decrypt(s.facebookVideoId);
+                });
+            }
 
-        if (error) {
-            console.error('Error fetching tv shows:', error);
-            return [];
-        }
-
-        // Store in cache
-        setCache(CACHE_KEYS.tvShows, data || []);
-        return data || [];
+            setCache(CACHE_KEYS.tvShows, data);
+            return data;
+        } catch (e) { return []; }
     },
 
     async addTVShow(show) {
-        const existing = await this.getTVShowByTmdbId(show.tmdbId);
-        if (existing) return false;
+        const cleanShow = { ...show };
+        if (window.Security) {
+            if (cleanShow.videoUrl) cleanShow.videoUrl = Security.encrypt(cleanShow.videoUrl);
+            if (cleanShow.facebookVideoId) cleanShow.facebookVideoId = Security.encrypt(cleanShow.facebookVideoId);
+        }
 
-        // Sanitize object
-        const allowedFields = [
-            'tmdbId', 'title', 'description', 'platform', 'year', 'rating',
-            'genres', 'backdrop', 'poster', 'ageRating', 'seasons', 'videoUrl', 'facebookVideoId'
-        ];
-
-        const cleanShow = {};
-        allowedFields.forEach(field => {
-            if (show[field] !== undefined) {
-                if (field === 'videoUrl' || field === 'facebookVideoId') {
-                    cleanShow[field] = show[field] ? Security.encrypt(show[field]) : show[field];
-                } else {
-                    cleanShow[field] = show[field];
-                }
+        try {
+            const res = await fetch(`${CONFIG.API_BASE_URL}/api/tv`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(cleanShow)
+            });
+            if (res.ok) {
+                clearCache();
+                return true;
             }
-        });
-
-        const { data, error } = await supabaseClient
-            .from('tv_shows')
-            .insert([cleanShow])
-            .select();
-
-        if (error) {
-            console.error('Error adding tv show:', error);
-            return false;
-        }
-        clearCache(); // Invalidate cache
-        return true;
-    },
-
-    async getTVShowByTmdbId(tmdbId) {
-        const { data, error } = await supabaseClient
-            .from('tv_shows')
-            .select('*')
-            .eq('tmdbId', tmdbId)
-            .maybeSingle();
-
-        if (data) {
-            if (data.videoUrl) data.videoUrl = Security.decrypt(data.videoUrl);
-            if (data.facebookVideoId) data.facebookVideoId = Security.decrypt(data.facebookVideoId);
-        }
-
-        return data;
+        } catch (e) { console.error(e); }
+        return false;
     },
 
     async updateTVShow(id, updates) {
-        // Sanitize updates
-        const allowedFields = [
-            'tmdbId', 'title', 'description', 'platform', 'year', 'rating',
-            'genres', 'backdrop', 'poster', 'ageRating', 'seasons', 'videoUrl', 'facebookVideoId'
-        ];
+        const cleanUpdates = { ...updates };
+        if (window.Security) {
+            if (cleanUpdates.videoUrl) cleanUpdates.videoUrl = Security.encrypt(cleanUpdates.videoUrl);
+            if (cleanUpdates.facebookVideoId) cleanUpdates.facebookVideoId = Security.encrypt(cleanUpdates.facebookVideoId);
+        }
 
-        const cleanUpdates = {};
-        allowedFields.forEach(field => {
-            if (updates[field] !== undefined) {
-                if (field === 'videoUrl' || field === 'facebookVideoId') {
-                    cleanUpdates[field] = updates[field] ? Security.encrypt(updates[field]) : updates[field];
-                } else {
-                    cleanUpdates[field] = updates[field];
-                }
+        try {
+            const res = await fetch(`${CONFIG.API_BASE_URL}/api/tv/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(cleanUpdates)
+            });
+            if (res.ok) {
+                clearCache();
+                return true;
             }
-        });
-
-        const { data, error } = await supabaseClient
-            .from('tv_shows')
-            .update(cleanUpdates)
-            .eq('id', id)
-            .select();
-
-        if (error) {
-            console.error('Error updating tv show:', error);
-            return false;
-        }
-        clearCache(); // Invalidate cache
-        return true;
+        } catch (e) { console.error(e); }
+        return false;
     },
 
-    async removeTVShow(id) {
-        const { error } = await supabaseClient
-            .from('tv_shows')
-            .delete()
-            .eq('id', id);
-
-        if (error) {
-            console.error('Error deleting tv show:', error);
-            return false;
-        }
-        clearCache(); // Invalidate cache
-        return true;
-    },
-
+    // --- Episodes (Currently just LocalStorage or not fully mocked in worker yet? 
     // --- Episodes ---
 
     async getEpisodes(tvShowId) {
-        const { data, error } = await supabaseClient
-            .from('episodes')
-            .select('*')
-            .eq('tv_show_id', tvShowId)
-            .order('season_number', { ascending: true })
-            .order('episode_number', { ascending: true });
+        try {
+            const res = await fetch(`${CONFIG.API_BASE_URL}/api/episodes?tv_show_id=${tvShowId}`);
+            if (!res.ok) return [];
+            const data = await res.json();
 
-        if (data) {
-            data.forEach(ep => {
-                if (ep.video_url) ep.video_url = Security.decrypt(ep.video_url);
-                if (ep.facebook_video_id) ep.facebook_video_id = Security.decrypt(ep.facebook_video_id);
-            });
-        }
-
-        if (error) {
-            console.error('Error fetching episodes:', error);
-            return [];
-        }
-        return data || [];
+            // Decrypt
+            if (data && window.Security) {
+                data.forEach(ep => {
+                    if (ep.video_url) ep.video_url = Security.decrypt(ep.video_url);
+                    if (ep.facebook_video_id) ep.facebook_video_id = Security.decrypt(ep.facebook_video_id);
+                });
+            }
+            return data;
+        } catch (e) { return []; }
     },
 
     async addEpisode(episode) {
-        // Obfuscate
-        if (episode.video_url) episode.video_url = Security.encrypt(episode.video_url);
-        if (episode.facebook_video_id) episode.facebook_video_id = Security.encrypt(episode.facebook_video_id);
-
-        const { data, error } = await supabaseClient
-            .from('episodes')
-            .insert([episode])
-            .select();
-
-        if (error) {
-            console.error('Error adding episode:', error);
-            return false;
+        const cleanEp = { ...episode };
+        if (window.Security) {
+            if (cleanEp.video_url) cleanEp.video_url = Security.encrypt(cleanEp.video_url);
+            if (cleanEp.facebook_video_id) cleanEp.facebook_video_id = Security.encrypt(cleanEp.facebook_video_id);
         }
-        clearCache();
-        return true;
+
+        try {
+            const res = await fetch(`${CONFIG.API_BASE_URL}/api/episodes`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(cleanEp)
+            });
+            return res.ok;
+        } catch (e) { return false; }
     },
 
     async updateEpisode(id, updates) {
-        if (updates.video_url) updates.video_url = Security.encrypt(updates.video_url);
-        if (updates.facebook_video_id) updates.facebook_video_id = Security.encrypt(updates.facebook_video_id);
-
-        const { error } = await supabaseClient
-            .from('episodes')
-            .update(updates)
-            .eq('id', id);
-
-        if (error) {
-            console.error('Error updating episode:', error);
-            return false;
+        const cleanUpdates = { ...updates };
+        if (window.Security) {
+            if (cleanUpdates.video_url) cleanUpdates.video_url = Security.encrypt(cleanUpdates.video_url);
+            if (cleanUpdates.facebook_video_id) cleanUpdates.facebook_video_id = Security.encrypt(cleanUpdates.facebook_video_id);
         }
-        clearCache();
-        return true;
+
+        try {
+            const res = await fetch(`${CONFIG.API_BASE_URL}/api/episodes/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(cleanUpdates)
+            });
+            return res.ok;
+        } catch (e) { return false; }
     },
 
     async deleteEpisode(id) {
-        const { error } = await supabaseClient
-            .from('episodes')
-            .delete()
-            .eq('id', id);
-
-        if (error) {
-            console.error('Error deleting episode:', error);
-            return false;
-        }
-        clearCache();
-        return true;
+        try {
+            const res = await fetch(`${CONFIG.API_BASE_URL}/api/episodes/${id}`, { method: 'DELETE' });
+            return res.ok;
+        } catch (e) { return false; }
     },
 
-
-    // --- Search Content ---
-
-    async search(query) {
-        if (!query || query.length < 2) return [];
-
-        const searchQuery = query.toLowerCase().trim();
-
-        // Search movies
-        const { data: movies, error: moviesError } = await supabaseClient
-            .from('movies')
-            .select('*')
-            .ilike('title', `%${searchQuery}%`);
-
-        if (moviesError) {
-            console.error('Error searching movies:', moviesError);
-        }
-
-        // Search TV shows
-        const { data: shows, error: showsError } = await supabaseClient
-            .from('tv_shows')
-            .select('*')
-            .ilike('title', `%${searchQuery}%`);
-
-        if (showsError) {
-            console.error('Error searching TV shows:', showsError);
-        }
-
-        // Combine and mark media types
-        const markedMovies = (movies || []).map(m => ({ ...m, mediaType: 'movie' }));
-        const markedShows = (shows || []).map(s => ({ ...s, mediaType: 'tv' }));
-
-        return [...markedMovies, ...markedShows];
-    },
-
-    // --- Unified Content ---
-
+    // --- Unified ---
     async getAllContent() {
-        const [movies, shows] = await Promise.all([this.getMovies(), this.getTVShows()]);
-
-        const markedMovies = movies.map(m => ({ ...m, mediaType: 'movie' }));
-        const markedShows = shows.map(s => ({ ...s, mediaType: 'tv' }));
-
-        // Sort by added date if possible, currently just mixing
-        // Assuming 'created_at' is available or 'addedAt'
-        return [...markedMovies, ...markedShows].sort((a, b) => {
-            return new Date(b.created_at || b.addedAt) - new Date(a.created_at || a.addedAt);
-        });
+        const [m, t] = await Promise.all([this.getMovies(), this.getTVShows()]);
+        return [...m.map(x => ({ ...x, mediaType: 'movie' })), ...t.map(x => ({ ...x, mediaType: 'tv' }))].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     },
 
-    // --- Watchlist (Local Storage for now, or Supabase if Auth existed) ---
-    // User is Anonymous, so Local Storage is better for Watchlist unless we track IP/Session
-    // Keeping Watchlist local for now to keep it simple as user didn't request Auth.
-
-    getWatchlist() {
-        return Storage.getWatchlist(); // Fallback to existing Storage implementation which assumes LocalStorage
+    async getMovieByTmdbId(id) {
+        const movies = await this.getMovies();
+        return movies.find(m => m.tmdbId == id);
     },
 
-    addToWatchlist(item) {
-        return Storage.addToWatchlist(item);
+    async getTVShowByTmdbId(id) {
+        const shows = await this.getTVShows();
+        return shows.find(s => s.tmdbId == id);
     },
 
-    removeFromWatchlist(tmdbId, mediaType) {
-        return Storage.removeFromWatchlist(tmdbId, mediaType);
-    },
-
-    isInWatchlist(tmdbId, mediaType) {
-        return Storage.isInWatchlist(tmdbId, mediaType);
-    }
+    // --- Watchlist ---
+    getWatchlist() { return Storage.getWatchlist(); },
+    addToWatchlist(item) { return Storage.addToWatchlist(item); },
+    removeFromWatchlist(id, type) { return Storage.removeFromWatchlist(id, type); },
+    isInWatchlist(id, type) { return Storage.isInWatchlist(id, type); }
 };
 
 window.DB = DB;

@@ -1,6 +1,7 @@
 name = "movx-streaming-backend"
 main = "worker.js"
 compatibility_date = "2023-12-01"
+account_id = "7b6e2e1c4bd848d5707f16059e81996d"
 
 [vars]
 # These are placeholders. You MUST set these in your Cloudflare Dashboard or via 'wrangler secret put'
