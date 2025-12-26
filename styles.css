@@ -609,10 +609,11 @@ img {
 
 .hero-description {
     color: var(--text-secondary);
-    font-size: 0.95rem;
-    line-height: 1.7;
+    font-family: 'Noto Sans Sinhala', 'Inter', sans-serif;
+    font-size: 1.05rem;
+    line-height: 1.8;
     margin-bottom: 20px;
-    max-width: 420px;
+    max-width: 500px;
 }
 
 .hero-genres {
