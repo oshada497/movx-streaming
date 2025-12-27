@@ -2274,7 +2274,7 @@ img {
     }
 
     .logo-text {
-        font-size: 1rem;
+        display: none;
     }
 
     .logo-icon {
@@ -2288,12 +2288,12 @@ img {
     }
 
     .search-input {
-        width: 100px;
-        font-size: 0.8rem;
+        width: 160px;
+        font-size: 0.9rem;
     }
 
     .search-input:focus {
-        width: 130px;
+        width: 180px;
     }
 
     .search-icon {
