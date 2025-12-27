@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         searchTimeout = setTimeout(async () => {
-            const results = await TMDB.search(query);
+            const results = await DB.search(query);
             const searchResults = document.getElementById('searchResults');
 
             if (results.length === 0) {
@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const title = item.title || item.name;
                 const year = (item.release_date || item.first_air_date || '').substring(0, 4);
                 const type = item.media_type === 'tv' ? 'TV Show' : 'Movie';
-                const poster = TMDB.getImageUrl(item.poster_path, 'thumbnail');
+                const poster = item.poster || (item.poster_path ? `https://image.tmdb.org/t/p/w92${item.poster_path}` : 'https://placehold.co/50x75?text=No+Img');
 
                 return `
                     <div class="search-result-item" data-id="${item.id}" data-type="${item.media_type}">
