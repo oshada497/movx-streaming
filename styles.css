@@ -614,7 +614,7 @@ img {
     line-height: 1.8;
     margin-bottom: 20px;
     max-width: 500px;
-    max-height: 150px;
+    max-height: 150px !important;
     overflow-y: auto;
     padding-right: 10px;
 }
@@ -635,6 +635,7 @@ img {
 
 .hero-description::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.3);
+}
 
 .hero-genres {
     display: flex;
