@@ -340,7 +340,7 @@ class MovXApp {
 
             return `
                 <div class="search-result-item" data-id="${item.tmdbId || item.id}" data-type="${item.mediaType}">
-                    <img src="${poster}" alt="${title}" class="search-result-poster">
+                    <img src="${poster}" alt="${title}" class="search-result-poster" loading="lazy">
                     <div class="search-result-info">
                         <div class="search-result-title">${title}</div>
                         <div class="search-result-meta">${type} • ${year}</div>
@@ -450,7 +450,7 @@ class MovXApp {
         container.innerHTML = episodes.map((ep, index) => `
             <div class="episode-card" data-episode="${index + 1}">
                 <img src="${ep.thumbnail || 'https://placehold.co/280x160/1a1a1a/666666?text=Episode'}" 
-                     alt="Episode ${index + 1}" class="episode-thumbnail">
+                     alt="Episode ${index + 1}" class="episode-thumbnail" loading="lazy">
                 <div class="episode-info">
                     <div class="episode-number">S1-E${index + 1}</div>
                     <div class="episode-title">${ep.title || `Episode ${index + 1}`}</div>

@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 return `
                     <div class="search-result-item" data-id="${item.id}" data-type="${item.media_type}">
-                        <img src="${poster}" alt="${title}" class="search-result-poster">
+                        <img src="${poster}" alt="${title}" class="search-result-poster" loading="lazy">
                         <div class="search-result-info">
                             <div class="search-result-title">${title}</div>
                             <div class="search-result-meta">${type} • ${year}</div>
@@ -468,7 +468,7 @@ function renderComments(comments) {
         const commentHTML = `
             <div class="comment-card" data-id="${comment.id}">
                 <div class="comment-avatar">
-                    <img src="${comment.user_avatar || 'https://placehold.co/40'}" alt="${escapeHTML(comment.user_name || 'User')}" referrerpolicy="no-referrer">
+                    <img src="${comment.user_avatar || 'https://placehold.co/40'}" alt="${escapeHTML(comment.user_name || 'User')}" referrerpolicy="no-referrer" loading="lazy">
                 </div>
                 <div class="comment-content">
                     <div class="comment-header">

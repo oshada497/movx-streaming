@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 return `
                     <div class="search-result-item" data-id="${item.tmdbId || item.id}" data-type="${item.mediaType}">
-                        <img src="${nposter}" alt="${ntitle}" class="search-result-poster">
+                        <img src="${nposter}" alt="${ntitle}" class="search-result-poster" loading="lazy">
                         <div class="search-result-info">
                             <div class="search-result-title">${ntitle}</div>
                             <div class="search-result-meta">${ntype} • ${nyear}</div>
