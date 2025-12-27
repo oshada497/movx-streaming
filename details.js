@@ -150,9 +150,6 @@ async function loadDetails(id, type) {
 
 
     // DEBUGGING: Print details to console to verify videoUrl existence
-    console.log('Fetched Details:', details);
-    console.log('Video URL (Camel):', details.videoUrl);
-    console.log('Video URL (Lower):', details.videourl);
 
     // Video Player Logic
     const videoSection = document.getElementById('video-player-section');
