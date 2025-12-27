@@ -95,9 +95,9 @@ async function loadDetails(id, type) {
     } else {
         // Fallback to TMDB API
         if (type === 'movie') {
-            details = await TMDB.getMovieDetails(id);
+            details = await API.getDetails('movie', id);
         } else {
-            details = await TMDB.getTVDetails(id);
+            details = await API.getDetails('tv', id);
         }
     }
 
@@ -110,11 +110,11 @@ async function loadDetails(id, type) {
     document.title = `${details.title || details.name} - FBFLIX`;
 
     // Backdrop
-    const backdropUrl = details.backdrop_path ? TMDB.getBackdropUrl(details.backdrop_path) : (details.backdrop || '');
+    const backdropUrl = details.backdrop_path ? API.getBackdropUrl(details.backdrop_path) : (details.backdrop || '');
     document.getElementById('backdrop').style.backgroundImage = `url(${backdropUrl})`;
 
     // Poster
-    const posterUrl = details.poster_path ? TMDB.getImageUrl(details.poster_path) : (details.poster || '');
+    const posterUrl = details.poster_path ? API.getImageUrl(details.poster_path) : (details.poster || '');
     document.getElementById('poster').src = posterUrl;
 
     // Title
