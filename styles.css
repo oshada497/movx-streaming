@@ -2462,3 +2462,137 @@ img {
         font-size: 0.85rem;
     }
 }
+
+/* ===== Warning Modal ===== */
+.warning-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+}
+
+.warning-modal.active {
+    display: flex;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.warning-content {
+    background: #1a1a1a;
+    width: 90%;
+    max-width: 500px;
+    padding: 40px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    position: relative;
+    animation: zoomIn 0.3s ease-out;
+}
+
+.close-warning {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all var(--transition-fast);
+}
+
+.close-warning:hover {
+    background: var(--bg-glass);
+    color: var(--text-primary);
+}
+
+.warning-icon {
+    font-size: 3rem;
+    color: var(--accent-yellow);
+    margin-bottom: 20px;
+}
+
+.warning-content h3 {
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+    color: #fff;
+    font-family: 'Noto Sans Sinhala', sans-serif;
+}
+
+.warning-content p {
+    color: var(--text-secondary);
+    font-family: 'Noto Sans Sinhala', sans-serif;
+    line-height: 1.6;
+    margin-bottom: 30px;
+    font-size: 1rem;
+}
+
+/* ===== Warning Modal ===== */
+.warning-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+}
+
+.warning-modal.active {
+    display: flex;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.warning-content {
+    background: #1a1a1a;
+    width: 90%;
+    max-width: 500px;
+    padding: 40px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    position: relative;
+    animation: zoomIn 0.3s ease-out;
+}
+
+.close-warning {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all var(--transition-fast);
+}
+
+.close-warning:hover {
+    background: var(--bg-glass);
+    color: var(--text-primary);
+}
+
+.warning-icon {
+    font-size: 3rem;
+    color: var(--accent-yellow);
+    margin-bottom: 20px;
+}
+
+.warning-content h3 {
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+    color: #fff;
+    font-family: 'Noto Sans Sinhala', sans-serif;
+}
+
+.warning-content p {
+    color: var(--text-secondary);
+    font-family: 'Noto Sans Sinhala', sans-serif;
+    line-height: 1.6;
+    margin-bottom: 30px;
+    font-size: 1rem;
+}

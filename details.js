@@ -313,6 +313,44 @@ async function loadDetails(id, type) {
     // Setup comment section
     const contentId = details.tmdb_id || details.id;
     await setupCommentSection(String(contentId), type);
+
+    // Show Copyright Warning
+    showCopyrightWarning();
+}
+
+function showCopyrightWarning() {
+    // Check if user has already acknowledged in this session
+    if (sessionStorage.getItem('copyright_warning_acknowledged')) {
+        return;
+    }
+
+    const modal = document.getElementById('warningModal');
+    const closeBtn = document.getElementById('closeWarning');
+    const acknowledgeBtn = document.getElementById('acknowledgeWarning');
+
+    if (!modal) return;
+
+    // Show modal with a slight delay
+    setTimeout(() => {
+        modal.classList.add('active');
+    }, 1000);
+
+    const closeWarning = () => {
+        modal.classList.remove('active');
+        // Mark as acknowledged for this session
+        sessionStorage.setItem('copyright_warning_acknowledged', 'true');
+    };
+
+    if (closeBtn) closeBtn.addEventListener('click', closeWarning);
+
+    if (acknowledgeBtn) {
+        acknowledgeBtn.addEventListener('click', closeWarning);
+    }
+
+    // Close on click outside
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeWarning();
+    });
 }
 
 function updateQuality(newQuality) {
