@@ -620,7 +620,7 @@ async function handleRoute() {
         if (content) {
             console.log('[Router] Redirecting to details:', content);
             // We use replace to avoid adding the redirect jump to history
-            window.location.replace(`details.html ? id = ${content.tmdbId}& type=${content.mediaType} `);
+            window.location.replace(`details.html?id=${content.tmdbId}&type=${content.mediaType}`);
             return true;
         }
     }
