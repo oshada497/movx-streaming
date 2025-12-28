@@ -210,6 +210,212 @@
     <script src="api.js?v=2.6" defer></script>
     <script src="browse.js?v=2.6" defer></script>
     <script src="security.js?v=2.6" defer></script>
+
+    <!-- Facebook Unlimited Notice Popup -->
+    <div class="fb-notice-popup" id="fbNoticePopup">
+        <button class="fb-notice-close" id="fbNoticeClose" aria-label="Close notification">
+            <i class="fas fa-times"></i>
+        </button>
+        <div class="fb-notice-icon">
+            <i class="fab fa-facebook-f"></i>
+        </div>
+        <div class="fb-notice-content">
+            <h4 class="fb-notice-title">විශේෂ දැනුම්දීමක් • Special Notice</h4>
+            <p class="fb-notice-text">
+                ඔබ Facebook Unlimited පැකේජයක් භාවිතා කරන්නේ නම්, කිසිදු ඩේටා ගාස්තුවකින් තොරව අපගේ වෙබ් අඩවියේ වීඩියෝ
+                නැරඹිය හැකිය.
+            </p>
+            <p class="fb-notice-text-en">
+                If you are using a Facebook Unlimited package, you can watch videos on our website without any data
+                charges.
+            </p>
+        </div>
+    </div>
+
+    <style>
+        .fb-notice-popup {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            max-width: 380px;
+            background: linear-gradient(135deg, #1877f2 0%, #0d5bb8 100%);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(24, 119, 242, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            z-index: 1500;
+            display: none;
+            animation: slideInRight 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .fb-notice-popup.show {
+            display: block;
+        }
+
+        .fb-notice-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .fb-notice-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .fb-notice-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .fb-notice-content {
+            color: white;
+        }
+
+        .fb-notice-title {
+            font-size: 1rem;
+            font-weight: 700;
+            margin: 0 0 12px 0;
+            color: white;
+            letter-spacing: 0.3px;
+        }
+
+        .fb-notice-text {
+            font-family: 'Noto Sans Sinhala', sans-serif;
+            font-size: 0.88rem;
+            line-height: 1.6;
+            margin: 0 0 8px 0;
+            color: rgba(255, 255, 255, 0.95);
+        }
+
+        .fb-notice-text-en {
+            font-size: 0.82rem;
+            line-height: 1.5;
+            margin: 0;
+            color: rgba(255, 255, 255, 0.85);
+            font-style: italic;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
+        .fb-notice-popup.hiding {
+            animation: slideOutRight 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 480px) {
+            .fb-notice-popup {
+                bottom: 10px;
+                right: 10px;
+                left: 10px;
+                max-width: none;
+                padding: 16px;
+            }
+
+            .fb-notice-title {
+                font-size: 0.92rem;
+            }
+
+            .fb-notice-text {
+                font-size: 0.82rem;
+            }
+
+            .fb-notice-text-en {
+                font-size: 0.76rem;
+            }
+        }
+    </style>
+
+    <script>
+        // Facebook Unlimited Notice Popup Logic
+        (function () {
+            const FB_NOTICE_SHOWN_KEY = 'fbNoticeShown';
+            const AUTO_DISMISS_DELAY = 10000; // 10 seconds
+
+            function initFbNotice() {
+                const popup = document.getElementById('fbNoticePopup');
+                const closeBtn = document.getElementById('fbNoticeClose');
+
+                if (!popup || !closeBtn) return;
+
+                // Check if already shown in this session
+                const alreadyShown = sessionStorage.getItem(FB_NOTICE_SHOWN_KEY);
+
+                if (!alreadyShown) {
+                    // Show popup after a short delay (1.5 seconds after page load)
+                    setTimeout(() => {
+                        popup.classList.add('show');
+                        sessionStorage.setItem(FB_NOTICE_SHOWN_KEY, 'true');
+
+                        // Auto-dismiss after 10 seconds
+                        setTimeout(() => {
+                            dismissPopup();
+                        }, AUTO_DISMISS_DELAY);
+                    }, 1500);
+                }
+
+                // Close button handler
+                closeBtn.addEventListener('click', dismissPopup);
+
+                function dismissPopup() {
+                    popup.classList.add('hiding');
+                    setTimeout(() => {
+                        popup.classList.remove('show', 'hiding');
+                    }, 400);
+                }
+            }
+
+            // Initialize when DOM is ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initFbNotice);
+            } else {
+                initFbNotice();
+            }
+        })();
+    </script>
 </body>
 
 </html>
