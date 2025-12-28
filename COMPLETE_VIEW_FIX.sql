@@ -267,48 +267,13 @@ UPDATE movies SET view_count = 0 WHERE view_count IS NULL;
 UPDATE tv_shows SET view_count = 0 WHERE view_count IS NULL;
 
 -- ==========================================
--- VERIFICATION SECTION
--- Run this after the main script to verify
--- ==========================================
-
--- Check current status
-SELECT * FROM test_view_tracking();
-
--- Show top 10 most viewed content
-SELECT 
-    'movie' as type,
-    title,
-    view_count
-FROM movies
-WHERE view_count > 0
-ORDER BY view_count DESC
-LIMIT 10
-
-UNION ALL
-
-SELECT 
-    'tv' as type,
-    title,
-    view_count
-FROM tv_shows
-WHERE view_count > 0
-ORDER BY view_count DESC
-LIMIT 10;
-
--- Show recent view history
-SELECT 
-    vh.content_type,
-    COALESCE(m.title, t.title) as title,
-    vh.viewed_at,
-    vh.user_id,
-    vh.session_id
-FROM view_history vh
-LEFT JOIN movies m ON vh.content_type = 'movie' AND vh.content_id = m.id
-LEFT JOIN tv_shows t ON vh.content_type = 'tv' AND vh.content_id = t.id
-ORDER BY vh.viewed_at DESC
-LIMIT 20;
-
--- ==========================================
--- DONE!
+-- SETUP COMPLETE!
 -- View tracking system is now fully set up
+-- ==========================================
+-- 
+-- To verify the setup, run these queries manually:
+-- 1. SELECT * FROM test_view_tracking();
+-- 2. SELECT title, view_count FROM movies ORDER BY view_count DESC LIMIT 10;
+-- 3. SELECT * FROM view_history ORDER BY created_at DESC LIMIT 10;
+--
 -- ==========================================
