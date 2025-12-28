@@ -101,7 +101,7 @@ BEGIN
         WHERE vh.viewed_at >= NOW() - (days_limit || ' days')::INTERVAL
         GROUP BY vh.content_id, vh.content_type, vh.tmdb_id
     )
-    -- Union movies and TV shows with all their details
+    -- Union movies (seasons is NULL) and TV shows
     SELECT 
         rv.content_id,
         rv.content_type,
@@ -110,18 +110,19 @@ BEGIN
         m.poster,
         m.backdrop,
         m.description,
-        m.rating,
+        m.rating::NUMERIC,
         m.year,
-        m.genres,
+        to_jsonb(m.genres) as genres, -- FIXED: Convert text[] to JSONB
         m.platform,
         m.runtime,
-        m.seasons,
+        NULL::INTEGER as seasons,  -- FIXED: Movies don't have seasons
         rv.recent_view_count
     FROM recent_views rv
     INNER JOIN movies m ON rv.content_type = 'movie' AND rv.content_id = m.id
     
     UNION ALL
     
+    -- 2. TV Shows Part (No runtime, Has seasons)
     SELECT 
         rv.content_id,
         rv.content_type,
@@ -130,12 +131,12 @@ BEGIN
         t.poster,
         t.backdrop,
         t.description,
-        t.rating,
+        t.rating::NUMERIC,
         t.year,
-        t.genres,
+        to_jsonb(t.genres) as genres, -- FIXED: Convert text[] to JSONB
         t.platform,
-        t.runtime,
-        t.seasons,
+        NULL::TEXT as runtime,    -- TV Shows DO NOT have runtime (FIXED HERE)
+        t.seasons::INTEGER,             -- TV Shows HAVE seasons
         rv.recent_view_count
     FROM recent_views rv
     INNER JOIN tv_shows t ON rv.content_type = 'tv' AND rv.content_id = t.id

@@ -434,17 +434,38 @@ const DB = {
             });
 
             if (error) {
-                console.error('Error tracking view:', error);
-                return false;
-            }
+                console.warn('[DB] RPC increment failed, trying direct insert fallback:', error);
 
-            console.log('[DB] View tracked successfully');
+                // Fallback: Try to insert directly into view_history
+                // This works even if the user can't update the 'movies' table directly
+                const { error: insertError } = await window.auth.supabase
+                    .from('view_history')
+                    .insert({
+                        content_id: contentId,
+                        content_type: contentType,
+                        tmdb_id: tmdbId,
+                        user_id: userId,
+                        session_id: sessionId
+                    });
+
+                if (insertError) {
+                    console.error('[DB] Direct insert also failed:', insertError);
+                    return false;
+                }
+                console.log('[DB] Direct insert fallback successful');
+            } else {
+                console.log('[DB] View tracked successfully via RPC');
+            }
 
             // Small delay to ensure database has processed the update
             await new Promise(resolve => setTimeout(resolve, 300));
 
             // Clear ALL cache to refresh view counts and trending data
-            clearCache();
+            if (typeof clearTrendingCache === 'function') {
+                clearTrendingCache();
+            } else {
+                clearCache();
+            }
             console.log('[DB] Cache cleared after view tracking');
 
             // Dispatch custom event for real-time UI updates
