@@ -69,7 +69,7 @@ BEGIN
 END;
 $$;
 
--- Function to get trending content (most viewed in last 30 days)
+-- Function to get trending content (most viewed in last 30 days) - OPTIMIZED
 CREATE OR REPLACE FUNCTION get_trending_content(days_limit INTEGER DEFAULT 30, result_limit INTEGER DEFAULT 10)
 RETURNS TABLE (
     content_id INTEGER,
@@ -77,6 +77,14 @@ RETURNS TABLE (
     tmdb_id INTEGER,
     title TEXT,
     poster TEXT,
+    backdrop TEXT,
+    description TEXT,
+    rating NUMERIC,
+    year TEXT,
+    genres JSONB,
+    platform TEXT,
+    runtime TEXT,
+    seasons INTEGER,
     view_count BIGINT
 )
 LANGUAGE plpgsql
@@ -93,17 +101,46 @@ BEGIN
         WHERE vh.viewed_at >= NOW() - (days_limit || ' days')::INTERVAL
         GROUP BY vh.content_id, vh.content_type, vh.tmdb_id
     )
+    -- Union movies and TV shows with all their details
     SELECT 
         rv.content_id,
         rv.content_type,
         rv.tmdb_id,
-        COALESCE(m.title, t.title) as title,
-        COALESCE(m.poster, t.poster) as poster,
+        m.title,
+        m.poster,
+        m.backdrop,
+        m.description,
+        m.rating,
+        m.year,
+        m.genres,
+        m.platform,
+        m.runtime,
+        m.seasons,
         rv.recent_view_count
     FROM recent_views rv
-    LEFT JOIN movies m ON rv.content_type = 'movie' AND rv.content_id = m.id
-    LEFT JOIN tv_shows t ON rv.content_type = 'tv' AND rv.content_id = t.id
-    ORDER BY rv.recent_view_count DESC
+    INNER JOIN movies m ON rv.content_type = 'movie' AND rv.content_id = m.id
+    
+    UNION ALL
+    
+    SELECT 
+        rv.content_id,
+        rv.content_type,
+        rv.tmdb_id,
+        t.title,
+        t.poster,
+        t.backdrop,
+        t.description,
+        t.rating,
+        t.year,
+        t.genres,
+        t.platform,
+        t.runtime,
+        t.seasons,
+        rv.recent_view_count
+    FROM recent_views rv
+    INNER JOIN tv_shows t ON rv.content_type = 'tv' AND rv.content_id = t.id
+    
+    ORDER BY recent_view_count DESC
     LIMIT result_limit;
 END;
 $$;
@@ -112,4 +149,4 @@ COMMENT ON COLUMN movies.view_count IS 'Total number of times this movie has bee
 COMMENT ON COLUMN tv_shows.view_count IS 'Total number of times this TV show has been viewed';
 COMMENT ON TABLE view_history IS 'Detailed view history for analytics and trending calculations';
 COMMENT ON FUNCTION increment_view_count IS 'Increments view count and records view in history';
-COMMENT ON FUNCTION get_trending_content IS 'Returns most viewed content in the specified time period';
+COMMENT ON FUNCTION get_trending_content IS 'Returns most viewed content with ALL details in single query - optimized version';

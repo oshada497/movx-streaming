@@ -411,6 +411,7 @@ class MovXApp {
 
         try {
             // Get trending content based on views in last 30 days
+            // Now returns ALL data in one query - no enrichment needed!
             const trendingContent = await DB.getTrendingContent(30, 6, bypassCache);
 
             if (trendingContent.length === 0) {
@@ -418,20 +419,9 @@ class MovXApp {
                 return;
             }
 
-            // For each trending item, fetch full details to get all necessary data
-            const enrichedContent = await Promise.all(trendingContent.map(async (item) => {
-                const fullContent = item.mediaType === 'movie'
-                    ? await DB.getMovieByTmdbId(item.tmdbId)
-                    : await DB.getTVShowByTmdbId(item.tmdbId);
-
-                return {
-                    ...fullContent,
-                    mediaType: item.mediaType,
-                    viewCount: item.viewCount
-                };
-            }));
-
-            container.innerHTML = enrichedContent.map(item =>
+            // No enrichment needed - all data is already included!
+            // Directly render the trending cards
+            container.innerHTML = trendingContent.map(item =>
                 this.createTrendingCard(item, item.mediaType)
             ).join('');
             this.bindCardEvents(container);

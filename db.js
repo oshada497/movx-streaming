@@ -486,14 +486,23 @@ const DB = {
                 return allContent.slice(0, resultLimit);
             }
 
-            // Transform data to match our content structure
+            // Transform data to match our content structure - now with ALL fields from SQL
             const transformed = data.map(item => ({
                 id: item.content_id,
                 tmdbId: item.tmdb_id,
                 title: item.title,
                 poster: item.poster,
+                backdrop: item.backdrop,
+                description: item.description,
+                rating: item.rating,
+                year: item.year,
+                genres: item.genres,
+                platform: item.platform,
+                runtime: item.runtime,
+                seasons: item.seasons,
                 mediaType: item.content_type,
-                viewCount: item.view_count
+                viewCount: item.view_count,
+                view_count: item.view_count // Keep both for compatibility
             }));
 
             // Cache the result
