@@ -166,7 +166,7 @@
         const SUPABASE_URL = 'https://hlfvrhmvulsttzdwyzus.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhsZnZyaG12dWxzdHR6ZHd5enVzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwNjAyMzksImV4cCI6MjA4MTYzNjIzOX0.AZmSk-JMht2MC3I1giMJpI3JGVsDRgAPSkqihaDZ6xo';
 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let diagnosisIssues = [];
         let movieId = null;
@@ -174,7 +174,7 @@
         async function checkConnection() {
             const el = document.getElementById('status1');
             try {
-                const { data, error } = await supabase
+                const { data, error } = await dbClient
                     .from('movies')
                     .select('id')
                     .limit(1);
@@ -207,7 +207,7 @@
 
             // Check increment_view_count
             try {
-                const { data, error } = await supabase.rpc('increment_view_count', {
+                const { data, error } = await dbClient.rpc('increment_view_count', {
                     p_content_id: -999,
                     p_content_type: 'movie',
                     p_tmdb_id: 0,
@@ -229,7 +229,7 @@
 
             // Check get_trending_content
             try {
-                const { data, error } = await supabase.rpc('get_trending_content', {
+                const { data, error } = await dbClient.rpc('get_trending_content', {
                     days_limit: 30,
                     result_limit: 5
                 });
@@ -386,7 +386,7 @@
 
             try {
                 // Call the increment function
-                const { data, error } = await supabase.rpc('increment_view_count', {
+                const { data, error } = await dbClient.rpc('increment_view_count', {
                     p_content_id: movieId,
                     p_content_type: 'movie',
                     p_tmdb_id: 550,
