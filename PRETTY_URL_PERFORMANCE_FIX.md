@@ -23,13 +23,42 @@ After implementing pretty URLs, users experienced a noticeable delay (page appea
 
 ## Solutions Implemented
 
-### ✅ Fix 1: Removed Loading Delay
+### ✅ Fix 1: Server-Side Routing (Critical!)
+**File:** `_redirects`
+- **Problem:** Slug URLs (`/deadpool`) were routed to `index.html`, causing a blank page and JavaScript redirect
+- **Solution:** Route slug URLs directly to `details.html` with path preserved
+- **Impact:** **Eliminates double redirect** - direct load, no blank page
+
+**Flow Before:**
+```
+/deadpool → index.html (blank page) 
+         → handleRoute() runs 
+         → redirects to details.html?id=X 
+         → URL changes to /deadpool
+Result: 2 page loads, visible blank page
+```
+
+**Flow After:**
+```
+/deadpool → details.html (instant)
+         → resolves slug in details.js
+         → displays content
+Result: 1 page load, instant display ⚡
+```
+
+### ✅ Fix 2: Removed Client-Side Router
+**File:** `app.js`
+- Removed `handleRoute()` function (no longer needed)
+- Simplified initialization - no routing checks
+- Server handles all routing via `_redirects`
+
+### ✅ Fix 3: Removed Loading Delay
 **File:** `details.js` (lines 339-349)
 - **Before:** 300ms delay before showing content
 - **After:** Immediate content display once data loads
 - **Impact:** Instant visual feedback
 
-### ✅ Fix 2: Direct Pretty URL Navigation  
+### ✅ Fix 4: Direct Pretty URL Navigation  
 **Files:** `app.js`, `browse.js`
 - **Before:** All cards navigated to `details.html?id=X&type=Y`
 - **After:** Cards navigate to `/{slug}` when slug exists
@@ -40,7 +69,7 @@ After implementing pretty URLs, users experienced a noticeable delay (page appea
 - `app.js` - `showContentDetails()`: Uses slug if available
 - `browse.js` - `createCard()`: Generates slug-based links
 
-### ✅ Fix 3: Enhanced Routing in Details Page
+### ✅ Fix 5: Enhanced Routing in Details Page
 **File:** `details.js` (lines 1-40)
 - **Before:** Only handled query parameters
 - **After:** Handles both pretty URLs and query parameters
@@ -50,7 +79,7 @@ After implementing pretty URLs, users experienced a noticeable delay (page appea
   3. Resolves slug to get `id` and `type` via `DB.getContentBySlug()`
   4. Loads content normally
 
-### ✅ Fix 4: Smarter URL Canonicalization
+### ✅ Fix 6: Smarter URL Canonicalization
 **File:** `details.js` (line 152)
 - **Before:** Replaced URL whenever slug didn't match pathname
 - **After:** Only replaces if query params are present (`id=`)
@@ -82,9 +111,10 @@ The solution maintains full backward compatibility:
 
 ## Files Modified
 
-1. ✅ `details.js` - Enhanced routing, removed delays
-2. ✅ `app.js` - Updated navigation to use slugs
-3. ✅ `browse.js` - Updated card links to use slugs
+1. ✅ `_redirects` - **Critical!** Server-side routing for pretty URLs
+2. ✅ `app.js` - Removed client-side router, updated navigation to use slugs
+3. ✅ `details.js` - Enhanced routing, removed delays
+4. ✅ `browse.js` - Updated card links to use slugs
 
 ## Next Steps (Optional Enhancements)
 
