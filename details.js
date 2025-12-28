@@ -246,7 +246,17 @@ async function loadDetails(id, type) {
         };
     } else {
         videoSection.style.display = 'none';
-        watchBtn.onclick = () => openPlayer(details); // Trailer fallback
+        watchBtn.onclick = async (e) => {
+            e.preventDefault();
+
+            // Track view even for trailer/no video
+            if (storedItem && storedItem.id) {
+                await DB.trackView(storedItem.id, type, id);
+                console.log('View tracked for (no video):', { contentId: storedItem.id, type, tmdbId: id });
+            }
+
+            openPlayer(details); // Trailer fallback
+        };
     }
 
     // --- Episodes Logic ---
