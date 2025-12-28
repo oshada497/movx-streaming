@@ -1,0 +1,10 @@
+/*
+This file handles Cloudflare Pages redirects and routing.
+Cloudflare Pages uses this file for custom routing rules.
+*/
+
+# Redirect old URL format to new slug format
+# This is handled by JavaScript routing instead
+
+# Handle pretty URLs - all paths go to root for client-side routing
+/*  /index.html  200
