@@ -639,7 +639,7 @@ async function handleRoute() {
         const content = await window.DB.getContentBySlug(slug);
         if (content) {
             console.log('[Router] Found content, redirecting to details:', content);
-            // Navigate to details page with query params, which will then canonicalize to pretty URL
+            // Use replace for instant, seamless redirect (no browser history entry)
             window.location.replace(`details.html?id=${content.tmdbId}&type=${content.mediaType}`);
             return true;
         }
