@@ -1,10 +1,24 @@
-/*
-This file handles Cloudflare Pages redirects and routing.
-Cloudflare Pages uses this file for custom routing rules.
-*/
+# Cloudflare Pages Redirects
+# This file handles routing for pretty URLs
 
-# Redirect old URL format to new slug format
-# This is handled by JavaScript routing instead
+# Static files - serve as-is
+/*.js  /:splat  200
+/*.css  /:splat  200
+/*.png  /:splat  200
+/*.jpg  /:splat  200
+/*.svg  /:splat  200
+/*.ico  /:splat  200
+/*.woff  /:splat  200
+/*.woff2  /:splat  200
+/*.ttf  /:splat  200
 
-# Handle pretty URLs - all paths go to root for client-side routing
-/*  /index.html  200
+# Known pages - serve directly
+/index.html  /index.html  200
+/browse.html  /browse.html  200
+/details.html  /details.html  200
+/admin.html  /admin.html  200
+/  /index.html  200
+
+# Slug URLs (content pages) - redirect to details.html with path preserved
+# This allows details.html to handle the slug routing
+/*  /details.html  200

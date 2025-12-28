@@ -604,41 +604,7 @@ class MovXApp {
     }
 }
 
-// Router for Pretty URLs
-async function handleRoute() {
-    const path = window.location.pathname;
-
-    // Ignore known pages/assets or root
-    if (path === '/' || path === '/index.html' || path.includes('.') ||
-        path.startsWith('/details') || path.startsWith('/browse') || path.startsWith('/admin')) {
-        return false;
-    }
-
-    const slug = path.replace(/^\//, '').replace(/\/$/, '');
-    if (!slug) return false;
-
-    console.log('[Router] Checking slug:', slug);
-
-    // Check DB if available
-    if (window.DB && window.DB.getContentBySlug) {
-        const content = await window.DB.getContentBySlug(slug);
-        if (content) {
-            console.log('[Router] Redirecting to details:', content);
-            // We use replace to avoid adding the redirect jump to history
-            window.location.replace(`details.html?id=${content.tmdbId}&type=${content.mediaType}`);
-            return true;
-        }
-    }
-    return false;
-}
-
 // Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', async () => {
-    // Try routing first
-    const redirected = await handleRoute();
-
-    // Only init app if we didn't redirect
-    if (!redirected) {
-        window.app = new MovXApp();
-    }
+    window.app = new MovXApp();
 });
