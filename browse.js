@@ -23,8 +23,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 break;
             case 'trending':
                 title = 'Trending Now';
-                const allTrending = await DB.getAllContent();
-                items = allTrending.slice(0, 20); // Top 20 trending
+                const trendingContent = await DB.getTrendingContent(30, 20); // Last 30 days, top 20
+                items = trendingContent; // Already has view counts
                 break;
             default:
                 title = 'Browse';
@@ -107,13 +107,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     resultsCount.textContent = `${items.length} titles found`;
 
     // Render Grid
-    renderGrid(items, contentGrid);
+    renderGrid(items, contentGrid, type);
 
     // Initialize Auth UI
     window.auth.setupHeaderUI();
 });
 
-function renderGrid(items, container) {
+function renderGrid(items, container, type) {
     if (items.length === 0) {
         container.innerHTML = `
             <div style="grid-column: 1/-1; text-align: center; padding: 60px; color: var(--text-muted);">
@@ -124,7 +124,12 @@ function renderGrid(items, container) {
         return;
     }
 
-    container.innerHTML = items.map(item => createCard(item)).join('');
+    // Use trending card for trending type
+    if (type === 'trending') {
+        container.innerHTML = items.map(item => createTrendingCard(item)).join('');
+    } else {
+        container.innerHTML = items.map(item => createCard(item)).join('');
+    }
 }
 
 function createCard(item) {
@@ -151,4 +156,42 @@ function createCard(item) {
             </div>
         </a>
     `;
+}
+
+function createTrendingCard(item) {
+    const poster = item.poster || 'https://placehold.co/180x270/1a1a1a/666666?text=No+Poster';
+    const rating = item.rating ? item.rating.toFixed(1) : 'N/A';
+    const type = item.mediaType || 'movie';
+    const viewCount = item.viewCount || item.view_count || 0;
+
+    // Use pretty URL if slug is available, otherwise fall back to query params
+    const link = item.slug ? `/${item.slug}` : `details.html?id=${item.tmdbId || item.id}&type=${type}`;
+
+    return `
+        <a href="${link}" class="content-card" style="text-decoration: none; color: inherit;">
+            <div class="rating-badge">
+                <i class="fas fa-star"></i>
+                ${rating}
+            </div>
+            <div class="trending-badge" title="${viewCount} views">
+                <i class="fas fa-fire"></i>
+                ${formatViews(viewCount)}
+            </div>
+            <img src="${poster}" alt="${item.title}" class="card-poster" loading="lazy">
+            <div class="card-overlay">
+                <h4 class="card-title">${item.title}</h4>
+                <div class="card-meta">
+                    <span>${item.year || ''}</span>
+                    <span>${type === 'tv' ? 'TV' : 'Movie'}</span>
+                    <span class="views-text">${viewCount} views</span>
+                </div>
+            </div>
+        </a>
+    `;
+}
+
+function formatViews(count) {
+    if (count >= 1000000) return (count / 1000000).toFixed(1) + 'M';
+    if (count >= 1000) return (count / 1000).toFixed(1) + 'K';
+    return count.toString();
 }
