@@ -55,7 +55,17 @@ function setCache(key, data) {
 }
 
 function clearCache() {
-    Object.values(CACHE_KEYS).forEach(k => sessionStorage.removeItem(k));
+    console.log('[Cache] Clearing all caches');
+    Object.values(CACHE_KEYS).forEach(k => {
+        sessionStorage.removeItem(k);
+        console.log(`[Cache] Removed: ${k}`);
+    });
+}
+
+// Force clear trending cache specifically
+function clearTrendingCache() {
+    console.log('[Cache] Force clearing trending cache');
+    sessionStorage.removeItem(CACHE_KEYS.trending);
 }
 
 const DB = {
@@ -501,9 +511,12 @@ const DB = {
                 runtime: item.runtime,
                 seasons: item.seasons,
                 mediaType: item.content_type,
-                viewCount: item.view_count,
-                view_count: item.view_count // Keep both for compatibility
+                viewCount: item.view_count || 0, // Ensure number
+                view_count: item.view_count || 0
             }));
+
+            // FORCE SORT by view count descending to guarantee UI order
+            transformed.sort((a, b) => b.viewCount - a.viewCount);
 
             // Cache the result
             setCache(CACHE_KEYS.trending, transformed);

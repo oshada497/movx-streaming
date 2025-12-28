@@ -2601,12 +2601,14 @@ img {
     font-family: 'Noto Sans Sinhala', sans-serif;
     font-weight: 700;
 }
+
 /* ===== Trending Badge Styles ===== */
 .trending-badge {
     position: absolute;
     top: 10px;
     left: 10px;
-    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+    background: linear-gradient(135deg, #FF8008 0%, #FFC837 100%);
+    /* Fire Orange/Gold */
     color: white;
     padding: 4px 10px;
     border-radius: 50px;
@@ -2616,8 +2618,10 @@ img {
     align-items: center;
     gap: 4px;
     z-index: 10;
-    box-shadow: 0 2px 8px rgba(238, 90, 111, 0.4);
+    box-shadow: 0 2px 10px rgba(255, 128, 8, 0.5);
+    /* Orange shadow */
     animation: pulse 2s ease-in-out infinite;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .trending-badge i {
@@ -2626,18 +2630,24 @@ img {
 }
 
 @keyframes pulse {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: scale(1);
     }
+
     50% {
         transform: scale(1.05);
     }
 }
 
 @keyframes flicker {
-    0%, 100% {
+
+    0%,
+    100% {
         opacity: 1;
     }
+
     50% {
         opacity: 0.7;
     }
