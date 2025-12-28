@@ -15,6 +15,19 @@ class MovXApp {
         this.setupAuth(); // Initialize Google Auth
         await this.loadContent();
         this.startHeroSlider();
+
+        // Listen for view tracking events to refresh trending
+        window.addEventListener('viewTracked', () => {
+            console.log('[App] View tracked event received, will refresh trending on next visit');
+        });
+
+        // Check if we should refresh trending (page visibility)
+        document.addEventListener('visibilitychange', async () => {
+            if (!document.hidden) {
+                console.log('[App] Page became visible, refreshing trending data');
+                await this.renderTrendingRow(true); // Force bypass cache
+            }
+        });
     }
 
     setupAuth() {
@@ -393,12 +406,12 @@ class MovXApp {
     }
 
 
-    async renderTrendingRow() {
+    async renderTrendingRow(bypassCache = false) {
         const container = document.getElementById('trendingRow');
 
         try {
             // Get trending content based on views in last 30 days
-            const trendingContent = await DB.getTrendingContent(30, 6);
+            const trendingContent = await DB.getTrendingContent(30, 6, bypassCache);
 
             if (trendingContent.length === 0) {
                 container.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">Add content and start watching to see trending items!</p>';

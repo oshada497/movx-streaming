@@ -4,7 +4,8 @@
 const CACHE_DURATION = 5 * 60 * 1000; // 5 mins
 const CACHE_KEYS = {
     movies: 'movx_cache_movies',
-    tvShows: 'movx_cache_tvshows'
+    tvShows: 'movx_cache_tvshows',
+    trending: 'movx_cache_trending'
 };
 
 // --- Storage Helper ---
@@ -411,6 +412,8 @@ const DB = {
                 sessionStorage.setItem('viewSessionId', sessionId);
             }
 
+            console.log('[DB] Tracking view:', { contentId, contentType, tmdbId, userId, sessionId });
+
             // Call the database function to increment view count
             const { error } = await window.auth.supabase.rpc('increment_view_count', {
                 p_content_id: contentId,
@@ -425,8 +428,20 @@ const DB = {
                 return false;
             }
 
-            // Clear cache to refresh view counts
+            console.log('[DB] View tracked successfully');
+
+            // Small delay to ensure database has processed the update
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            // Clear ALL cache to refresh view counts and trending data
             clearCache();
+            console.log('[DB] Cache cleared after view tracking');
+
+            // Dispatch custom event for real-time UI updates
+            window.dispatchEvent(new CustomEvent('viewTracked', {
+                detail: { contentId, contentType, tmdbId }
+            }));
+
             return true;
         } catch (e) {
             console.error('View tracking error:', e);
@@ -438,9 +453,19 @@ const DB = {
      * Get trending content based on views in the last X days
      * @param {number} daysLimit - Number of days to look back (default: 30)
      * @param {number} resultLimit - Number of results to return (default: 10)
+     * @param {boolean} bypassCache - Force fresh data (default: false)
      * @returns {Promise<Array>}
      */
-    async getTrendingContent(daysLimit = 30, resultLimit = 10) {
+    async getTrendingContent(daysLimit = 30, resultLimit = 10, bypassCache = false) {
+        // Check cache first (unless bypassed)
+        if (!bypassCache) {
+            const cached = getFromCache(CACHE_KEYS.trending);
+            if (cached) {
+                console.log('[DB] Using cached trending data');
+                return cached;
+            }
+        }
+
         if (!window.auth || !window.auth.supabase) {
             // Fallback to most recent content if no Supabase
             const allContent = await this.getAllContent();
@@ -448,6 +473,7 @@ const DB = {
         }
 
         try {
+            console.log('[DB] Fetching fresh trending data from database');
             const { data, error } = await window.auth.supabase.rpc('get_trending_content', {
                 days_limit: daysLimit,
                 result_limit: resultLimit
@@ -461,7 +487,7 @@ const DB = {
             }
 
             // Transform data to match our content structure
-            return data.map(item => ({
+            const transformed = data.map(item => ({
                 id: item.content_id,
                 tmdbId: item.tmdb_id,
                 title: item.title,
@@ -469,6 +495,11 @@ const DB = {
                 mediaType: item.content_type,
                 viewCount: item.view_count
             }));
+
+            // Cache the result
+            setCache(CACHE_KEYS.trending, transformed);
+
+            return transformed;
         } catch (e) {
             console.error('Trending content error:', e);
             const allContent = await this.getAllContent();
