@@ -511,11 +511,11 @@ const DB = {
                 runtime: item.runtime,
                 seasons: item.seasons,
                 mediaType: item.content_type,
-                viewCount: item.view_count || 0, // Ensure number
-                view_count: item.view_count || 0
+                viewCount: Number(item.view_count || 0), // Explicit cast to Number
+                view_count: Number(item.view_count || 0)
             }));
 
-            // FORCE SORT by view count descending to guarantee UI order
+            // FORCE SORT by view count descending (Numeric safe)
             transformed.sort((a, b) => b.viewCount - a.viewCount);
 
             // Cache the result

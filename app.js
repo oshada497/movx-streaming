@@ -431,7 +431,7 @@ class MovXApp {
             const allContent = await DB.getAllContent();
 
             // Try to sort fallback content by view count if available
-            const sortedFallback = allContent.sort((a, b) => (b.view_count || 0) - (a.view_count || 0));
+            const sortedFallback = allContent.sort((a, b) => Number(b.view_count || 0) - Number(a.view_count || 0));
 
             container.innerHTML = sortedFallback.slice(0, 6).map(item =>
                 this.createContentCard(item, item.mediaType)
