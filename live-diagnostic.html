@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Supabase Diagnostic</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #fff;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #f5c518;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #f5c518;
+            padding-bottom: 10px;
+        }
+
+        .status {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+        }
+
+        .success {
+            border-left: 4px solid #0f0;
+        }
+
+        .error {
+            border-left: 4px solid #f00;
+        }
+
+        .warning {
+            border-left: 4px solid #ff0;
+        }
+
+        .info {
+            border-left: 4px solid #0ff;
+        }
+
+        h2 {
+            color: #0ff;
+            margin-bottom: 10px;
+        }
+
+        pre {
+            background: #000;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 10px 0;
+            border: 1px solid #333;
+        }
+
+        .loading {
+            color: #ff0;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        button {
+            background: #f5c518;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+
+        button:hover {
+            background: #ffd700;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+
+        th,
+        td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+
+        th {
+            background: #222;
+            color: #f5c518;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔍 LIVE SUPABASE DATABASE DIAGNOSTIC</h1>
+
+        <div id="status1" class="status loading">
+            <h2>⏳ Connecting to Supabase...</h2>
+        </div>
+
+        <div id="status2" class="status" style="display:none;">
+            <h2>Database Functions Check</h2>
+            <div id="functions-result"></div>
+        </div>
+
+        <div id="status3" class="status" style="display:none;">
+            <h2>Movies in Database</h2>
+            <div id="movies-result"></div>
+        </div>
+
+        <div id="status4" class="status" style="display:none;">
+            <h2>View History Records</h2>
+            <div id="history-result"></div>
+        </div>
+
+        <div id="status5" class="status" style="display:none;">
+            <h2>View Counts</h2>
+            <div id="counts-result"></div>
+        </div>
+
+        <div id="status6" class="status" style="display:none;">
+            <h2>🧪 Test View Tracking</h2>
+            <button onclick="testTracking()">Test Tracking Now</button>
+            <div id="test-result"></div>
+        </div>
+
+        <div id="diagnosis" class="status" style="display:none;">
+            <h2>🎯 DIAGNOSIS</h2>
+            <div id="diagnosis-text"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://hlfvrhmvulsttzdwyzus.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhsZnZyaG12dWxzdHR6ZHd5enVzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwNjAyMzksImV4cCI6MjA4MTYzNjIzOX0.AZmSk-JMht2MC3I1giMJpI3JGVsDRgAPSkqihaDZ6xo';
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let diagnosisIssues = [];
+        let movieId = null;
+
+        async function checkConnection() {
+            const el = document.getElementById('status1');
+            try {
+                const { data, error } = await supabase
+                    .from('movies')
+                    .select('id')
+                    .limit(1);
+
+                if (error) throw error;
+
+                el.className = 'status success';
+                el.innerHTML = '<h2>✅ Connected to Supabase Successfully!</h2>';
+
+                // Run all checks
+                await checkFunctions();
+                await checkMovies();
+                await checkHistory();
+                await checkCounts();
+
+                document.getElementById('status6').style.display = 'block';
+                showDiagnosis();
+            } catch (e) {
+                el.className = 'status error';
+                el.innerHTML = `<h2>❌ Connection Failed</h2><pre>${e.message}</pre>`;
+                diagnosisIssues.push('Cannot connect to Supabase');
+            }
+        }
+
+        async function checkFunctions() {
+            const el = document.getElementById('status2');
+            el.style.display = 'block';
+
+            let html = '<h3>Checking database functions...</h3>';
+
+            // Check increment_view_count
+            try {
+                const { data, error } = await supabase.rpc('increment_view_count', {
+                    p_content_id: -999,
+                    p_content_type: 'movie',
+                    p_tmdb_id: 0,
+                    p_user_id: null,
+                    p_session_id: 'test'
+                });
+
+                html += '<p style="color: #0f0;">✅ increment_view_count function EXISTS</p>';
+            } catch (e) {
+                if (e.message.includes('does not exist')) {
+                    html += '<p style="color: #f00;">❌ increment_view_count function MISSING!</p>';
+                    html += '<p style="color: #ff0;">⚠️ You MUST run COMPLETE_VIEW_FIX.sql in Supabase SQL Editor</p>';
+                    diagnosisIssues.push('increment_view_count function missing - Run COMPLETE_VIEW_FIX.sql');
+                    el.className = 'status error';
+                } else {
+                    html += '<p style="color: #0f0;">✅ increment_view_count function EXISTS (error expected for test)</p>';
+                }
+            }
+
+            // Check get_trending_content
+            try {
+                const { data, error } = await supabase.rpc('get_trending_content', {
+                    days_limit: 30,
+                    result_limit: 5
+                });
+
+                html += '<p style="color: #0f0;">✅ get_trending_content function EXISTS</p>';
+                html += `<p style="color: #0ff;">Returns ${data ? data.length : 0} trending items</p>`;
+            } catch (e) {
+                if (e.message.includes('does not exist')) {
+                    html += '<p style="color: #f00;">❌ get_trending_content function MISSING!</p>';
+                    diagnosisIssues.push('get_trending_content function missing');
+                } else {
+                    html += '<p style="color: #0f0;">✅ get_trending_content function EXISTS</p>';
+                }
+            }
+
+            document.getElementById('functions-result').innerHTML = html;
+        }
+
+        async function checkMovies() {
+            const el = document.getElementById('status3');
+            el.style.display = 'block';
+
+            try {
+                const { data, error } = await supabase
+                    .from('movies')
+                    .select('id, title, tmdb_id, view_count')
+                    .order('id', { ascending: true })
+                    .limit(20);
+
+                if (error) throw error;
+
+                let html = `<p style="color: #0ff;"><strong>${data.length} movies found in database</strong></p>`;
+
+                if (data.length === 0) {
+                    html += '<p style="color: #f00;">❌ NO MOVIES IN DATABASE!</p>';
+                    html += '<p style="color: #ff0;">⚠️ You need to add movies via Admin Panel first!</p>';
+                    html += '<p style="color: #ff0;">You cannot track views for movies that only exist in TMDB.</p>';
+                    diagnosisIssues.push('No movies in database - Add via admin panel');
+                    el.className = 'status error';
+                } else {
+                    movieId = data[0].id; // Save for testing
+                    html += '<table>';
+                    html += '<tr><th>DB ID</th><th>Title</th><th>TMDB ID</th><th>View Count</th></tr>';
+                    data.forEach(m => {
+                        html += `<tr>
+                            <td>${m.id}</td>
+                            <td>${m.title || 'N/A'}</td>
+                            <td>${m.tmdb_id || 'N/A'}</td>
+                            <td>${m.view_count || 0}</td>
+                        </tr>`;
+                    });
+                    html += '</table>';
+                    el.className = 'status success';
+                }
+
+                document.getElementById('movies-result').innerHTML = html;
+            } catch (e) {
+                el.className = 'status error';
+                document.getElementById('movies-result').innerHTML = `<p style="color: #f00;">❌ Error: ${e.message}</p>`;
+                diagnosisIssues.push(`Error reading movies: ${e.message}`);
+            }
+        }
+
+        async function checkHistory() {
+            const el = document.getElementById('status4');
+            el.style.display = 'block';
+
+            try {
+                const { data, error } = await supabase
+                    .from('view_history')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(20);
+
+                if (error) throw error;
+
+                let html = `<p style="color: #0ff;"><strong>${data.length} view history records found</strong></p>`;
+
+                if (data.length === 0) {
+                    html += '<p style="color: #f00;">❌ NO VIEW HISTORY! Views are NOT being tracked!</p>';
+                    diagnosisIssues.push('No view history - Views not being tracked');
+                    el.className = 'status error';
+                } else {
+                    html += '<table>';
+                    html += '<tr><th>Content ID</th><th>Type</th><th>TMDB ID</th><th>Viewed At</th><th>Session ID</th></tr>';
+                    data.forEach(v => {
+                        const date = new Date(v.created_at).toLocaleString();
+                        html += `<tr>
+                            <td>${v.content_id}</td>
+                            <td>${v.content_type}</td>
+                            <td>${v.tmdb_id || 'N/A'}</td>
+                            <td>${date}</td>
+                            <td>${v.session_id ? v.session_id.substring(0, 20) + '...' : 'N/A'}</td>
+                        </tr>`;
+                    });
+                    html += '</table>';
+                    el.className = 'status success';
+                }
+
+                document.getElementById('history-result').innerHTML = html;
+            } catch (e) {
+                el.className = 'status error';
+                document.getElementById('history-result').innerHTML = `<p style="color: #f00;">❌ Error: ${e.message}</p>`;
+                diagnosisIssues.push(`Error reading view_history: ${e.message}`);
+            }
+        }
+
+        async function checkCounts() {
+            const el = document.getElementById('status5');
+            el.style.display = 'block';
+
+            try {
+                const queries = [
+                    supabase.from('movies').select('*', { count: 'exact', head: true }),
+                    supabase.from('movies').select('*', { count: 'exact', head: true }).gt('view_count', 0),
+                    supabase.from('view_history').select('*', { count: 'exact', head: true })
+                ];
+
+                const results = await Promise.all(queries);
+
+                const totalMovies = results[0].count || 0;
+                const moviesWithViews = results[1].count || 0;
+                const totalViews = results[2].count || 0;
+
+                let html = '<table>';
+                html += `<tr><td>Total Movies:</td><td><strong>${totalMovies}</strong></td></tr>`;
+                html += `<tr><td>Movies with Views:</td><td><strong>${moviesWithViews}</strong></td></tr>`;
+                html += `<tr><td>Total View Records:</td><td><strong>${totalViews}</strong></td></tr>`;
+                html += '</table>';
+
+                if (totalViews === 0) {
+                    html += '<p style="color: #f00; margin-top: 10px;">❌ Zero views tracked! This is the problem!</p>';
+                    el.className = 'status error';
+                } else {
+                    html += '<p style="color: #0f0; margin-top: 10px;">✅ Views are being tracked!</p>';
+                    el.className = 'status success';
+                }
+
+                document.getElementById('counts-result').innerHTML = html;
+            } catch (e) {
+                el.className = 'status error';
+                document.getElementById('counts-result').innerHTML = `<p style="color: #f00;">❌ Error: ${e.message}</p>`;
+            }
+        }
+
+        async function testTracking() {
+            const el = document.getElementById('test-result');
+            el.innerHTML = '<p style="color: #ff0;">⏳ Testing view tracking...</p>';
+
+            if (!movieId) {
+                el.innerHTML = '<p style="color: #f00;">❌ No movies in database to test with!</p>';
+                return;
+            }
+
+            try {
+                // Call the increment function
+                const { data, error } = await supabase.rpc('increment_view_count', {
+                    p_content_id: movieId,
+                    p_content_type: 'movie',
+                    p_tmdb_id: 550,
+                    p_user_id: null,
+                    p_session_id: 'live_test_' + Date.now()
+                });
+
+                if (error) throw error;
+
+                el.innerHTML = '<p style="color: #0f0;">✅ View tracking test SUCCESSFUL!</p>';
+                el.innerHTML += `<p>Tracked view for movie ID ${movieId}</p>`;
+                el.innerHTML += '<p style="color: #ff0;">⏳ Refreshing data in 2 seconds...</p>';
+
+                // Refresh after 2 seconds
+                setTimeout(async () => {
+                    await checkMovies();
+                    await checkHistory();
+                    await checkCounts();
+                    el.innerHTML += '<p style="color: #0f0;">✅ Data refreshed! Check the tables above.</p>';
+                }, 2000);
+
+            } catch (e) {
+                el.innerHTML = `<p style="color: #f00;">❌ Test FAILED: ${e.message}</p>`;
+                if (e.message.includes('does not exist')) {
+                    el.innerHTML += '<p style="color: #ff0;">⚠️ The increment_view_count function does not exist!</p>';
+                    el.innerHTML += '<p style="color: #ff0;">You MUST run COMPLETE_VIEW_FIX.sql in Supabase SQL Editor first!</p>';
+                }
+            }
+        }
+
+        function showDiagnosis() {
+            const el = document.getElementById('diagnosis');
+            el.style.display = 'block';
+
+            let html = '';
+
+            if (diagnosisIssues.length === 0) {
+                html = '<h3 style="color: #0f0;">✅ ALL SYSTEMS OPERATIONAL!</h3>';
+                html += '<p>Database functions exist, movies are in the database, and view tracking should work.</p>';
+                html += '<p style="color: #ff0;">If views still not tracking on your website:</p>';
+                html += '<ul style="margin-left: 20px; color: #0ff;">';
+                html += '<li>Check browser console for errors when clicking "Watch Now"</li>';
+                html += '<li>Make sure you\'re watching movies that are IN your database (not just TMDB)</li>';
+                html += '<li>Verify storedItem is not null in details.js</li>';
+                html += '<li>Clear browser cache and try again</li>';
+                html += '</ul>';
+                el.className = 'status success';
+            } else {
+                html = '<h3 style="color: #f00;">❌ ISSUES FOUND:</h3>';
+                html += '<ol style="margin-left: 20px; color: #f00;">';
+                diagnosisIssues.forEach(issue => {
+                    html += `<li>${issue}</li>`;
+                });
+                html += '</ol>';
+                html += '<h3 style="color: #ff0; margin-top: 20px;">🔧 WHAT TO DO:</h3>';
+
+                if (diagnosisIssues.some(i => i.includes('increment_view_count'))) {
+                    html += '<p style="color: #ff0;">1. Go to Supabase Dashboard → SQL Editor</p>';
+                    html += '<p style="color: #ff0;">2. Copy and paste COMPLETE_VIEW_FIX.sql</p>';
+                    html += '<p style="color: #ff0;">3. Click RUN</p>';
+                    html += '<p style="color: #ff0;">4. Refresh this page and re-test</p>';
+                }
+
+                if (diagnosisIssues.some(i => i.includes('No movies'))) {
+                    html += '<p style="color: #ff0;">1. Go to your Admin Panel</p>';
+                    html += '<p style="color: #ff0;">2. Search for movies (e.g., "Fight Club")</p>';
+                    html += '<p style="color: #ff0;">3. Add them to your database</p>';
+                    html += '<p style="color: #ff0;">4. Refresh this page to see them</p>';
+                }
+
+                el.className = 'status error';
+            }
+
+            document.getElementById('diagnosis-text').innerHTML = html;
+        }
+
+        // Auto-start diagnostic
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('Starting live diagnostic...');
+            checkConnection();
+        });
+    </script>
+</body>
+
+</html>
