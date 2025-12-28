@@ -385,6 +385,164 @@ const DB = {
             return null;
         }
         return data ? data[0] : null;
+    },
+
+    // --- View Tracking & Analytics ---
+
+    /**
+     * Track a view for a movie or TV show
+     * @param {number} contentId - Database ID of the content
+     * @param {string} contentType - 'movie' or 'tv'
+     * @param {number} tmdbId - TMDB ID of the content
+     * @returns {Promise<boolean>}
+     */
+    async trackView(contentId, contentType, tmdbId) {
+        if (!window.auth || !window.auth.supabase) return false;
+
+        try {
+            // Get current user if logged in
+            const { data: { user } } = await window.auth.supabase.auth.getUser();
+            const userId = user?.id || null;
+
+            // Generate or retrieve session ID for anonymous tracking
+            let sessionId = sessionStorage.getItem('viewSessionId');
+            if (!sessionId) {
+                sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                sessionStorage.setItem('viewSessionId', sessionId);
+            }
+
+            // Call the database function to increment view count
+            const { error } = await window.auth.supabase.rpc('increment_view_count', {
+                p_content_id: contentId,
+                p_content_type: contentType,
+                p_tmdb_id: tmdbId,
+                p_user_id: userId,
+                p_session_id: sessionId
+            });
+
+            if (error) {
+                console.error('Error tracking view:', error);
+                return false;
+            }
+
+            // Clear cache to refresh view counts
+            clearCache();
+            return true;
+        } catch (e) {
+            console.error('View tracking error:', e);
+            return false;
+        }
+    },
+
+    /**
+     * Get trending content based on views in the last X days
+     * @param {number} daysLimit - Number of days to look back (default: 30)
+     * @param {number} resultLimit - Number of results to return (default: 10)
+     * @returns {Promise<Array>}
+     */
+    async getTrendingContent(daysLimit = 30, resultLimit = 10) {
+        if (!window.auth || !window.auth.supabase) {
+            // Fallback to most recent content if no Supabase
+            const allContent = await this.getAllContent();
+            return allContent.slice(0, resultLimit);
+        }
+
+        try {
+            const { data, error } = await window.auth.supabase.rpc('get_trending_content', {
+                days_limit: daysLimit,
+                result_limit: resultLimit
+            });
+
+            if (error) {
+                console.error('Error getting trending:', error);
+                // Fallback to most recent content
+                const allContent = await this.getAllContent();
+                return allContent.slice(0, resultLimit);
+            }
+
+            // Transform data to match our content structure
+            return data.map(item => ({
+                id: item.content_id,
+                tmdbId: item.tmdb_id,
+                title: item.title,
+                poster: item.poster,
+                mediaType: item.content_type,
+                viewCount: item.view_count
+            }));
+        } catch (e) {
+            console.error('Trending content error:', e);
+            const allContent = await this.getAllContent();
+            return allContent.slice(0, resultLimit);
+        }
+    },
+
+    /**
+     * Get view statistics for a specific content
+     * @param {number} tmdbId - TMDB ID
+     * @param {string} contentType - 'movie' or 'tv'
+     * @returns {Promise<object>}
+     */
+    async getViewStats(tmdbId, contentType) {
+        if (!window.auth || !window.auth.supabase) return { totalViews: 0, recentViews: 0 };
+
+        try {
+            // Get content to find database ID
+            const content = contentType === 'movie'
+                ? await this.getMovieByTmdbId(tmdbId)
+                : await this.getTVShowByTmdbId(tmdbId);
+
+            if (!content) return { totalViews: 0, recentViews: 0 };
+
+            // Get total views from content table
+            const totalViews = content.view_count || 0;
+
+            // Get recent views (last 7 days) from view_history
+            const { data, error } = await window.auth.supabase
+                .from('view_history')
+                .select('id', { count: 'exact' })
+                .eq('tmdb_id', tmdbId)
+                .eq('content_type', contentType)
+                .gte('viewed_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+
+            const recentViews = error ? 0 : (data?.length || 0);
+
+            return {
+                totalViews,
+                recentViews,
+                contentId: content.id
+            };
+        } catch (e) {
+            console.error('View stats error:', e);
+            return { totalViews: 0, recentViews: 0 };
+        }
+    },
+
+    /**
+     * Get most popular content by total views
+     * @param {number} limit - Number of results
+     * @returns {Promise<Array>}
+     */
+    async getMostPopular(limit = 10) {
+        try {
+            const [movies, tvShows] = await Promise.all([
+                this.getMovies(),
+                this.getTVShows()
+            ]);
+
+            // Combine and sort by view_count
+            const allContent = [
+                ...movies.map(m => ({ ...m, mediaType: 'movie' })),
+                ...tvShows.map(t => ({ ...t, mediaType: 'tv' }))
+            ];
+
+            // Sort by view_count (descending) and return top results
+            return allContent
+                .sort((a, b) => (b.view_count || 0) - (a.view_count || 0))
+                .slice(0, limit);
+        } catch (e) {
+            console.error('Most popular error:', e);
+            return [];
+        }
     }
 };
 

@@ -232,8 +232,15 @@ async function loadDetails(id, type) {
     if (videoSource) {
         window.initializePlayer(videoSource, finalPosterUrl);
         watchBtn.textContent = 'Watch Now';
-        watchBtn.onclick = (e) => {
+        watchBtn.onclick = async (e) => {
             e.preventDefault();
+
+            // Track view
+            if (storedItem && storedItem.id) {
+                await DB.trackView(storedItem.id, type, id);
+                console.log('View tracked for:', { contentId: storedItem.id, type, tmdbId: id });
+            }
+
             videoSection.scrollIntoView({ behavior: 'smooth' });
             setTimeout(() => { if (window.plyrPlayer) window.plyrPlayer.play(); }, 500);
         };
@@ -263,7 +270,13 @@ async function loadDetails(id, type) {
             `).join('');
 
             // Define play handler
-            window.playEpisode = (url, card) => {
+            window.playEpisode = async (url, card) => {
+                // Track view when playing episodes
+                if (storedItem && storedItem.id) {
+                    await DB.trackView(storedItem.id, type, id);
+                    console.log('Episode view tracked for:', { contentId: storedItem.id, type, tmdbId: id });
+                }
+
                 // Formatting active state
                 document.querySelectorAll('.episode-card').forEach(c => c.classList.remove('active'));
                 if (card) card.classList.add('active');
@@ -279,8 +292,15 @@ async function loadDetails(id, type) {
             // If no main source, play first episode on 'Watch Now'
             if (!videoSource) {
                 watchBtn.textContent = 'Watch S1 E1';
-                watchBtn.onclick = (e) => {
+                watchBtn.onclick = async (e) => {
                     e.preventDefault();
+
+                    // Track view
+                    if (storedItem && storedItem.id) {
+                        await DB.trackView(storedItem.id, type, id);
+                        console.log('First episode view tracked for:', { contentId: storedItem.id, type, tmdbId: id });
+                    }
+
                     const firstCard = epContainer.children[0];
                     window.playEpisode(episodes[0].video_url, firstCard);
                 };

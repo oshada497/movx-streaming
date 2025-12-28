@@ -164,7 +164,7 @@ class MovXApp {
         // Render content rows
         await this.renderMoviesRow();
         await this.renderTVShowsRow();
-        this.renderTrendingRow(allContent);
+        await this.renderTrendingRow();
     }
 
     preloadAllHeroImages() {
@@ -392,20 +392,81 @@ class MovXApp {
         this.bindCardEvents(container);
     }
 
-    renderTrendingRow(allContent) {
+
+    async renderTrendingRow() {
         const container = document.getElementById('trendingRow');
 
-        if (allContent.length === 0) {
-            container.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">Add content to see it here.</p>';
-            return;
-        }
+        try {
+            // Get trending content based on views in last 30 days
+            const trendingContent = await DB.getTrendingContent(30, 6);
 
-        // Show most recently added as trending
-        container.innerHTML = allContent.slice(0, 6).map(item =>
-            this.createContentCard(item, item.mediaType)
-        ).join('');
-        this.bindCardEvents(container);
+            if (trendingContent.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">Add content and start watching to see trending items!</p>';
+                return;
+            }
+
+            // For each trending item, fetch full details to get all necessary data
+            const enrichedContent = await Promise.all(trendingContent.map(async (item) => {
+                const fullContent = item.mediaType === 'movie'
+                    ? await DB.getMovieByTmdbId(item.tmdbId)
+                    : await DB.getTVShowByTmdbId(item.tmdbId);
+
+                return {
+                    ...fullContent,
+                    mediaType: item.mediaType,
+                    viewCount: item.viewCount
+                };
+            }));
+
+            container.innerHTML = enrichedContent.map(item =>
+                this.createTrendingCard(item, item.mediaType)
+            ).join('');
+            this.bindCardEvents(container);
+        } catch (e) {
+            console.error('Error loading trending:', e);
+            // Fallback to all content if trending fails
+            const allContent = await DB.getAllContent();
+            container.innerHTML = allContent.slice(0, 6).map(item =>
+                this.createContentCard(item, item.mediaType)
+            ).join('');
+            this.bindCardEvents(container);
+        }
     }
+
+    createTrendingCard(item, type) {
+        const poster = item.poster || 'https://placehold.co/180x270/1a1a1a/666666?text=No+Poster';
+        const rating = item.rating ? Number(item.rating).toFixed(1) : 'N/A';
+        const viewCount = item.viewCount || item.view_count || 0;
+
+        return `
+            <div class="content-card" data-id="${item.tmdbId || item.id}" data-tmdb="${item.tmdbId}" data-type="${type}">
+                <div class="rating-badge">
+                    <i class="fas fa-star"></i>
+                    ${rating}
+                </div>
+                <div class="trending-badge" title="${viewCount} views">
+                    <i class="fas fa-fire"></i>
+                    ${this.formatViews(viewCount)}
+                </div>
+                <img src="${poster}" alt="${item.title}" class="card-poster" loading="lazy">
+                <div class="card-overlay">
+                    <h4 class="card-title">${item.title}</h4>
+                    <div class="card-meta">
+                        <span>${item.year || ''}</span>
+                        <span>${type === 'tv' ? 'TV' : 'Movie'}</span>
+                        <span class="views-text">${viewCount} views</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    formatViews(count) {
+        if (count >= 1000000) return (count / 1000000).toFixed(1) + 'M';
+        if (count >= 1000) return (count / 1000).toFixed(1) + 'K';
+        return count.toString();
+    }
+
 
     createContentCard(item, type) {
         const poster = item.poster || 'https://placehold.co/180x270/1a1a1a/666666?text=No+Poster';
