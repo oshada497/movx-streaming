@@ -378,6 +378,7 @@ class MovXApp {
     }
 
     async showContentDetails(id, type, slug) {
+        // Use pretty URL if slug is available, otherwise fall back to query params
         if (slug) {
             window.location.href = `/${slug}`;
         } else {
@@ -510,7 +511,11 @@ class MovXApp {
                 const tmdbId = card.dataset.tmdb;
                 const type = card.dataset.type;
                 const slug = card.dataset.slug;
-                if (tmdbId) {
+
+                // Prioritize slug for navigation (cleaner, faster)
+                if (slug) {
+                    window.location.href = `/${slug}`;
+                } else if (tmdbId) {
                     this.showContentDetails(tmdbId, type, slug);
                 } else {
                     // Fallback

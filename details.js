@@ -1,12 +1,41 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const id = urlParams.get('id');
-    const type = urlParams.get('type');
+    // Check if we're on a pretty URL or query param URL
+    let id, type;
 
-    if (!id || !type) {
-        window.location.href = 'index.html';
-        return;
+    const urlParams = new URLSearchParams(window.location.search);
+    const queryId = urlParams.get('id');
+    const queryType = urlParams.get('type');
+
+    // Handle Pretty URL routing
+    if (!queryId || !queryType) {
+        const path = window.location.pathname;
+        const slug = path.replace(/^\//, '').replace(/\/$/, '');
+
+        // Check if this looks like a content slug (not a known page)
+        if (slug && slug !== 'index.html' && slug !== 'details.html' && !slug.includes('.')) {
+            console.log('[Details] Resolving slug:', slug);
+            const content = await DB.getContentBySlug(slug);
+
+            if (content) {
+                id = content.tmdbId;
+                type = content.mediaType;
+                console.log('[Details] Resolved slug to:', { id, type });
+            } else {
+                console.error('[Details] Slug not found:', slug);
+                window.location.href = 'index.html';
+                return;
+            }
+        } else {
+            // No valid slug or query params - redirect home
+            window.location.href = 'index.html';
+            return;
+        }
+    } else {
+        // Use Query Parameters
+        id = queryId;
+        type = queryType;
     }
+
 
     // Bind Search Events
     const searchInput = document.getElementById('searchInput');
@@ -119,7 +148,8 @@ async function loadDetails(id, type) {
         // ============================================
         // URL CANONICALIZATION (Pretty URLs)
         // ============================================
-        if (storedItem.slug && !window.location.pathname.includes(storedItem.slug)) {
+        // Only update URL if we're using query params, not if already on pretty URL
+        if (storedItem.slug && window.location.search.includes('id=')) {
             const newUrl = `/${storedItem.slug}`;
             console.log('🔄 Canonicalizing URL to:', newUrl);
             window.history.replaceState({ path: newUrl }, '', newUrl);
@@ -336,18 +366,17 @@ async function loadDetails(id, type) {
         if (window.plyrPlayer && typeof window.plyrPlayer.pause === 'function') window.plyrPlayer.pause();
     });
 
-    // Hide Loader and Reveal Content
-    setTimeout(() => {
-        const loader = document.getElementById('loadingOverlay');
-        const containers = document.querySelectorAll('.details-container, .video-section');
+    // Hide Loader and Reveal Content (Immediate - No Delay)
+    const loader = document.getElementById('loadingOverlay');
+    const containers = document.querySelectorAll('.details-container, .video-section');
 
-        if (loader) {
-            loader.style.opacity = '0';
-            setTimeout(() => loader.style.display = 'none', 500);
-        }
+    if (loader) {
+        loader.style.opacity = '0';
+        setTimeout(() => loader.style.display = 'none', 300);
+    }
 
-        containers.forEach(el => el.classList.add('content-visible'));
-    }, 300); // Short delay for smoothness
+    // Show content immediately
+    containers.forEach(el => el.classList.add('content-visible'));
 
     // Setup comment section
     const contentId = details.tmdb_id || details.id;

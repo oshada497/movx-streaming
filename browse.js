@@ -131,7 +131,9 @@ function createCard(item) {
     const poster = item.poster || 'https://placehold.co/180x270/1a1a1a/666666?text=No+Poster';
     const rating = item.rating ? item.rating.toFixed(1) : 'N/A';
     const type = item.mediaType || 'movie';
-    const link = `details.html?id=${item.tmdbId || item.id}&type=${type}`;
+
+    // Use pretty URL if slug is available, otherwise fall back to query params
+    const link = item.slug ? `/${item.slug}` : `details.html?id=${item.tmdbId || item.id}&type=${type}`;
 
     return `
         <a href="${link}" class="content-card" style="text-decoration: none; color: inherit;">
