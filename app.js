@@ -604,7 +604,48 @@ class MovXApp {
     }
 }
 
+// Router for Pretty URLs (restored for client-side routing)
+async function handleRoute() {
+    const path = window.location.pathname;
+
+    // Ignore known pages/assets or root
+    if (path === '/' || path === '/index.html' || path.includes('.')) {
+        return false;
+    }
+
+    const slug = path.replace(/^\//, '').replace(/\/$/, '');
+    if (!slug) return false;
+
+    console.log('[Router] Checking slug:', slug);
+
+    // Wait for DB to be ready
+    if (!window.DB || !window.DB.getContentBySlug) {
+        console.log('[Router] DB not ready yet, waiting...');
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    // Check DB if available
+    if (window.DB && window.DB.getContentBySlug) {
+        const content = await window.DB.getContentBySlug(slug);
+        if (content) {
+            console.log('[Router] Found content, redirecting to details:', content);
+            // Navigate to details page with query params, which will then canonicalize to pretty URL
+            window.location.replace(`details.html?id=${content.tmdbId}&type=${content.mediaType}`);
+            return true;
+        }
+    }
+
+    console.log('[Router] No content found for slug, showing home');
+    return false;
+}
+
 // Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', async () => {
-    window.app = new MovXApp();
+    // Try routing first
+    const redirected = await handleRoute();
+
+    // Only init app if we didn't redirect
+    if (!redirected) {
+        window.app = new MovXApp();
+    }
 });
