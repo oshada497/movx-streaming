@@ -91,9 +91,35 @@ async function loadDetails(id, type) {
 
     if (storedItem) {
         details = storedItem;
-        console.log('Loaded from Supabase:', details);
+        console.log('✅ Loaded from Supabase:', details);
+        console.log('📊 Current view_count:', details.view_count || 0);
+
+        // ============================================
+        // TRACK VIEW IMMEDIATELY ON PAGE LOAD
+        // ============================================
+        console.log('🔥 Tracking view NOW...');
+        try {
+            const tracked = await DB.trackView(storedItem.id, type, id);
+            if (tracked) {
+                console.log('✅ VIEW TRACKED SUCCESSFULLY!');
+                console.log('📈 View recorded for:', {
+                    movieId: storedItem.id,
+                    title: storedItem.title,
+                    type: type,
+                    tmdbId: id
+                });
+            } else {
+                console.error('❌ View tracking returned false');
+            }
+        } catch (trackError) {
+            console.error('❌ View tracking error:', trackError);
+        }
+        // ============================================
+
     } else {
         // Fallback to TMDB API
+        console.log('⚠️ Movie not in Supabase database - loading from TMDB only');
+        console.log('⚠️ Views will NOT be tracked (movie not in database)');
         if (type === 'movie') {
             details = await API.getDetails('movie', id);
         } else {
@@ -148,8 +174,6 @@ async function loadDetails(id, type) {
     // Description
     document.getElementById('description').textContent = details.overview || details.description || 'No description available.';
 
-
-    // DEBUGGING: Print details to console to verify videoUrl existence
 
     // Video Player Logic
     const videoSection = document.getElementById('video-player-section');
@@ -232,31 +256,17 @@ async function loadDetails(id, type) {
     if (videoSource) {
         window.initializePlayer(videoSource, finalPosterUrl);
         watchBtn.textContent = 'Watch Now';
-        watchBtn.onclick = async (e) => {
+        watchBtn.onclick = (e) => {
             e.preventDefault();
-
-            // Track view
-            if (storedItem && storedItem.id) {
-                await DB.trackView(storedItem.id, type, id);
-                console.log('View tracked for:', { contentId: storedItem.id, type, tmdbId: id });
-            }
-
             videoSection.scrollIntoView({ behavior: 'smooth' });
             setTimeout(() => { if (window.plyrPlayer) window.plyrPlayer.play(); }, 500);
         };
     } else {
         videoSection.style.display = 'none';
-        watchBtn.onclick = async (e) => {
-            e.preventDefault();
-
-            // Track view even for trailer/no video
-            if (storedItem && storedItem.id) {
-                await DB.trackView(storedItem.id, type, id);
-                console.log('View tracked for (no video):', { contentId: storedItem.id, type, tmdbId: id });
-            }
-
-            openPlayer(details); // Trailer fallback
-        };
+        watchBtn.textContent = 'No Video Available';
+        watchBtn.disabled = true;
+        watchBtn.style.opacity = '0.5';
+        watchBtn.style.cursor = 'not-allowed';
     }
 
     // --- Episodes Logic ---
@@ -281,12 +291,6 @@ async function loadDetails(id, type) {
 
             // Define play handler
             window.playEpisode = async (url, card) => {
-                // Track view when playing episodes
-                if (storedItem && storedItem.id) {
-                    await DB.trackView(storedItem.id, type, id);
-                    console.log('Episode view tracked for:', { contentId: storedItem.id, type, tmdbId: id });
-                }
-
                 // Formatting active state
                 document.querySelectorAll('.episode-card').forEach(c => c.classList.remove('active'));
                 if (card) card.classList.add('active');
@@ -302,15 +306,11 @@ async function loadDetails(id, type) {
             // If no main source, play first episode on 'Watch Now'
             if (!videoSource) {
                 watchBtn.textContent = 'Watch S1 E1';
-                watchBtn.onclick = async (e) => {
+                watchBtn.disabled = false;
+                watchBtn.style.opacity = '1';
+                watchBtn.style.cursor = 'pointer';
+                watchBtn.onclick = (e) => {
                     e.preventDefault();
-
-                    // Track view
-                    if (storedItem && storedItem.id) {
-                        await DB.trackView(storedItem.id, type, id);
-                        console.log('First episode view tracked for:', { contentId: storedItem.id, type, tmdbId: id });
-                    }
-
                     const firstCard = epContainer.children[0];
                     window.playEpisode(episodes[0].video_url, firstCard);
                 };
