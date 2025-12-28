@@ -116,6 +116,15 @@ async function loadDetails(id, type) {
         }
         // ============================================
 
+        // ============================================
+        // URL CANONICALIZATION (Pretty URLs)
+        // ============================================
+        if (storedItem.slug && !window.location.pathname.includes(storedItem.slug)) {
+            const newUrl = `/${storedItem.slug}`;
+            console.log('🔄 Canonicalizing URL to:', newUrl);
+            window.history.replaceState({ path: newUrl }, '', newUrl);
+        }
+        // ============================================
     } else {
         // Fallback to TMDB API
         console.log('⚠️ Movie not in Supabase database - loading from TMDB only');

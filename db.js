@@ -3,9 +3,9 @@
 // Cache Configuration for Backend Calls
 const CACHE_DURATION = 5 * 60 * 1000; // 5 mins
 const CACHE_KEYS = {
-    movies: 'movx_cache_movies',
-    tvShows: 'movx_cache_tvshows',
-    trending: 'movx_cache_trending'
+    movies: 'movx_cache_movies_v2',
+    tvShows: 'movx_cache_tvshows_v2',
+    trending: 'movx_cache_trending_v2'
 };
 
 // --- Storage Helper ---
