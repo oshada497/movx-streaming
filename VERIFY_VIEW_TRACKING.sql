@@ -1,18 +1,28 @@
 -- ==========================================
 -- VIEW TRACKING VERIFICATION QUERIES
 -- Run these AFTER executing COMPLETE_VIEW_FIX.sql
+-- 
+-- IMPORTANT: Run EACH query SEPARATELY in Supabase SQL Editor
+-- Copy and paste one query at a time
 -- ==========================================
 
--- 1. Check if all components are set up correctly
+-- ==========================================
+-- QUERY 1: Check Setup Status
+-- ==========================================
+-- This should show all 'PASS' results
+-- Copy and run this query:
+
 SELECT * FROM test_view_tracking();
 
--- Expected output: All tests should show 'PASS'
+-- Expected: All tests show 'PASS'
 -- If any show 'FAIL', re-run COMPLETE_VIEW_FIX.sql
 
 
 -- ==========================================
--- 2. Check top viewed movies and TV shows
+-- QUERY 2: Top Viewed Content
 -- ==========================================
+-- Shows movies and TV shows with the most views
+-- Copy and run this query:
 
 SELECT 
     'movie' as type,
@@ -34,13 +44,15 @@ WHERE view_count > 0
 ORDER BY view_count DESC
 LIMIT 10;
 
--- Expected output: List of most viewed content
+-- Expected: List of most viewed content
 -- If empty, no views have been tracked yet
 
 
 -- ==========================================
--- 3. Check recent view history
+-- QUERY 3: Recent View History
 -- ==========================================
+-- Shows the 20 most recent views
+-- Copy and run this query:
 
 SELECT 
     vh.content_type,
@@ -54,37 +66,27 @@ LEFT JOIN tv_shows t ON vh.content_type = 'tv' AND vh.content_id = t.id
 ORDER BY vh.viewed_at DESC
 LIMIT 20;
 
--- Expected output: Recent view entries
+-- Expected: Recent view entries
 -- If empty, no views have been tracked yet
 
 
 -- ==========================================
--- 4. Test the increment_view_count function
+-- QUERY 4: Test Trending Function
 -- ==========================================
-
--- Get a valid content ID first
-SELECT id, title FROM movies LIMIT 1;
-
--- Then test tracking (replace 1 with an actual ID from above)
--- SELECT increment_view_count(1, 'movie', 550, NULL, 'test_session');
-
--- Check if it worked
--- SELECT id, title, view_count FROM movies WHERE id = 1;
-
-
--- ==========================================
--- 5. Test get_trending_content function
--- ==========================================
+-- Tests the get_trending_content function
+-- Copy and run this query:
 
 SELECT * FROM get_trending_content(30, 10);
 
--- Expected output: Trending content from last 30 days
+-- Expected: Trending content from last 30 days
 -- If empty, add some test views first
 
 
 -- ==========================================
--- 6. Quick stats summary
+-- QUERY 5: Quick Stats Summary
 -- ==========================================
+-- Shows overview statistics
+-- Copy and run this query:
 
 SELECT 
     'Total Movies' as metric,
@@ -128,6 +130,22 @@ SELECT
     COUNT(*)::TEXT
 FROM view_history
 WHERE viewed_at >= NOW() - INTERVAL '24 hours';
+
+-- Expected: Summary of system statistics
+
+
+-- ==========================================
+-- QUERY 6: Test Manual View Tracking (Optional)
+-- ==========================================
+-- First, get a valid content ID:
+
+SELECT id, title FROM movies LIMIT 1;
+
+-- Then uncomment and run this (replace 1 with actual ID):
+-- SELECT increment_view_count(1, 'movie', 550, NULL, 'test_session');
+
+-- Check if it worked (replace 1 with actual ID):
+-- SELECT id, title, view_count FROM movies WHERE id = 1;
 
 
 -- ==========================================
