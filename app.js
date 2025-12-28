@@ -608,13 +608,23 @@ class MovXApp {
 async function handleRoute() {
     const path = window.location.pathname;
 
-    // Ignore known pages/assets or root
-    if (path === '/' || path === '/index.html' || path.includes('.')) {
+    // Ignore known pages/assets or root - BE VERY SPECIFIC
+    if (path === '/' ||
+        path === '/index.html' ||
+        path === '/details.html' ||
+        path === '/browse.html' ||
+        path === '/admin.html' ||
+        path.startsWith('/details') ||  // Critical: ignore /details path
+        path.startsWith('/browse') ||
+        path.startsWith('/admin') ||
+        path.includes('.')) {
         return false;
     }
 
     const slug = path.replace(/^\//, '').replace(/\/$/, '');
-    if (!slug) return false;
+    if (!slug || slug === 'details' || slug === 'browse' || slug === 'admin') {
+        return false;
+    }
 
     console.log('[Router] Checking slug:', slug);
 
