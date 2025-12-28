@@ -23,8 +23,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                 break;
             case 'trending':
                 title = 'Trending Now';
-                const trendingContent = await DB.getTrendingContent(30, 20); // Last 30 days, top 20
-                items = trendingContent; // Already has view counts
+                try {
+                    // Try to get trending content first
+                    const trendingContent = await DB.getTrendingContent(30, 50); // Last 30 days, top 50
+                    if (trendingContent && trendingContent.length > 0) {
+                        items = trendingContent;
+                    } else {
+                        // Fallback: Get all content and sort by view_count
+                        console.log('[Browse] No trending data, falling back to all content sorted by views');
+                        const allContent = await DB.getAllContent();
+                        items = allContent.sort((a, b) => {
+                            const aViews = Number(a.view_count || a.viewCount || 0);
+                            const bViews = Number(b.view_count || b.viewCount || 0);
+                            return bViews - aViews; // Highest first
+                        });
+                    }
+                } catch (e) {
+                    console.error('[Browse] Error loading trending:', e);
+                    // Fallback to all content
+                    items = await DB.getAllContent();
+                }
                 break;
             default:
                 title = 'Browse';
