@@ -76,7 +76,8 @@ class MovXApp {
             if (content) {
                 const id = content.tmdbId || content.id;
                 const type = content.mediaType || 'movie';
-                if (id) this.showContentDetails(id, type);
+                const slug = content.slug;
+                if (id) this.showContentDetails(id, type, slug);
             }
         });
 
@@ -352,7 +353,7 @@ class MovXApp {
             const poster = item.poster || 'https://placehold.co/300x450/1a1a1a/666666?text=No+Poster';
 
             return `
-                <div class="search-result-item" data-id="${item.tmdbId || item.id}" data-type="${item.mediaType}">
+                <div class="search-result-item" data-id="${item.tmdbId || item.id}" data-type="${item.mediaType}" data-slug="${item.slug || ''}">
                     <img src="${poster}" alt="${title}" class="search-result-poster" loading="lazy">
                     <div class="search-result-info">
                         <div class="search-result-title">${title}</div>
@@ -367,7 +368,8 @@ class MovXApp {
             item.addEventListener('click', () => {
                 const id = item.dataset.id;
                 const type = item.dataset.type;
-                this.showContentDetails(id, type);
+                const slug = item.dataset.slug;
+                this.showContentDetails(id, type, slug);
                 searchModal.classList.remove('active');
             });
         });
@@ -375,8 +377,12 @@ class MovXApp {
         searchModal.classList.add('active');
     }
 
-    async showContentDetails(id, type) {
-        window.location.href = `details.html?id=${id}&type=${type}`;
+    async showContentDetails(id, type, slug) {
+        if (slug) {
+            window.location.href = `/${slug}`;
+        } else {
+            window.location.href = `details.html?id=${id}&type=${type}`;
+        }
     }
 
     async renderMoviesRow() {
@@ -446,7 +452,7 @@ class MovXApp {
         const viewCount = item.viewCount || item.view_count || 0;
 
         return `
-            <div class="content-card" data-id="${item.tmdbId || item.id}" data-tmdb="${item.tmdbId}" data-type="${type}">
+            <div class="content-card" data-id="${item.tmdbId || item.id}" data-tmdb="${item.tmdbId}" data-type="${type}" data-slug="${item.slug || ''}">
                 <div class="rating-badge">
                     <i class="fas fa-star"></i>
                     ${rating}
@@ -481,7 +487,7 @@ class MovXApp {
 
         // Use tmdbId for linking if available, otherwise fallback (DB items should have tmdbId)
         return `
-            <div class="content-card" data-id="${item.tmdbId || item.id}" data-tmdb="${item.tmdbId}" data-type="${type}">
+            <div class="content-card" data-id="${item.tmdbId || item.id}" data-tmdb="${item.tmdbId}" data-type="${type}" data-slug="${item.slug || ''}">
                 <div class="rating-badge">
                     <i class="fas fa-star"></i>
                     ${rating}
@@ -503,11 +509,12 @@ class MovXApp {
             card.addEventListener('click', () => {
                 const tmdbId = card.dataset.tmdb;
                 const type = card.dataset.type;
+                const slug = card.dataset.slug;
                 if (tmdbId) {
-                    this.showContentDetails(tmdbId, type);
+                    this.showContentDetails(tmdbId, type, slug);
                 } else {
                     // Fallback
-                    this.showContentDetails(card.dataset.id, type);
+                    this.showContentDetails(card.dataset.id, type, slug);
                 }
             });
         });
@@ -516,14 +523,14 @@ class MovXApp {
     renderEpisodes(episodes) {
         const container = document.getElementById('episodesList');
         container.innerHTML = episodes.map((ep, index) => `
-            <div class="episode-card" data-episode="${index + 1}">
-                <img src="${ep.thumbnail || 'https://placehold.co/280x160/1a1a1a/666666?text=Episode'}" 
-                     alt="Episode ${index + 1}" class="episode-thumbnail" loading="lazy">
-                <div class="episode-info">
-                    <div class="episode-number">S1-E${index + 1}</div>
-                    <div class="episode-title">${ep.title || `Episode ${index + 1}`}</div>
+            < div class="episode-card" data - episode="${index + 1}" >
+                <img src="${ep.thumbnail || 'https://placehold.co/280x160/1a1a1a/666666?text=Episode'}"
+                    alt="Episode ${index + 1}" class="episode-thumbnail" loading="lazy">
+                    <div class="episode-info">
+                        <div class="episode-number">S1-E${index + 1}</div>
+                        <div class="episode-title">${ep.title || `Episode ${index + 1}`}</div>
+                    </div>
                 </div>
-            </div>
         `).join('');
     }
 
@@ -539,20 +546,20 @@ class MovXApp {
         // Check if content has a video URL
         if (content.videoUrl) {
             playerContent.innerHTML = `
-                <iframe src="${content.videoUrl}" 
-                        allowfullscreen 
-                        allow="autoplay; encrypted-media"
-                        frameborder="0">
-                </iframe>
+            < iframe src = "${content.videoUrl}"
+        allowfullscreen
+        allow = "autoplay; encrypted-media"
+        frameborder = "0" >
+                </iframe >
             `;
         } else {
             // Show placeholder message
             playerContent.innerHTML = `
-                <div class="no-video-message">
+            < div class="no-video-message" >
                     <i class="fas fa-film"></i>
                     <h3>No Video Source Available</h3>
                     <p>Add a video URL in the Admin Panel to play this content.</p>
-                </div>
+                </div >
             `;
         }
 
@@ -592,7 +599,41 @@ class MovXApp {
     }
 }
 
+// Router for Pretty URLs
+async function handleRoute() {
+    const path = window.location.pathname;
+
+    // Ignore known pages/assets or root
+    if (path === '/' || path === '/index.html' || path.includes('.') ||
+        path.startsWith('/details') || path.startsWith('/browse') || path.startsWith('/admin')) {
+        return false;
+    }
+
+    const slug = path.replace(/^\//, '').replace(/\/$/, '');
+    if (!slug) return false;
+
+    console.log('[Router] Checking slug:', slug);
+
+    // Check DB if available
+    if (window.DB && window.DB.getContentBySlug) {
+        const content = await window.DB.getContentBySlug(slug);
+        if (content) {
+            console.log('[Router] Redirecting to details:', content);
+            // We use replace to avoid adding the redirect jump to history
+            window.location.replace(`details.html ? id = ${content.tmdbId}& type=${content.mediaType} `);
+            return true;
+        }
+    }
+    return false;
+}
+
 // Initialize app when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-    window.app = new MovXApp();
+document.addEventListener('DOMContentLoaded', async () => {
+    // Try routing first
+    const redirected = await handleRoute();
+
+    // Only init app if we didn't redirect
+    if (!redirected) {
+        window.app = new MovXApp();
+    }
 });

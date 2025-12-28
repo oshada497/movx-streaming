@@ -617,6 +617,41 @@ const DB = {
             console.error('Most popular error:', e);
             return [];
         }
+    },
+    // --- Pretty URLs ---
+    async getContentBySlug(slug) {
+        if (!window.auth || !window.auth.supabase) return null;
+
+        try {
+            const { data, error } = await window.auth.supabase
+                .rpc('get_content_by_slug', { p_slug: slug });
+
+            if (error || !data || data.length === 0) {
+                console.log('[DB] No content found for slug:', slug);
+                return null;
+            }
+
+            const result = data[0];
+            console.log('[DB] Found by slug:', result);
+
+            // Return the result directly (contains id, content_type, tmdb_id)
+            return {
+                id: result.content_id,
+                tmdbId: result.tmdb_id,
+                mediaType: result.content_type
+            };
+        } catch (e) {
+            console.error('[DB] Error getting content by slug:', e);
+            return null;
+        }
+    },
+
+    generateSlug(title) {
+        if (!title) return '';
+        return title
+            .toLowerCase()
+            .replace(/[^a-z0-9\s-]/g, '')
+            .replace(/\s+/g, '-');
     }
 };
 

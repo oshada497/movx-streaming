@@ -206,3 +206,31 @@ The trigger ensures:
 ---
 
 **Ready to implement? Start with Step 1!** 🚀
+
+---
+
+## Post-Implementation Guide
+
+I have automatically applied the code changes for Steps 2, 3, and 4!
+
+### Your Tasks:
+1. **Run SQL Migration:**
+   - Open `add_slug_support.sql`
+   - Copy the content
+   - Run it in your Supabase SQL Editor
+   - This creates the `slug` column and generates slugs for existing content.
+
+2. **Verify:**
+   - After running the SQL, check if movies have slugs: `SELECT slug FROM movies;`
+   - Reload your site (locally or deploy)
+   - Click on a movie -> URL should now be `/movie-name` instead of `?id=...`
+   - Refresh the page on the new URL -> It should still load the movie!
+
+### Troubleshooting
+- If clicking a movie still shows `?id=...`:
+  - Check if the movie actually has a `slug` in the database.
+  - Check browser console for `[Router]` logs.
+
+- If the page 404s on refresh:
+  - Ensure `_redirects` file is present in the build output.
+  - Ensure Cloudflare Pages is configured to serve `index.html` for unknown routes (SPA mode).

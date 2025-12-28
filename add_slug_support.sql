@@ -35,14 +35,14 @@ WHERE slug IS NULL AND title IS NOT NULL;
 
 -- Handle duplicate slugs by appending tmdb_id
 UPDATE movies m1
-SET slug = slug || '-' || tmdb_id::TEXT
+SET slug = slug || '-' || "tmdbId"::TEXT
 WHERE EXISTS (
     SELECT 1 FROM movies m2 
     WHERE m2.slug = m1.slug AND m2.id != m1.id
 );
 
 UPDATE tv_shows t1
-SET slug = slug || '-' || tmdb_id::TEXT
+SET slug = slug || '-' || "tmdbId"::TEXT
 WHERE EXISTS (
     SELECT 1 FROM tv_shows t2 
     WHERE t2.slug = t1.slug AND t2.id != t1.id
@@ -61,7 +61,7 @@ AS $$
 BEGIN
     -- Try movies first
     RETURN QUERY
-    SELECT id, 'movie'::TEXT, tmdb_id
+    SELECT id, 'movie'::TEXT, "tmdbId"
     FROM movies
     WHERE slug = p_slug
     LIMIT 1;
@@ -69,7 +69,7 @@ BEGIN
     -- If no movie found, try TV shows
     IF NOT FOUND THEN
         RETURN QUERY
-        SELECT id, 'tv'::TEXT, tmdb_id
+        SELECT id, 'tv'::TEXT, "tmdbId"
         FROM tv_shows
         WHERE slug = p_slug
         LIMIT 1;
@@ -88,14 +88,14 @@ BEGIN
     IF NEW.slug IS NULL AND NEW.title IS NOT NULL THEN
         NEW.slug := generate_slug(NEW.title);
         
-        -- Check for duplicates and append tmdb_id if needed
+    -- Check for duplicates and append tmdb_id if needed
         IF TG_TABLE_NAME = 'movies' THEN
             IF EXISTS (SELECT 1 FROM movies WHERE slug = NEW.slug AND id != NEW.id) THEN
-                NEW.slug := NEW.slug || '-' || NEW.tmdb_id::TEXT;
+                NEW.slug := NEW.slug || '-' || NEW."tmdbId"::TEXT;
             END IF;
         ELSIF TG_TABLE_NAME = 'tv_shows' THEN
             IF EXISTS (SELECT 1 FROM tv_shows WHERE slug = NEW.slug AND id != NEW.id) THEN
-                NEW.slug := NEW.slug || '-' || NEW.tmdb_id::TEXT;
+                NEW.slug := NEW.slug || '-' || NEW."tmdbId"::TEXT;
             END IF;
         END IF;
     END IF;
@@ -122,4 +122,4 @@ SELECT COUNT(*) as movies_with_slugs FROM movies WHERE slug IS NOT NULL;
 SELECT COUNT(*) as tvshows_with_slugs FROM tv_shows WHERE slug IS NOT NULL;
 
 -- Show some examples
-SELECT id, title, slug, tmdb_id FROM movies WHERE slug IS NOT NULL LIMIT 10;
+SELECT id, title, slug, "tmdbId" FROM movies WHERE slug IS NOT NULL LIMIT 10;
